@@ -26,6 +26,12 @@ export type {
 export { Button } from "./components/button/Button.js";
 export type { IconButtonProps } from "./components/button/IconButton.js";
 export { IconButton } from "./components/button/IconButton.js";
+export type {
+  ColorFieldPart,
+  ColorFieldProps,
+  ColorSwatch,
+} from "./components/color-field/ColorField.js";
+export { ColorField } from "./components/color-field/ColorField.js";
 export type { DialogPart, DialogProps } from "./components/dialog/Dialog.js";
 export { Dialog } from "./components/dialog/Dialog.js";
 export type { FieldPart, FieldProps } from "./components/field/Field.js";

@@ -83,7 +83,29 @@ export type ClassNames<Part extends string> = {
 export function CloseIcon(props: IconProps): ReactElement;
 
 // @public
+export const ColorField: ForwardRefExoticComponent<ColorFieldProps & RefAttributes<HTMLDivElement>>;
+
+// @public
+export type ColorFieldPart = "root" | "control" | "preview" | "input" | "swatches" | "swatch";
+
+// @public
+export interface ColorFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "className" | "type" | "value" | "defaultValue" | "onChange">, StyleProps<ColorFieldPart> {
+    readonly defaultValue?: string | undefined;
+    readonly label?: string | undefined;
+    readonly onValueChange?: ((value: string) => void) | undefined;
+    readonly swatches?: readonly ColorSwatch[] | undefined;
+    readonly swatchesLabel?: string | undefined;
+    readonly value?: string | undefined;
+}
+
+// @public
 export type ColorMode = "light" | "dark" | "system";
+
+// @public
+export interface ColorSwatch {
+    readonly label: string;
+    readonly value: string;
+}
 
 // @public
 export function CropIcon(props: IconProps): ReactElement;
@@ -546,6 +568,7 @@ export type UiMessages = Messages<typeof uiMessages>;
 
 // @public
 export const uiMessages: {
+    readonly "colorField.swatches": "swatches";
     readonly "dialog.close": "Close";
     readonly "fileDropZone.choose": "Choose a file";
     readonly "fileDropZone.chooseMultiple": "Choose files";

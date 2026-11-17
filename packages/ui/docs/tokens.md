@@ -252,6 +252,11 @@ Fine-grained overrides for one component. `ui` never declares them: each compone
 | `--hm-text-field-placeholder-fg` | `--hm-color-text-muted` | Placeholder text of a text field. It needs 4.5:1 contrast with the field's background. |
 | `--hm-text-field-border-color` | `--hm-color-border-strong` | Border of a text field. It needs 3:1 contrast with the surface. |
 | `--hm-text-field-invalid-border-color` | `--hm-color-danger-text` | Border of a text field marked invalid. It needs 3:1 contrast with the surface. |
+| `--hm-color-field-gap` | `--hm-gap-tight` | Space between a colour field's preview, input and swatches. |
+| `--hm-color-field-swatch-size` | `--hm-control-height-small` | Width and height of a colour field's swatch. |
+| `--hm-color-field-swatch-radius` | `--hm-radius-control` | Corner radius of a colour field's preview and swatches. |
+| `--hm-color-field-swatch-border-color` | `--hm-color-border-strong` | Border of a colour field's preview and swatches. It needs 3:1 contrast with the surface. |
+| `--hm-color-field-swatch-checked-border-color` | `--hm-color-text` | Ring of the checked swatch. It needs 3:1 contrast with the surface. |
 
 ## Base tokens
 

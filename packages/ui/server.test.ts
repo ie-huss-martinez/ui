@@ -105,6 +105,11 @@ describe("the built package on a server", () => {
       IconButton: { label: "Rotate", icon },
       ToggleButton: { label: "Loop", icon, defaultPressed: true },
       TextField: { label: "File name", defaultValue: "report" },
+      ColorField: {
+        label: "Fill",
+        defaultValue: "#1570ef",
+        swatches: [{ value: "#d92d20", label: "Red" }],
+      },
       Tooltip: {
         content: "Rotate",
         type: "label",

@@ -15,3 +15,4 @@ Use [`template.md`](template.md) for new records. Name files `NNNN-short-title.m
 | [0005](0005-icon-set.md) | An icon set generated from Lucide | Accepted |
 | [0006](0006-overlays-in-the-top-layer.md) | Overlays in the top layer, placed without a library | Accepted |
 | [0007](0007-browser-tests-in-the-pinned-image.md) | Every browser test runs in the pinned image, through `sdk-config` | Accepted |
+| [0008](0008-colour-input-without-the-native-picker.md) | A colour input without the browser's picker | Accepted |

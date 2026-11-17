@@ -290,6 +290,15 @@ describe("TextField", () => {
   });
 });
 
+describe("ColorField", () => {
+  it("ships without the other fields", async () => {
+    await expectShipped('import { ColorField } from "./react.js"; export const app = ColorField;', {
+      includes: ["hm-color-field"],
+      excludes: ["hm-number-field", "hm-slider", "hm-tooltip", ROVING_FOCUS],
+    });
+  });
+});
+
 describe("Tooltip", () => {
   it("ships without the components it isn't given", async () => {
     await expectShipped('import { Tooltip } from "./react.js"; export const app = Tooltip;', {
