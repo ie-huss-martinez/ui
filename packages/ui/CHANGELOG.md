@@ -1,5 +1,57 @@
 # @hussmartinez/ui
 
+## 0.11.0
+
+### Minor Changes
+
+- [#76](https://github.com/ie-huss-martinez/ui/pull/76) [`ff6f7cd`](https://github.com/ie-huss-martinez/ui/commit/ff6f7cdf1753d8f0dc666171a2b79588afa8ddcc) Thanks [@hussmartinez](https://github.com/hussmartinez)! - Add the `hm-text` class, for text outside components. Put it on your editor's or application's root element, and the text inside takes ui's font family, size, weight, letter spacing, line height and text colour from the tokens, instead of the page's. It's opt-in and in the lowest-priority layer, so your own CSS, and an SDK's rules in `hm.sdk`, still win.
+  
+  ```html
+  <div class="hm-text my-editor">…</div>
+  ```
+
+- [#81](https://github.com/ie-huss-martinez/ui/pull/81) [`0ebdee8`](https://github.com/ie-huss-martinez/ui/commit/0ebdee882da702a7a708599cdc06835bc066b36d) Thanks [@hussmartinez](https://github.com/hussmartinez)! - Add `TimelineClips`, the clip track of `Timeline`: a horizontal listbox with one Tab stop, where each clip is as wide as its length at the timeline's zoom.
+  
+  - Clips are data: `{ key, length, label, content, attributes }`. Give each a `label` with its place and range, such as "Clip 2 of 5, 0:04.00 to 0:09.20".
+  - ← and → move between clips and select, and Home and End go to the first and last, following the reading direction. With `selectionMode="multiple"`, Shift extends the selection, Ctrl or ⌘ moves without changing it, Space adds or removes the focused clip, and Ctrl or ⌘+A selects all; clicks take the same modifiers.
+  - The selection is yours, through `selectedKeys` and `onSelectedKeysChange`. A ref gives `focusClip(key)`.
+  - The clips' boundaries are snap targets for the playhead and for `useTimelineScale().snap`.
+  - When the focused clip is removed, focus goes to the clip that took its place, or the one before, or the playhead.
+  
+  `Timeline` and `TimelinePlayhead` now measure and size themselves before the first paint, so there's no unsized frame.
+  
+  It adds seven component tokens, `--hm-timeline-clip-*`. Moving and trimming clips come in a later release.
+
+- [#83](https://github.com/ie-huss-martinez/ui/pull/83) [`07155cc`](https://github.com/ie-huss-martinez/ui/commit/07155cc0687d7b30692bc4f4b286ad9d488c9f66) Thanks [@hussmartinez](https://github.com/hussmartinez)! - `TimelineClips` can now move and trim clips. It reports each edit, and you render the result.
+  
+  - `onMove(keys, direction)`: Alt+← and Alt+→ (Option on macOS) move the selected clips, or the focused one when it isn't selected, earlier or later. Focus stays with the clip.
+  - `onTrim(key, edge, delta)`: Alt+`[` and Alt+`]` shorten a clip at its start or end by `trimStep`, and with Shift lengthen it. Dragging a clip's edge does the same: it snaps to the playhead and the clips' boundaries unless Alt is held, stops at `trimLimits`, shows the new length as it goes, and reports once on release. Escape cancels it.
+  - `onTrimToPlayhead(key, edge)`: `[` and `]` set a clip's start or end to the playhead.
+  
+  **Alt+← and Alt+→ are now always taken while focus is on a clip,** with or without `onMove`, so the browser never goes back or forward instead.
+  
+  Also render buttons that move and trim the selected clips, with `aria-keyshortcuts`, and offer zoom: the keys and the drag are additions, not the only way.
+  
+  It adds the component token `--hm-timeline-clip-edge-size`.
+
+- [#80](https://github.com/ie-huss-martinez/ui/pull/80) [`65d3316`](https://github.com/ie-huss-martinez/ui/commit/65d3316d3de5ad0c182ac7e26840cc9d4162e6f6) Thanks [@hussmartinez](https://github.com/hussmartinez)! - Add the first part of a shared timeline for editors of audio and video: `Timeline`, `TimelineLayer`, `TimelinePlayhead` and `useTimelineScale`. The clip track comes in a later release.
+  
+  - `Timeline` is a scrolling track over whole units, such as frames or samples, as wide as `length` at the current `zoom`. A zoom of 1 fits it to the width, and `onMaxZoomChange` says where zooming stops.
+  - `TimelinePlayhead` is a slider over the units, with a line at its `position`. A press on the track moves it, snapping to the timeline's `snapTargets` within 8 px unless Alt is held, and `following` keeps it in view.
+  - `TimelineLayer` holds your own drawing, such as a waveform. `useTimelineScale()` gives it `toPixels`, `unitAt`, `snap` and `visibleRange`, the same mapping the parts use.
+  - It formats no time and has no text of its own: pass `label`s and `formatValue`.
+  
+  ```tsx
+  <Timeline label={t("timeline.label")} length={frames} zoom={zoom} onMaxZoomChange={setMaxZoom}>
+    <TimelineLayer>
+      <Waveform />
+    </TimelineLayer>
+    <TimelinePlayhead label={t("timeline.playhead")} position={playhead} onPositionChange={seek} formatValue={formatTime} />
+  </Timeline>
+  ```
+  
+  It adds four component tokens, `--hm-timeline-*`.
+
 ## 0.10.0
 
 ### Minor Changes
