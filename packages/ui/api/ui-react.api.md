@@ -38,6 +38,9 @@ export interface AnnouncerProviderProps {
 }
 
 // @public
+export function ArrowIcon(props: IconProps): ReactElement;
+
+// @public
 export const Button: ForwardRefExoticComponent<ButtonProps & RefAttributes<HTMLButtonElement>>;
 
 // @public
@@ -114,6 +117,12 @@ export interface DialogProps extends Omit<DialogHTMLAttributes<HTMLDialogElement
 export function DownloadIcon(props: IconProps): ReactElement;
 
 // @public
+export function DuplicateIcon(props: IconProps): ReactElement;
+
+// @public
+export function EllipseIcon(props: IconProps): ReactElement;
+
+// @public
 export function FadeInIcon(props: IconProps): ReactElement;
 
 // @public
@@ -180,6 +189,9 @@ export function FlipHorizontalIcon(props: IconProps): ReactElement;
 export function FlipVerticalIcon(props: IconProps): ReactElement;
 
 // @public
+export function HiddenIcon(props: IconProps): ReactElement;
+
+// @public
 export function HighlighterIcon(props: IconProps): ReactElement;
 
 // @public
@@ -196,7 +208,7 @@ export interface IconButtonProps extends Omit<ButtonProps, "startIcon" | "endIco
 export type IconComponent = (props: IconProps) => ReactElement;
 
 // @public
-export type IconName = "add" | "check" | "chevron-down" | "chevron-left" | "chevron-right" | "close" | "crop" | "delete" | "download" | "fade-in" | "fade-out" | "fit" | "flip-horizontal" | "flip-vertical" | "highlighter" | "info" | "loop" | "menu" | "more" | "muted" | "open" | "page-grid" | "page-single" | "pan" | "pause" | "pen" | "play" | "redo" | "remove" | "rotate-left" | "rotate-right" | "search" | "select" | "skip-back" | "skip-forward" | "snap" | "split" | "stop" | "trim-end" | "trim-start" | "undo" | "upload" | "volume" | "warning" | "zoom-in" | "zoom-out";
+export type IconName = "add" | "arrow" | "check" | "chevron-down" | "chevron-left" | "chevron-right" | "close" | "crop" | "delete" | "download" | "duplicate" | "ellipse" | "fade-in" | "fade-out" | "fit" | "flip-horizontal" | "flip-vertical" | "hidden" | "highlighter" | "info" | "layers" | "loop" | "menu" | "more" | "move-down" | "move-up" | "muted" | "open" | "page-add" | "page-grid" | "page-single" | "pan" | "pause" | "pen" | "play" | "rectangle" | "redact" | "redo" | "remove" | "rotate-left" | "rotate-right" | "search" | "select" | "skip-back" | "skip-forward" | "snap" | "split" | "stop" | "text" | "trim-end" | "trim-start" | "undo" | "upload" | "visible" | "volume" | "warning" | "zoom-in" | "zoom-out";
 
 // @public
 export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "children" | "dangerouslySetInnerHTML" | "ref"> {
@@ -207,6 +219,9 @@ export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "children" | "d
 export function InfoIcon(props: IconProps): ReactElement;
 
 // @public
+export function LayersIcon(props: IconProps): ReactElement;
+
+// @public
 export function LoopIcon(props: IconProps): ReactElement;
 
 // @public
@@ -214,6 +229,12 @@ export function MenuIcon(props: IconProps): ReactElement;
 
 // @public
 export function MoreIcon(props: IconProps): ReactElement;
+
+// @public
+export function MoveDownIcon(props: IconProps): ReactElement;
+
+// @public
+export function MoveUpIcon(props: IconProps): ReactElement;
 
 // @public
 export function MutedIcon(props: IconProps): ReactElement;
@@ -238,6 +259,9 @@ export interface NumberFieldProps extends Omit<InputHTMLAttributes<HTMLInputElem
 
 // @public
 export function OpenIcon(props: IconProps): ReactElement;
+
+// @public
+export function PageAddIcon(props: IconProps): ReactElement;
 
 // @public
 export function PageGridIcon(props: IconProps): ReactElement;
@@ -270,6 +294,12 @@ export interface ProgressBarProps extends Omit<ProgressHTMLAttributes<HTMLProgre
     readonly value?: number | undefined;
     readonly valueText?: string | undefined;
 }
+
+// @public
+export function RectangleIcon(props: IconProps): ReactElement;
+
+// @public
+export function RedactIcon(props: IconProps): ReactElement;
 
 // @public
 export function RedoIcon(props: IconProps): ReactElement;
@@ -375,6 +405,9 @@ export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElemen
 
 // @public
 export type TextFieldType = "text" | "search" | "email" | "url" | "tel" | "password";
+
+// @public
+export function TextIcon(props: IconProps): ReactElement;
 
 // @public
 export interface Theme {
@@ -548,6 +581,9 @@ export function usePlatform(): Platform;
 
 // @public
 export function useUiMessages(): UiMessages;
+
+// @public
+export function VisibleIcon(props: IconProps): ReactElement;
 
 // @public
 export const VisuallyHidden: ForwardRefExoticComponent<VisuallyHiddenProps & RefAttributes<HTMLElement>>;

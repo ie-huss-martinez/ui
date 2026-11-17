@@ -86,7 +86,7 @@ export interface ExtendingThemeInput extends ThemeInputBase {
 }
 
 // @public
-export type IconName = "add" | "check" | "chevron-down" | "chevron-left" | "chevron-right" | "close" | "crop" | "delete" | "download" | "fade-in" | "fade-out" | "fit" | "flip-horizontal" | "flip-vertical" | "highlighter" | "info" | "loop" | "menu" | "more" | "muted" | "open" | "page-grid" | "page-single" | "pan" | "pause" | "pen" | "play" | "redo" | "remove" | "rotate-left" | "rotate-right" | "search" | "select" | "skip-back" | "skip-forward" | "snap" | "split" | "stop" | "trim-end" | "trim-start" | "undo" | "upload" | "volume" | "warning" | "zoom-in" | "zoom-out";
+export type IconName = "add" | "arrow" | "check" | "chevron-down" | "chevron-left" | "chevron-right" | "close" | "crop" | "delete" | "download" | "duplicate" | "ellipse" | "fade-in" | "fade-out" | "fit" | "flip-horizontal" | "flip-vertical" | "hidden" | "highlighter" | "info" | "layers" | "loop" | "menu" | "more" | "move-down" | "move-up" | "muted" | "open" | "page-add" | "page-grid" | "page-single" | "pan" | "pause" | "pen" | "play" | "rectangle" | "redact" | "redo" | "remove" | "rotate-left" | "rotate-right" | "search" | "select" | "skip-back" | "skip-forward" | "snap" | "split" | "stop" | "text" | "trim-end" | "trim-start" | "undo" | "upload" | "visible" | "volume" | "warning" | "zoom-in" | "zoom-out";
 
 // @public
 export const lightTheme: Theme;
