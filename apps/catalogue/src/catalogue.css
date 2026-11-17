@@ -3,12 +3,8 @@
  * library: hm- names and token values only, so every theme applies to them.
  */
 .hm-catalogue-canvas {
+  /* Its type and text colour come from ui's hm-text class, in preview.tsx. */
   background: var(--hm-color-bg);
-  color: var(--hm-color-text);
-  font-family: var(--hm-font-family);
-  font-size: var(--hm-font-size-body);
-  letter-spacing: var(--hm-letter-spacing);
-  line-height: var(--hm-line-height-body);
   padding: var(--hm-inset-loose);
 }
 

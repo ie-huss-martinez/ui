@@ -69,6 +69,16 @@ With `styles.css` loaded, the built-in light and dark themes follow the operatin
 
 `data-hm-theme` takes `light`, `dark` or `system`, and `data-hm-density` takes `comfortable` (the default) or `compact`. On touch screens, targets are 44 px in either density. A themed subtree also sets its text colour to `--hm-color-text`, in the lowest-priority layer, so your own CSS still wins. Backgrounds are left to you: paint them with `--hm-color-bg` or `--hm-color-surface`.
 
+### Text outside components
+
+Components set their own font and colour. Text you render yourself, such as an editor's own labels, values and status lines, takes the page's font unless you say otherwise. Put **`hm-text`** on its root, usually your editor's or application's outermost element:
+
+```html
+<div class="hm-text my-editor">…</div>
+```
+
+It sets `font-family`, `font-size`, `font-weight`, `letter-spacing`, `line-height` and `color` from the tokens (`--hm-font-family`, `--hm-font-size-body`, `--hm-font-weight-regular`, `--hm-letter-spacing`, `--hm-line-height-body`, `--hm-color-text`), and everything inside inherits them. It's opt-in, so ui never restyles a page that didn't ask, and it's in the lowest-priority layer, so an SDK's rules in `hm.sdk` and your own CSS still win. It follows `data-hm-theme` and `data-hm-density` like everything else.
+
 ### Custom themes
 
 `createTheme` validates a set of token values. Extend a built-in theme and change only what you need, or set every semantic token to replace the look entirely.
