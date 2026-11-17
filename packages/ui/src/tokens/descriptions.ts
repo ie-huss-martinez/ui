@@ -332,4 +332,5 @@ export const tokenDescriptions: Readonly<Record<TokenName, string>> = {
   "timeline-clip-selected-bg": "Background of a selected clip.",
   "timeline-clip-selected-border-color":
     "Border of a selected clip. It needs 3:1 contrast with the track.",
+  "timeline-clip-edge-size": "Width of the part of a clip's edge that a pointer drags to trim it.",
 };

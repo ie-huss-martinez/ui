@@ -692,6 +692,7 @@ export type ComponentTokenName =
   | "timeline-clip-padding-x"
   | "timeline-clip-selected-bg"
   | "timeline-clip-selected-border-color"
+  | "timeline-clip-edge-size"
   | "color-field-gap"
   | "color-field-swatch-size"
   | "color-field-swatch-radius"
@@ -856,6 +857,7 @@ const component = {
   "timeline-clip-padding-x": { fallback: "gap-tight" },
   "timeline-clip-selected-bg": { fallback: "color-accent-subtle" },
   "timeline-clip-selected-border-color": { fallback: "color-accent" },
+  "timeline-clip-edge-size": { fallback: "gap-normal" },
   "color-field-gap": { fallback: "gap-tight" },
   "color-field-swatch-size": { fallback: "control-height-small" },
   "color-field-swatch-radius": { fallback: "radius-control" },

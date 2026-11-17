@@ -530,6 +530,9 @@ export interface TimelineClip {
 }
 
 // @public
+export type TimelineClipEdge = "start" | "end";
+
+// @public
 export const TimelineClips: ForwardRefExoticComponent<TimelineClipsProps & RefAttributes<TimelineClipsHandle>>;
 
 // @public
@@ -544,9 +547,17 @@ export type TimelineClipsPart = "root" | "clip" | "content";
 export interface TimelineClipsProps extends StyleProps<TimelineClipsPart> {
     readonly clips: readonly TimelineClip[];
     readonly label: string;
+    readonly onMove?: ((keys: readonly string[], direction: -1 | 1) => void) | undefined;
     readonly onSelectedKeysChange: (keys: readonly string[]) => void;
+    readonly onTrim?: ((key: string, edge: TimelineClipEdge, delta: number) => void) | undefined;
+    readonly onTrimToPlayhead?: ((key: string, edge: TimelineClipEdge) => void) | undefined;
     readonly selectedKeys: readonly string[];
     readonly selectionMode?: "single" | "multiple" | undefined;
+    readonly trimLimits?: ((key: string, edge: TimelineClipEdge) => {
+        readonly min?: number;
+        readonly max?: number;
+    }) | undefined;
+    readonly trimStep?: number | undefined;
 }
 
 // @public

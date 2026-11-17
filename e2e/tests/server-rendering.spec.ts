@@ -215,12 +215,47 @@ for (const app of apps) {
       );
       await page.keyboard.press("Shift+ArrowRight");
       await expect(clipsList.getByRole("option", { selected: true })).toHaveCount(2);
-      // Each clip is as wide as its length: 150 frames to 60.
+      // Alt with an arrow moves the selected clips, and its default is
+      // prevented at the track's end too. That, not the URL, is what's
+      // checked: automation has no Back shortcut to prevent (docs/adr/0011).
+      await page.evaluate(() => {
+        const seen: boolean[] = [];
+        (window as unknown as { hmClipKeys: boolean[] }).hmClipKeys = seen;
+        window.addEventListener("keydown", (event) => {
+          if (event.key.startsWith("Arrow")) {
+            seen.push(event.defaultPrevented);
+          }
+        });
+      });
+      await page.keyboard.press("Alt+ArrowLeft");
+      await expect(clipsList.getByRole("option").first()).toHaveAccessibleName("Clip 1 of 3, Talk");
+      await expect(clipsList.getByRole("option", { name: "Clip 2 of 3, Outro" })).toBeFocused();
+      await page.keyboard.press("Alt+ArrowLeft");
+      expect(
+        await page.evaluate(() => (window as unknown as { hmClipKeys: boolean[] }).hmClipKeys),
+      ).toEqual([true, true]);
+      // The buttons move them back without the keys.
+      await page.getByRole("button", { name: "Move clips later" }).click();
+      await expect(clipsList.getByRole("option").first()).toHaveAccessibleName(
+        "Clip 1 of 3, Intro",
+      );
+      // Alt with a bracket shortens the focused clip at that edge, by a frame.
+      await clipsList.getByRole("option", { name: "Clip 2 of 3, Talk" }).focus();
+      const wide = await clipsList.getByRole("option", { name: "Clip 2 of 3, Talk" }).boundingBox();
+      for (let press = 0; press < 30; press++) {
+        await page.keyboard.press("Alt+BracketRight");
+      }
+      const narrow = await clipsList
+        .getByRole("option", { name: "Clip 2 of 3, Talk" })
+        .boundingBox();
+      expect(narrow?.width ?? 0).toBeLessThan((wide?.width ?? 0) * 0.95);
+
+      // Each clip is as wide as its length: now 120 frames to 60.
       const talk = await clipsList.getByRole("option", { name: "Clip 2 of 3, Talk" }).boundingBox();
       const outro = await clipsList
         .getByRole("option", { name: "Clip 3 of 3, Outro" })
         .boundingBox();
-      expect((talk?.width ?? 0) / (outro?.width ?? 1)).toBeCloseTo(2.5, 1);
+      expect((talk?.width ?? 0) / (outro?.width ?? 1)).toBeCloseTo(2, 1);
 
       // The segmented control selects with the arrow keys.
       await page.getByRole("radio", { name: "Single" }).focus();

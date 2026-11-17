@@ -96,28 +96,62 @@ function Layers() {
 function Clock() {
   const [frame, setFrame] = useState(60);
   const [selected, setSelected] = useState<readonly string[]>(["intro"]);
+  const [clips, setClips] = useState([
+    { key: "intro", name: "Intro", length: 90 },
+    { key: "talk", name: "Talk", length: 150 },
+    { key: "outro", name: "Outro", length: 60 },
+  ]);
+  // The track reports a move; the application owns the order.
+  const move = (keys: readonly string[], direction: -1 | 1) =>
+    setClips((order) => {
+      const moving = order.filter((clip) => keys.includes(clip.key));
+      const rest = order.filter((clip) => !keys.includes(clip.key));
+      const at = order.findIndex((clip) => clip.key === keys[0]);
+      const before = order.slice(0, at).filter((clip) => !keys.includes(clip.key)).length;
+      const to = Math.min(Math.max(before + direction, 0), rest.length);
+      return [...rest.slice(0, to), ...moving, ...rest.slice(to)];
+    });
+  const trim = (key: string, delta: number) =>
+    setClips((all) =>
+      all.map((clip) =>
+        clip.key === key ? { ...clip, length: Math.max(1, clip.length + delta) } : clip,
+      ),
+    );
+  const length = clips.reduce((sum, clip) => sum + clip.length, 0);
   return (
-    <Timeline label="Timeline" length={300}>
-      <TimelineLayer />
-      <TimelineClips
-        label="Clips"
-        selectionMode="multiple"
-        clips={[
-          { key: "intro", length: 90, label: "Clip 1 of 3, Intro", content: "Intro" },
-          { key: "talk", length: 150, label: "Clip 2 of 3, Talk", content: "Talk" },
-          { key: "outro", length: 60, label: "Clip 3 of 3, Outro", content: "Outro" },
-        ]}
-        selectedKeys={selected}
-        onSelectedKeysChange={setSelected}
-      />
-      <TimelinePlayhead
-        label="Playhead"
-        position={frame}
-        onPositionChange={setFrame}
-        largeStep={30}
-        formatValue={(position) => `${(position / 30).toFixed(1)} seconds`}
-      />
-    </Timeline>
+    <div>
+      <Timeline label="Timeline" length={length}>
+        <TimelineLayer />
+        <TimelineClips
+          label="Clips"
+          selectionMode="multiple"
+          clips={clips.map((clip, index) => ({
+            key: clip.key,
+            length: clip.length,
+            label: `Clip ${index + 1} of ${clips.length}, ${clip.name}`,
+            content: clip.name,
+          }))}
+          selectedKeys={selected}
+          onSelectedKeysChange={setSelected}
+          onMove={move}
+          onTrim={(key, _edge, delta) => trim(key, delta)}
+        />
+        <TimelinePlayhead
+          label="Playhead"
+          position={Math.min(frame, length)}
+          onPositionChange={setFrame}
+          largeStep={30}
+          formatValue={(position) => `${(position / 30).toFixed(1)} seconds`}
+        />
+      </Timeline>
+      {/* The path that always works: buttons, with the keys named on them. */}
+      <Button aria-keyshortcuts="Alt+ArrowLeft" onClick={() => move(selected, -1)}>
+        Move clips earlier
+      </Button>
+      <Button aria-keyshortcuts="Alt+ArrowRight" onClick={() => move(selected, 1)}>
+        Move clips later
+      </Button>
+    </div>
   );
 }
 
