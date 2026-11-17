@@ -150,12 +150,30 @@ for (const app of apps) {
       expect(strayDrop).toBe(true);
 
       // The reorderable list: one Tab stop, arrows select, and Alt with an
-      // arrow moves the row without scrolling the page or leaving it.
+      // arrow moves the row. Each key's default is prevented, and the page
+      // doesn't scroll: it's made short enough to scroll first, or that
+      // couldn't fail. Nothing here shows that Alt with an arrow can't
+      // navigate: that shortcut belongs to the browser's own interface, which
+      // automation doesn't have, so the page stays put whatever it does
+      // (docs/adr/0011).
       const layers = page.getByRole("grid", { name: "Layers" });
       await expect(layers.locator('[tabindex="0"]')).toHaveCount(1);
+      await page.setViewportSize({ width: 1280, height: 320 });
+      await page.evaluate(() => {
+        const seen: boolean[] = [];
+        (window as unknown as { hmPrevented: boolean[] }).hmPrevented = seen;
+        // On the window, so it runs after the list has handled the key.
+        window.addEventListener("keydown", (event) => seen.push(event.defaultPrevented));
+      });
       await layers.getByRole("gridcell", { name: "Photo", exact: true }).focus();
-      const url = page.url();
-      await page.evaluate(() => window.scrollTo(0, 0));
+      const scroll = () =>
+        page.evaluate(() => ({
+          y: window.scrollY,
+          room: document.documentElement.scrollHeight - window.innerHeight - window.scrollY,
+        }));
+      const before = await scroll();
+      // Room to scroll further down, which an untaken ArrowDown would use.
+      expect(before.room).toBeGreaterThan(100);
       await page.keyboard.press("Alt+ArrowUp");
       await expect(layers.getByRole("row").first()).toHaveAttribute("data-hm-id", "Photo");
       await expect(layers.getByRole("gridcell", { name: "Photo", exact: true })).toBeFocused();
@@ -167,8 +185,13 @@ for (const app of apps) {
         "data-hm-id",
         "Title",
       );
-      expect(await page.evaluate(() => window.scrollY)).toBe(0);
-      expect(page.url()).toBe(url);
+      expect((await scroll()).y).toBe(before.y);
+      // One entry per key, with Alt's own keydown before each Alt combination.
+      const prevented = await page.evaluate(
+        () => (window as unknown as { hmPrevented: boolean[] }).hmPrevented,
+      );
+      expect(prevented).toEqual([false, true, false, true, true]);
+      await page.setViewportSize({ width: 1280, height: 720 });
       // The buttons do the same without the keys.
       await page.getByRole("button", { name: "Move layer down" }).click();
       await expect(layers.getByRole("row").last()).toHaveAttribute("data-hm-id", "Title");
