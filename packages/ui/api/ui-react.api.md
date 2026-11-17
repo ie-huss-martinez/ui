@@ -518,6 +518,71 @@ export interface ThemeProviderSingleProps extends ThemeProviderBaseProps {
 }
 
 // @public
+export const Timeline: ForwardRefExoticComponent<TimelineProps & RefAttributes<HTMLElement>>;
+
+// @public
+export const TimelineLayer: ForwardRefExoticComponent<TimelineLayerProps & RefAttributes<HTMLDivElement>>;
+
+// @public
+export interface TimelineLayerProps extends HTMLAttributes<HTMLDivElement> {
+    readonly children?: ReactNode;
+}
+
+// @public
+export type TimelinePart = "root" | "viewport" | "track";
+
+// @public
+export const TimelinePlayhead: ForwardRefExoticComponent<TimelinePlayheadProps & RefAttributes<HTMLInputElement>>;
+
+// @public
+export type TimelinePlayheadPart = "root" | "slider" | "line";
+
+// @public
+export interface TimelinePlayheadProps extends StyleProps<TimelinePlayheadPart> {
+    readonly following?: boolean | undefined;
+    readonly formatValue?: ((position: number) => string) | undefined;
+    readonly label: string;
+    readonly largeStep?: number | undefined;
+    readonly onPositionChange: (position: number) => void;
+    readonly position: number;
+    readonly seekOnPress?: boolean | undefined;
+    readonly step?: number | undefined;
+}
+
+// @public
+export interface TimelineProps extends Omit<HTMLAttributes<HTMLElement>, "className">, StyleProps<TimelinePart> {
+    readonly children?: ReactNode;
+    readonly label: string;
+    readonly length: number;
+    readonly maxPixelsPerUnit?: number | undefined;
+    readonly onMaxZoomChange?: ((maxZoom: number) => void) | undefined;
+    readonly onVisibleRangeChange?: ((range: TimelineRange) => void) | undefined;
+    readonly snapping?: boolean | undefined;
+    readonly snapTargets?: readonly number[] | undefined;
+    readonly zoom?: number | undefined;
+}
+
+// @public
+export interface TimelineRange {
+    // (undocumented)
+    readonly end: number;
+    // (undocumented)
+    readonly start: number;
+}
+
+// @public
+export interface TimelineScale {
+    readonly length: number;
+    readonly pixelsPerUnit: number;
+    readonly snap: (unit: number) => number;
+    readonly toPixels: (unit: number) => number;
+    readonly unitAt: (clientX: number, options?: {
+        readonly snap?: boolean;
+    }) => number;
+    readonly visibleRange: () => TimelineRange;
+}
+
+// @public
 export const ToggleButton: ForwardRefExoticComponent<ToggleButtonProps & RefAttributes<HTMLButtonElement>>;
 
 // @public
@@ -643,6 +708,9 @@ export function useAnnounce(): Announce;
 
 // @public
 export function usePlatform(): Platform;
+
+// @public
+export function useTimelineScale(): TimelineScale;
 
 // @public
 export function useUiMessages(): UiMessages;

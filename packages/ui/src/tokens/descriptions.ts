@@ -320,4 +320,8 @@ export const tokenDescriptions: Readonly<Record<TokenName, string>> = {
     "Border of a colour field's preview and swatches. It needs 3:1 contrast with the surface.",
   "color-field-swatch-checked-border-color":
     "Ring of the checked swatch. It needs 3:1 contrast with the surface.",
+  "timeline-track-bg": "Background of a timeline's track.",
+  "timeline-track-radius": "Corner radius of a timeline's track.",
+  "timeline-lane-height": "Least height of a timeline's lane, where its layers and clips are.",
+  "timeline-playhead-color": "Line of a timeline's playhead. It needs 3:1 contrast with the track.",
 };

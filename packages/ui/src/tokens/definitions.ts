@@ -681,6 +681,10 @@ export type ComponentTokenName =
   | "reorderable-list-row-bg-hover"
   | "reorderable-list-row-selected-bg"
   | "reorderable-list-row-selected-border-color"
+  | "timeline-track-bg"
+  | "timeline-track-radius"
+  | "timeline-lane-height"
+  | "timeline-playhead-color"
   | "color-field-gap"
   | "color-field-swatch-size"
   | "color-field-swatch-radius"
@@ -834,6 +838,10 @@ const component = {
   "reorderable-list-row-bg-hover": { fallback: "color-control-hover" },
   "reorderable-list-row-selected-bg": { fallback: "color-accent-subtle" },
   "reorderable-list-row-selected-border-color": { fallback: "color-accent" },
+  "timeline-track-bg": { fallback: "color-surface-sunken" },
+  "timeline-track-radius": { fallback: "radius-control" },
+  "timeline-lane-height": { fallback: "control-height" },
+  "timeline-playhead-color": { fallback: "color-accent" },
   "color-field-gap": { fallback: "gap-tight" },
   "color-field-swatch-size": { fallback: "control-height-small" },
   "color-field-swatch-radius": { fallback: "radius-control" },

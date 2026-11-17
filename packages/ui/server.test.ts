@@ -130,6 +130,21 @@ describe("the built package on a server", () => {
         children: createElement(component("IconButton"), { label: "Rotate", icon }),
       },
       ReorderableListItem: { id: "photo", label: "Photo", children: "Photo" },
+      Timeline: {
+        label: "Timeline",
+        length: 300,
+        children: [
+          createElement(component("TimelineLayer"), { key: "layer" }, "Layer"),
+          createElement(component("TimelinePlayhead"), {
+            key: "playhead",
+            label: "Playhead",
+            position: 30,
+            onPositionChange: noop,
+          }),
+        ],
+      },
+      TimelineLayer: { children: "Layer" },
+      TimelinePlayhead: { label: "Playhead", position: 0, onPositionChange: noop },
       VisuallyHidden: { children: "Hidden" },
       Toolbar: { label: "Tools", children: createElement(component("ToolbarSeparator")) },
       ToolbarGroup: { label: "Group" },

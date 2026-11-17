@@ -261,6 +261,10 @@ Fine-grained overrides for one component. `ui` never declares them: each compone
 | `--hm-reorderable-list-row-bg-hover` | `--hm-color-control-hover` | Background of a row under the pointer. |
 | `--hm-reorderable-list-row-selected-bg` | `--hm-color-accent-subtle` | Background of the selected row. |
 | `--hm-reorderable-list-row-selected-border-color` | `--hm-color-accent` | Border of the selected row. It needs 3:1 contrast with the surface. |
+| `--hm-timeline-track-bg` | `--hm-color-surface-sunken` | Background of a timeline's track. |
+| `--hm-timeline-track-radius` | `--hm-radius-control` | Corner radius of a timeline's track. |
+| `--hm-timeline-lane-height` | `--hm-control-height` | Least height of a timeline's lane, where its layers and clips are. |
+| `--hm-timeline-playhead-color` | `--hm-color-accent` | Line of a timeline's playhead. It needs 3:1 contrast with the track. |
 | `--hm-color-field-gap` | `--hm-gap-tight` | Space between a colour field's preview, input and swatches. |
 | `--hm-color-field-swatch-size` | `--hm-control-height-small` | Width and height of a colour field's swatch. |
 | `--hm-color-field-swatch-radius` | `--hm-radius-control` | Corner radius of a colour field's preview and swatches. |

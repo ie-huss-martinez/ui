@@ -19,6 +19,9 @@ import {
   TextArea,
   TextField,
   ThemeProvider,
+  Timeline,
+  TimelineLayer,
+  TimelinePlayhead,
   ToggleButton,
   Toolbar,
   ToolbarGroup,
@@ -97,6 +100,23 @@ function Layers() {
   );
 }
 
+/** A timeline of 300 frames at 30 a second, with the playhead's time as text. */
+function Clock() {
+  const [frame, setFrame] = useState(60);
+  return (
+    <Timeline label="Timeline" length={300}>
+      <TimelineLayer />
+      <TimelinePlayhead
+        label="Playhead"
+        position={frame}
+        onPositionChange={setFrame}
+        largeStep={30}
+        formatValue={(position) => `${(position / 30).toFixed(1)} seconds`}
+      />
+    </Timeline>
+  );
+}
+
 function Controls() {
   const announce = useAnnounce();
   const [open, setOpen] = useState(false);
@@ -116,6 +136,7 @@ function Controls() {
         ]}
       />
       <Layers />
+      <Clock />
       <FileDropZone accept=".pdf,application/pdf" onFiles={([file]) => setReceived(file?.name)}>
         {/* The name comes from the file: rendered as text, never as markup. */}
         {received ? <p data-testid="received">Received {received}</p> : null}
