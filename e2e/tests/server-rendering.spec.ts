@@ -52,6 +52,7 @@ for (const app of apps) {
         'class="hm-text-field hm-text-area"',
         'class="hm-color-field"',
         'role="grid"',
+        'class="hm-timeline"',
         'aria-pressed="false"',
         'class="hm-spinner"',
         "<progress",
@@ -195,6 +196,21 @@ for (const app of apps) {
       // The buttons do the same without the keys.
       await page.getByRole("button", { name: "Move layer down" }).click();
       await expect(layers.getByRole("row").last()).toHaveAttribute("data-hm-id", "Title");
+
+      // The timeline's playhead moves with the slider's keys and with a
+      // press on the track, and reads its time as text.
+      const playhead = page.getByRole("slider", { name: "Playhead" });
+      await expect(playhead).toHaveAttribute("aria-valuetext", "2.0 seconds");
+      await playhead.focus();
+      await page.keyboard.press("PageUp");
+      await expect(playhead).toHaveAttribute("aria-valuetext", "3.0 seconds");
+      const trackBox = await page.locator(".hm-timeline-track").boundingBox();
+      if (!trackBox) {
+        throw new Error("the timeline's track has no box");
+      }
+      // The middle of the track is the middle of the timeline.
+      await page.mouse.click(trackBox.x + trackBox.width / 2, trackBox.y + trackBox.height - 4);
+      await expect(playhead).toHaveValue("150");
 
       // The segmented control selects with the arrow keys.
       await page.getByRole("radio", { name: "Single" }).focus();

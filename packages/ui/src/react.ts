@@ -77,6 +77,19 @@ export { TextArea } from "./components/text-area/TextArea.js";
 export type { TextFieldProps, TextFieldType } from "./components/text-field/TextField.js";
 export { TextField } from "./components/text-field/TextField.js";
 export type {
+  TimelineLayerProps,
+  TimelinePart,
+  TimelineProps,
+  TimelineRange,
+  TimelineScale,
+} from "./components/timeline/Timeline.js";
+export { Timeline, TimelineLayer, useTimelineScale } from "./components/timeline/Timeline.js";
+export type {
+  TimelinePlayheadPart,
+  TimelinePlayheadProps,
+} from "./components/timeline/TimelinePlayhead.js";
+export { TimelinePlayhead } from "./components/timeline/TimelinePlayhead.js";
+export type {
   ToggleButtonBaseProps,
   ToggleButtonIconProps,
   ToggleButtonProps,

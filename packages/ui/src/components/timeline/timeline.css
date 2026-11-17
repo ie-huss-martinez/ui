@@ -1,0 +1,89 @@
+@layer hm.components {
+  /*
+   * Layout: kept with unstyled. The track is as wide as the timeline's
+   * length at the current zoom; Timeline.tsx sets its inline size. Its two
+   * rows are the playhead's slider, then the lane the layers and clips
+   * share, stacked in the order written.
+   */
+  .hm-timeline {
+    box-sizing: border-box;
+    display: block;
+    min-inline-size: 0;
+  }
+
+  /*
+   * Half a thumb of room at each end, so the slider's thumb can sit on the
+   * first and last units without being clipped.
+   */
+  .hm-timeline-viewport {
+    box-sizing: border-box;
+    overflow: auto hidden;
+    padding-inline: calc(var(--hm-slider-thumb-size, var(--hm-icon-size)) / 2);
+  }
+
+  .hm-timeline-track {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows:
+      max(var(--hm-slider-thumb-size, var(--hm-icon-size)), var(--hm-target-size))
+      minmax(var(--hm-timeline-lane-height, var(--hm-control-height)), auto);
+    isolation: isolate;
+    min-inline-size: 100%;
+    position: relative;
+  }
+
+  .hm-timeline-track > * {
+    grid-column: 1;
+    grid-row: 2;
+    min-inline-size: 0;
+  }
+
+  .hm-timeline-layer {
+    box-sizing: border-box;
+  }
+
+  /* Over both rows, and above the layers; only its slider takes the pointer. */
+  .hm-timeline-playhead {
+    grid-row: 1 / 3;
+    pointer-events: none;
+    position: relative;
+    z-index: var(--hm-z-raised);
+  }
+
+  .hm-timeline-playhead-slider {
+    pointer-events: auto;
+  }
+
+  /* Timeline.tsx sets its inline start; it's centred on that unit. */
+  .hm-timeline-playhead-line {
+    inline-size: 0;
+    inset-block: 0;
+    inset-inline-start: 0;
+    margin-inline-start: calc(var(--hm-focus-ring-width) / -2);
+    position: absolute;
+  }
+
+  /* Visual styles, dropped with unstyled. */
+  /* On the viewport, so it's behind the slider's ends too, and stays put while the track scrolls. */
+  .hm-timeline:not([data-hm-unstyled]) .hm-timeline-viewport {
+    background: var(--hm-timeline-track-bg, var(--hm-color-surface-sunken));
+    border-radius: var(--hm-timeline-track-radius, var(--hm-radius-control));
+  }
+
+  /*
+   * A thumb wider than the track by its own size travels from the first
+   * unit to the last, so its centre is where the line is. It needs the
+   * styled thumb, whose size is the token's.
+   */
+  .hm-timeline-playhead:not([data-hm-unstyled]) .hm-timeline-playhead-slider {
+    inline-size: calc(100% + var(--hm-slider-thumb-size, var(--hm-icon-size)));
+    margin-inline: calc(var(--hm-slider-thumb-size, var(--hm-icon-size)) / -2);
+  }
+
+  /* A border, so forced-colours mode draws it. */
+  .hm-timeline-playhead:not([data-hm-unstyled]) .hm-timeline-playhead-line {
+    border-inline-start: var(--hm-focus-ring-width) solid
+      var(--hm-timeline-playhead-color, var(--hm-color-accent));
+  }
+}

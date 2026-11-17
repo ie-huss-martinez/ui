@@ -2,7 +2,7 @@
 
 - **Status:** Proposed
 - **Date:** 2026-11-17
-- **Amended:** 2026-11-17, with the reviewer's rulings on the four open decisions, and with what the key tests do and don't prove
+- **Amended:** 2026-11-17, with the reviewer's rulings on the four open decisions, and with what the key tests do and don't prove; and again with step 1, as built: see "As built"
 
 ## Context
 
@@ -114,6 +114,18 @@ Each step is one pull request, and the timeline isn't announced as ready until t
 3. **Moving and trimming:** the keys, the edge drag, and snapping.
 
 Then each SDK replaces its own timeline in its own pull request: video-sdk's `VideoTimeline` becomes a thin binding of its session to these parts, and audio-sdk builds its waveform and range selection as layers.
+
+### As built
+
+**Step 1,** the region, the scale and the playhead:
+
+- **The slider is on the track,** as wide as it, so its thumb is the playhead's handle and the line hangs from it. It isn't a separate control above the track, as in `VideoTimeline`. The track has two rows: the slider's, then the lane that layers and clips share. The viewport keeps half a thumb free at each end, so the thumb reaches the first and last units.
+- **`following` is `TimelinePlayhead`'s prop, not `Timeline`'s.** Only the playhead knows its position, and the timeline mustn't render as it moves. The playhead also brings itself back to the middle after a zoom, and starts in view when the first zoom would leave it out.
+- **`onMaxZoomChange(maxZoom)`** replaces the `onZoomRangeChange` sketched above: the least zoom is always 1.
+- **`seekOnPress`** on the playhead turns off moving it with a press on the track, for an SDK whose layer handles presses itself, as audio-sdk's range selection does.
+- **`onVisibleRangeChange`** on the timeline, and `visibleRange()` on the scale, for a layer that draws only what's in view, such as a waveform on a canvas. The range isn't React state, so scrolling renders nothing.
+- **A track is at most eight million pixels wide.** Engines stop laying out boxes somewhere above sixteen million, so the zoom stops before `maxPixelsPerUnit` on a very long timeline.
+- **Sizes are set in effects, not layout effects,** which warn when rendered on a server in React 18. The first paint in a browser shows the track unmeasured, for one frame.
 
 ### Tests
 

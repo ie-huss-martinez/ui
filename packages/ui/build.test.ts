@@ -311,6 +311,18 @@ describe("ReorderableList", () => {
   });
 });
 
+describe("Timeline", () => {
+  it("ships with its playhead's slider, and without the lists and the fields", async () => {
+    await expectShipped(
+      'import { Timeline, TimelineLayer, TimelinePlayhead } from "./react.js"; export const app = [Timeline, TimelineLayer, TimelinePlayhead];',
+      {
+        includes: ["hm-timeline", "hm-slider"],
+        excludes: ["hm-reorderable-list", "hm-number-field", "hm-color-field", "hm-tooltip"],
+      },
+    );
+  });
+});
+
 describe("ColorField", () => {
   it("ships without the other fields", async () => {
     await expectShipped('import { ColorField } from "./react.js"; export const app = ColorField;', {
