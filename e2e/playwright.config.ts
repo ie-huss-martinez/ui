@@ -5,7 +5,8 @@ const ci = Boolean(process.env["CI"]);
 /**
  * End-to-end server-rendering tests (ADR 0007), against production builds of
  * the Next.js and Vite examples. Chromium locally, all three engines in CI,
- * as for the other browser tests (ADR 0015).
+ * as for the other browser tests (ADR 0015), always in the browser test image
+ * (docs/adr/0007).
  */
 export default defineConfig({
   testDir: "tests",

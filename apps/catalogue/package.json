@@ -9,8 +9,10 @@
     "typecheck": "tsc",
     "build": "storybook build --output-dir storybook-static --quiet",
     "test": "vitest run --project unit",
-    "test:browser": "vitest run --project storybook",
-    "test:browser:all": "vitest run --project storybook --mode all-browsers"
+    "test:browser": "hm-in-image vitest run --project storybook",
+    "test:browser:all": "hm-in-image vitest run --project storybook --mode all-browsers",
+    "test:visual": "hm-in-image vitest run --project visual",
+    "test:visual:update": "hm-in-image vitest run --project visual --update"
   },
   "dependencies": {
     "@hussmartinez/ui": "workspace:*",
