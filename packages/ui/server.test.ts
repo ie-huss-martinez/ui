@@ -106,6 +106,19 @@ describe("the built package on a server", () => {
       ToggleButton: { label: "Loop", icon, defaultPressed: true },
       TextField: { label: "File name", defaultValue: "report" },
       TextArea: { label: "Caption", defaultValue: "One\nTwo" },
+      ReorderableList: {
+        label: "Layers",
+        selectedId: "title",
+        children: createElement(
+          component("ReorderableListItem"),
+          {
+            id: "title",
+            label: "Title",
+            controls: [createElement("button", { key: "v", type: "button" }, "Visible")],
+          },
+          "Title",
+        ),
+      },
       ColorField: {
         label: "Fill",
         defaultValue: "#1570ef",
@@ -116,6 +129,7 @@ describe("the built package on a server", () => {
         type: "label",
         children: createElement(component("IconButton"), { label: "Rotate", icon }),
       },
+      ReorderableListItem: { id: "photo", label: "Photo", children: "Photo" },
       VisuallyHidden: { children: "Hidden" },
       Toolbar: { label: "Tools", children: createElement(component("ToolbarSeparator")) },
       ToolbarGroup: { label: "Group" },

@@ -304,6 +304,15 @@ export const tokenDescriptions: Readonly<Record<TokenName, string>> = {
   "text-field-invalid-border-color":
     "Border of a text field marked invalid. It needs 3:1 contrast with the surface.",
   "text-area-padding-y": "Space above and below a text area's text.",
+  "reorderable-list-gap": "Space between a reorderable list's rows, and between a row's cells.",
+  "reorderable-list-row-height": "Height of a reorderable list's row.",
+  "reorderable-list-row-padding-x": "Space at the start and end of a reorderable list's item.",
+  "reorderable-list-row-radius": "Corner radius of a reorderable list's row.",
+  "reorderable-list-row-fg": "Text of a reorderable list's row.",
+  "reorderable-list-row-bg-hover": "Background of a row under the pointer.",
+  "reorderable-list-row-selected-bg": "Background of the selected row.",
+  "reorderable-list-row-selected-border-color":
+    "Border of the selected row. It needs 3:1 contrast with the surface.",
   "color-field-gap": "Space between a colour field's preview, input and swatches.",
   "color-field-swatch-size": "Width and height of a colour field's swatch.",
   "color-field-swatch-radius": "Corner radius of a colour field's preview and swatches.",

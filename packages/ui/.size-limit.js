@@ -29,8 +29,12 @@ export default [
     name: "React entry (./react), with the shared code it loads",
     path: ["dist/react.js", "dist/shared/*.js"],
     brotli: true,
-    // Room for the components to come; ThemeProvider alone is about 1 kB.
-    limit: "15 kB",
+    // 16 kB. It measures 15.9 kB with ReorderableList, which took it over the
+    // 15 kB it started with: the list's keys and focus rules are about
+    // 1.5 kB. A budget is raised by the pull request whose component needs
+    // it, to its measurement rounded up to the next 0.5 kB. Applications
+    // ship only the components they import: see build.test.ts.
+    limit: "16 kB",
   },
   {
     name: "Stylesheet (./styles.css)",

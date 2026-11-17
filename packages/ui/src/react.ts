@@ -53,6 +53,15 @@ export { NumberField } from "./components/number-field/NumberField.js";
 export type { ProgressBarProps } from "./components/progress-bar/ProgressBar.js";
 export { ProgressBar } from "./components/progress-bar/ProgressBar.js";
 export type {
+  ReorderableListItemPart,
+  ReorderableListItemProps,
+  ReorderableListProps,
+} from "./components/reorderable-list/ReorderableList.js";
+export {
+  ReorderableList,
+  ReorderableListItem,
+} from "./components/reorderable-list/ReorderableList.js";
+export type {
   SegmentedControlOption,
   SegmentedControlPart,
   SegmentedControlProps,

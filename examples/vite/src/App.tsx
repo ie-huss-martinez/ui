@@ -5,9 +5,14 @@ import {
   Dialog,
   Field,
   FileDropZone,
+  HiddenIcon,
   IconButton,
+  MoveDownIcon,
+  MoveUpIcon,
   NumberField,
   ProgressBar,
+  ReorderableList,
+  ReorderableListItem,
   SegmentedControl,
   Slider,
   Spinner,
@@ -21,9 +26,76 @@ import {
   Tooltip,
   UndoIcon,
   useAnnounce,
+  VisibleIcon,
   VisuallyHidden,
 } from "@hussmartinez/ui/react";
 import { useEffect, useState } from "react";
+
+/**
+ * A reorderable list as an editor uses it: the list owns no order, and the
+ * buttons under it are the path that always works, with the keys named on
+ * them. The list's own keys are an addition.
+ */
+function Layers() {
+  const [layers, setLayers] = useState(["Title", "Photo", "Background"]);
+  const [selected, setSelected] = useState("Photo");
+  const [hidden, setHidden] = useState<readonly string[]>([]);
+  const index = layers.indexOf(selected);
+  const move = (id: string, toIndex: number) =>
+    setLayers((order) => {
+      const next = order.filter((layer) => layer !== id);
+      next.splice(toIndex, 0, id);
+      return next;
+    });
+  return (
+    <div>
+      <ReorderableList
+        label="Layers"
+        selectedId={selected}
+        onSelectedChange={setSelected}
+        onMove={move}
+      >
+        {layers.map((layer) => (
+          <ReorderableListItem
+            key={layer}
+            id={layer}
+            label={layer}
+            controls={[
+              <ToggleButton
+                key="visible"
+                variant="quiet"
+                label={`Show ${layer}`}
+                icon={hidden.includes(layer) ? <HiddenIcon /> : <VisibleIcon />}
+                pressed={!hidden.includes(layer)}
+                onPressedChange={(visible) =>
+                  setHidden((ids) => (visible ? ids.filter((id) => id !== layer) : [...ids, layer]))
+                }
+              />,
+            ]}
+          >
+            {layer}
+          </ReorderableListItem>
+        ))}
+      </ReorderableList>
+      <IconButton
+        label="Move layer up"
+        icon={<MoveUpIcon />}
+        aria-keyshortcuts="Alt+ArrowUp"
+        disabled={index <= 0}
+        focusableWhenDisabled
+        onClick={() => move(selected, index - 1)}
+      />
+      <IconButton
+        label="Move layer down"
+        icon={<MoveDownIcon />}
+        aria-keyshortcuts="Alt+ArrowDown"
+        disabled={index === layers.length - 1}
+        focusableWhenDisabled
+        onClick={() => move(selected, index + 1)}
+      />
+    </div>
+  );
+}
 
 function Controls() {
   const announce = useAnnounce();
@@ -43,6 +115,7 @@ function Controls() {
           { value: "grid", label: "Grid" },
         ]}
       />
+      <Layers />
       <FileDropZone accept=".pdf,application/pdf" onFiles={([file]) => setReceived(file?.name)}>
         {/* The name comes from the file: rendered as text, never as markup. */}
         {received ? <p data-testid="received">Received {received}</p> : null}

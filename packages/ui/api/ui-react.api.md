@@ -331,6 +331,34 @@ export function RedoIcon(props: IconProps): ReactElement;
 export function RemoveIcon(props: IconProps): ReactElement;
 
 // @public
+export const ReorderableList: ForwardRefExoticComponent<ReorderableListProps & RefAttributes<HTMLDivElement>>;
+
+// @public
+export const ReorderableListItem: ForwardRefExoticComponent<ReorderableListItemProps & RefAttributes<HTMLDivElement>>;
+
+// @public
+export type ReorderableListItemPart = "root" | "item" | "control";
+
+// @public
+export interface ReorderableListItemProps extends Omit<HTMLAttributes<HTMLDivElement>, "className" | "role" | "id">, StyleProps<ReorderableListItemPart> {
+    readonly children?: ReactNode;
+    readonly controls?: readonly ReactNode[] | undefined;
+    readonly id: string;
+    readonly label: string;
+}
+
+// @public
+export interface ReorderableListProps extends Omit<HTMLAttributes<HTMLDivElement>, "className" | "role">, StyleProps<"root"> {
+    readonly announceMoves?: boolean | undefined;
+    readonly children?: ReactNode;
+    readonly label: string;
+    readonly onMove?: ((id: string, toIndex: number) => void) | undefined;
+    readonly onRemove?: ((id: string) => void) | undefined;
+    readonly onSelectedChange?: ((id: string) => void) | undefined;
+    readonly selectedId?: string | null | undefined;
+}
+
+// @public
 export function RotateLeftIcon(props: IconProps): ReactElement;
 
 // @public
@@ -585,6 +613,7 @@ export const uiMessages: {
     readonly "fileDropZone.hint": "or drop it here";
     readonly "fileDropZone.hintMultiple": "or drop them here";
     readonly "progress.label": "Progress";
+    readonly "reorderableList.moved": "{label} moved to position {position} of {count}";
     readonly "spinner.label": "Loading";
     readonly "errors.INVALID_THEME_TOKEN": "The theme setting {token} has a value that can't be used.";
     readonly "errors.INVALID_THEME_SELECTOR": "The theme can't be applied to the selector {selector}.";

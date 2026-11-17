@@ -1,0 +1,73 @@
+@layer hm.components {
+  /*
+   * Layout, focus and target size: kept with unstyled, so the list stays
+   * usable and accessible.
+   */
+  .hm-reorderable-list {
+    box-sizing: border-box;
+    display: grid;
+    gap: var(--hm-reorderable-list-gap, var(--hm-gap-tight));
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hm-reorderable-list-row {
+    align-items: center;
+    box-sizing: border-box;
+    display: flex;
+    gap: var(--hm-reorderable-list-gap, var(--hm-gap-tight));
+    min-block-size: max(
+      var(--hm-reorderable-list-row-height, var(--hm-control-height)),
+      var(--hm-target-size)
+    );
+  }
+
+  /* The item fills its row, so the whole row selects it. */
+  .hm-reorderable-list-item {
+    align-items: center;
+    align-self: stretch;
+    box-sizing: border-box;
+    cursor: pointer;
+    display: flex;
+    flex: 1;
+    gap: var(--hm-control-gap);
+    min-inline-size: 0;
+    padding-inline: var(--hm-reorderable-list-row-padding-x, var(--hm-control-padding-x));
+    user-select: none;
+  }
+
+  /* Inside the cell, so a scrolling panel around the list can't clip it. */
+  .hm-reorderable-list-item:focus-visible {
+    outline: var(--hm-focus-ring);
+    outline-offset: calc(var(--hm-focus-ring-width) * -1);
+  }
+
+  .hm-reorderable-list-control {
+    display: flex;
+    flex: none;
+  }
+
+  /* Visual styles, dropped with unstyled. */
+  .hm-reorderable-list:not([data-hm-unstyled]) .hm-reorderable-list-row:not([data-hm-unstyled]) {
+    border: var(--hm-border-width) solid transparent;
+    border-radius: var(--hm-reorderable-list-row-radius, var(--hm-radius-control));
+    color: var(--hm-reorderable-list-row-fg, var(--hm-color-text));
+    font-family: var(--hm-font-family);
+    font-size: var(--hm-font-size-body);
+    letter-spacing: var(--hm-letter-spacing);
+    line-height: var(--hm-line-height-tight);
+  }
+
+  /* Selection shows as a boundary too, not only as a colour (WCAG 1.4.11). */
+  .hm-reorderable-list:not([data-hm-unstyled])
+    .hm-reorderable-list-row[aria-selected="true"]:not([data-hm-unstyled]) {
+    background: var(--hm-reorderable-list-row-selected-bg, var(--hm-color-accent-subtle));
+    border-color: var(--hm-reorderable-list-row-selected-border-color, var(--hm-color-accent));
+  }
+
+  @media (hover: hover) {
+    .hm-reorderable-list:not([data-hm-unstyled])
+      .hm-reorderable-list-row:not([aria-selected="true"], [data-hm-unstyled]):hover {
+      background: var(--hm-reorderable-list-row-bg-hover, var(--hm-color-control-hover));
+    }
+  }
+}
