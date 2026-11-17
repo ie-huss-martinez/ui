@@ -1,5 +1,27 @@
 # @hussmartinez/ui
 
+## 0.9.0
+
+### Minor Changes
+
+- [#68](https://github.com/ie-huss-martinez/ui/pull/68) [`8cb4a5f`](https://github.com/ie-huss-martinez/ui/commit/8cb4a5fe63e38558656cf05320dff72939c28d95) Thanks [@hussmartinez](https://github.com/hussmartinez)! - Add `ColorField`, a colour input that works with the keyboard alone and doesn't use the browser's own colour picker: a hex input (`#rrggbb` or `#rgb`, with or without the `#`) beside a preview, and optional `swatches`, each `{ value, label }`, as a radio group named after the field. Its value is always lowercase `#rrggbb`, through `value` and `onValueChange` or `defaultValue`, and `name` submits it with a form. In a `Field`, it takes the field's label, description and error.
+  
+  ```tsx
+  <Field label={t("shape.fill")}>
+    <ColorField value={fill} onValueChange={setFill} swatches={[{ value: "#d92d20", label: t("colors.red") }]} />
+  </Field>
+  ```
+  
+  It adds the message `colorField.swatches` and the component tokens `--hm-color-field-gap`, `--hm-color-field-swatch-size`, `--hm-color-field-swatch-radius`, `--hm-color-field-swatch-border-color` and `--hm-color-field-swatch-checked-border-color`. `Field`'s label now has an `id`.
+
+- [#70](https://github.com/ie-huss-martinez/ui/pull/70) [`cd6200f`](https://github.com/ie-huss-martinez/ui/commit/cd6200f2cb39d9ea1e6cfe4736bbcc641911ae42) Thanks [@hussmartinez](https://github.com/hussmartinez)! - Add `TextArea`, a multi-line text input styled like `TextField` and using its tokens, states and density. `rows` sets its height, three by default, and the user can drag it taller. Native textarea props pass through, plus `onValueChange(value)` and `label`; in a `Field`, it takes the field's label, description and error. It adds the component token `--hm-text-area-padding-y`.
+  
+  ```tsx
+  <Field label={t("text.content")}>
+    <TextArea value={text} onValueChange={setText} rows={4} />
+  </Field>
+  ```
+
 ## 0.8.0
 
 ### Minor Changes
