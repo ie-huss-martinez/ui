@@ -49,6 +49,7 @@ for (const app of apps) {
         'data-hm-icon="undo"',
         'role="tooltip"',
         'class="hm-text-field"',
+        'class="hm-color-field"',
         'aria-pressed="false"',
         'class="hm-spinner"',
         "<progress",
@@ -99,6 +100,16 @@ for (const app of apps) {
       const fileName = page.getByRole("textbox", { name: "File name" });
       await fileName.fill("final");
       await expect(fileName).toHaveValue("final");
+
+      // The colour field commits a typed colour, and its swatches select.
+      const fill = page.getByRole("textbox", { name: "Fill" });
+      await fill.fill("d92d20");
+      await fill.press("Enter");
+      await expect(fill).toHaveValue("#d92d20");
+      const fillSwatches = page.getByRole("radiogroup", { name: "Fill swatches" });
+      await expect(fillSwatches.getByRole("radio", { name: "Red" })).toBeChecked();
+      await fillSwatches.getByRole("radio", { name: "Red" }).press("ArrowRight");
+      await expect(fill).toHaveValue("#1570ef");
 
       // The number field commits typing on Enter, within its range.
       const copies = page.getByRole("spinbutton", { name: "Copies" });

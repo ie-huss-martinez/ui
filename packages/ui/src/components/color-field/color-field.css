@@ -1,0 +1,92 @@
+@layer hm.components {
+  /*
+   * Layout, focus and target size: kept with unstyled, so the field stays
+   * usable and accessible. The input is a text field, with its class and
+   * tokens.
+   */
+  .hm-color-field {
+    box-sizing: border-box;
+    display: inline-grid;
+    gap: var(--hm-color-field-gap, var(--hm-gap-tight));
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hm-color-field-control {
+    display: flex;
+    gap: var(--hm-color-field-gap, var(--hm-gap-tight));
+  }
+
+  /* As wide as the input is tall, and stretched to its height. */
+  .hm-color-field-preview {
+    box-sizing: border-box;
+    flex: none;
+    inline-size: max(var(--hm-text-field-height, var(--hm-control-height)), var(--hm-target-size));
+  }
+
+  .hm-color-field-input {
+    flex: 1;
+  }
+
+  .hm-color-field-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--hm-color-field-gap, var(--hm-gap-tight));
+  }
+
+  /* The padding keeps the checked ring apart from the colour. */
+  .hm-color-field-swatch {
+    block-size: max(
+      var(--hm-color-field-swatch-size, var(--hm-control-height-small)),
+      var(--hm-target-size)
+    );
+    box-sizing: border-box;
+    cursor: pointer;
+    display: inline-flex;
+    inline-size: max(
+      var(--hm-color-field-swatch-size, var(--hm-control-height-small)),
+      var(--hm-target-size)
+    );
+    padding: var(--hm-focus-ring-offset);
+  }
+
+  .hm-color-field-swatch:focus-visible {
+    outline: var(--hm-focus-ring);
+    outline-offset: var(--hm-focus-ring-offset);
+  }
+
+  .hm-color-field-swatch:disabled {
+    cursor: not-allowed;
+  }
+
+  .hm-color-field-swatch-fill {
+    block-size: 100%;
+    box-sizing: border-box;
+    inline-size: 100%;
+  }
+
+  /*
+   * Visual styles, dropped with unstyled. Every colour has a border, so one
+   * close to the surface's still shows its edge (WCAG 1.4.11).
+   */
+  .hm-color-field:not([data-hm-unstyled]) .hm-color-field-preview,
+  .hm-color-field:not([data-hm-unstyled]) .hm-color-field-swatch-fill {
+    border: var(--hm-border-width) solid
+      var(--hm-color-field-swatch-border-color, var(--hm-color-border-strong));
+    border-radius: var(--hm-color-field-swatch-radius, var(--hm-radius-control));
+  }
+
+  .hm-color-field:not([data-hm-unstyled]) .hm-color-field-swatch {
+    background: transparent;
+    border: var(--hm-focus-ring-width) solid transparent;
+    border-radius: var(--hm-color-field-swatch-radius, var(--hm-radius-control));
+  }
+
+  /* The checked swatch has a ring, whatever its colour. */
+  .hm-color-field:not([data-hm-unstyled]) .hm-color-field-swatch[aria-checked="true"] {
+    border-color: var(--hm-color-field-swatch-checked-border-color, var(--hm-color-text));
+  }
+
+  .hm-color-field:not([data-hm-unstyled]) .hm-color-field-swatch:disabled {
+    opacity: var(--hm-opacity-disabled);
+  }
+}

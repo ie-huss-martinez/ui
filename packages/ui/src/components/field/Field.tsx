@@ -1,6 +1,11 @@
 import { forwardRef, type HTMLAttributes, type ReactNode, useId } from "react";
 import { cx, type StyleProps, unstyledAttribute } from "../shared/style-props.js";
-import { FieldContext, type FieldControlProps, joinIds } from "./field-context.js";
+import {
+  FieldContext,
+  type FieldControlProps,
+  FieldLabelContext,
+  joinIds,
+} from "./field-context.js";
 
 /**
  * The parts of a field that `classNames` can target.
@@ -67,6 +72,7 @@ export const Field = /* @__PURE__ */ forwardRef<HTMLDivElement, FieldProps>(func
 ) {
   const generated = useId();
   const id = controlId ?? `${generated}-control`;
+  const labelId = `${generated}-label`;
   const descriptionId = `${generated}-description`;
   const errorId = `${generated}-error`;
   const hasDescription = description != null && description !== false;
@@ -87,7 +93,7 @@ export const Field = /* @__PURE__ */ forwardRef<HTMLDivElement, FieldProps>(func
       className={cx("hm-field", classNames?.root, className)}
       data-hm-unstyled={unstyledAttribute(unstyled)}
     >
-      <label htmlFor={id} className={cx("hm-field-label", classNames?.label)}>
+      <label id={labelId} htmlFor={id} className={cx("hm-field-label", classNames?.label)}>
         {label}
       </label>
       {hasDescription ? (
@@ -96,7 +102,9 @@ export const Field = /* @__PURE__ */ forwardRef<HTMLDivElement, FieldProps>(func
         </div>
       ) : null}
       <FieldContext.Provider value={control}>
-        {typeof children === "function" ? children(control) : children}
+        <FieldLabelContext.Provider value={labelId}>
+          {typeof children === "function" ? children(control) : children}
+        </FieldLabelContext.Provider>
       </FieldContext.Provider>
       {hasError ? (
         <div id={errorId} className={cx("hm-field-error", classNames?.error)}>

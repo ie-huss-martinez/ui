@@ -6,6 +6,7 @@
 import { createTheme, themeToCss, tokens } from "@hussmartinez/ui";
 import {
   Button,
+  ColorField,
   Field,
   IconButton,
   NumberField,
@@ -59,6 +60,15 @@ export default function Page() {
         </Field>
         <Field label="File name">
           <TextField defaultValue="report" />
+        </Field>
+        <Field label="Fill">
+          <ColorField
+            defaultValue="#1570ef"
+            swatches={[
+              { value: "#d92d20", label: "Red" },
+              { value: "#1570ef", label: "Blue" },
+            ]}
+          />
         </Field>
         <Field label="Copies">
           <NumberField min={1} max={99} defaultValue={1} />

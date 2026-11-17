@@ -14,6 +14,7 @@ import { defineMessages } from "@hussmartinez/sdk-core";
  * @public
  */
 export const uiMessages = /* @__PURE__ */ defineMessages({
+  "colorField.swatches": "swatches",
   "dialog.close": "Close",
   "fileDropZone.choose": "Choose a file",
   "fileDropZone.chooseMultiple": "Choose files",

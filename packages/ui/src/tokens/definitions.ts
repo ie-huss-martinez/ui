@@ -671,7 +671,12 @@ export type ComponentTokenName =
   | "text-field-fg"
   | "text-field-placeholder-fg"
   | "text-field-border-color"
-  | "text-field-invalid-border-color";
+  | "text-field-invalid-border-color"
+  | "color-field-gap"
+  | "color-field-swatch-size"
+  | "color-field-swatch-radius"
+  | "color-field-swatch-border-color"
+  | "color-field-swatch-checked-border-color";
 
 type ComponentSpec = { readonly fallback: SemanticTokenName };
 
@@ -811,6 +816,11 @@ const component = {
   "text-field-placeholder-fg": { fallback: "color-text-muted" },
   "text-field-border-color": { fallback: "color-border-strong" },
   "text-field-invalid-border-color": { fallback: "color-danger-text" },
+  "color-field-gap": { fallback: "gap-tight" },
+  "color-field-swatch-size": { fallback: "control-height-small" },
+  "color-field-swatch-radius": { fallback: "radius-control" },
+  "color-field-swatch-border-color": { fallback: "color-border-strong" },
+  "color-field-swatch-checked-border-color": { fallback: "color-text" },
 } as const satisfies Record<ComponentTokenName, ComponentSpec>;
 
 function baseDefinitions(): TokenDefinition[] {

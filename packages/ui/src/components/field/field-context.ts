@@ -21,6 +21,18 @@ export interface FieldControlProps {
 
 export const FieldContext = /* @__PURE__ */ createContext<FieldControlProps | undefined>(undefined);
 
+/**
+ * The id of the enclosing field's label, for a control that names more than
+ * one element from it, such as ColorField's swatch group. It's apart from
+ * {@link FieldControlProps}, which hosts spread onto a native control.
+ */
+export const FieldLabelContext = /* @__PURE__ */ createContext<string | undefined>(undefined);
+
+/** The enclosing field's label id, or `undefined` outside a field. */
+export function useFieldLabelId(): string | undefined {
+  return useContext(FieldLabelContext);
+}
+
 /** The enclosing field's control props, or `undefined` outside a field. */
 export function useFieldControl(): FieldControlProps | undefined {
   checkSingleCopy();
