@@ -30,6 +30,7 @@ export const iconManifest = {
   "flip-vertical": { lucide: "triangles-centerline-dashed-horizontal" },
   hidden: { lucide: "eye-off" },
   highlighter: { lucide: "highlighter" },
+  image: { lucide: "image" },
   info: { lucide: "info" },
   layers: { lucide: "layers" },
   loop: { lucide: "repeat" },
