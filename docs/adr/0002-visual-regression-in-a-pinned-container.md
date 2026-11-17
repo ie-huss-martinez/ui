@@ -2,6 +2,7 @@
 
 - **Status:** Accepted; the image's location is superseded by [0004](0004-one-browser-test-image.md), and the container runner is replaced by [0007](0007-browser-tests-in-the-pinned-image.md)
 - **Date:** 2026-11-10
+- **Amended:** 2026-11-17. "Pixel for pixel" wasn't true: the comparison allowed no differing pixel, but left pixelmatch's colour threshold and its anti-aliasing detection at their defaults, so a faint change passed. The timeline's background moved by ten pixels and no test failed. Both are now off, in `apps/catalogue/visual/comparator.ts`, with a test that fails if either is loosened. No baseline changed: all 523 already matched exactly
 
 ## Context
 

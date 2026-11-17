@@ -2,6 +2,7 @@ import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
 import { uiSourceAliases } from "./ui-source.js";
+import { strictComparator } from "./visual/comparator.js";
 
 const ALL_BROWSERS = ["chromium", "firefox", "webkit"] as const;
 
@@ -67,10 +68,8 @@ export default defineConfig(({ mode }) => {
               instances: [{ browser: "chromium" }],
               viewport: { width: 1024, height: 768 },
               expect: {
-                toMatchScreenshot: {
-                  comparatorName: "pixelmatch",
-                  comparatorOptions: { allowedMismatchedPixelRatio: 0 },
-                },
+                // No tolerance: see visual/comparator.ts.
+                toMatchScreenshot: strictComparator,
               },
             },
           },
