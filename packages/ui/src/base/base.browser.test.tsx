@@ -62,3 +62,74 @@ describe("text in themed subtrees", () => {
     expect(colour(root.querySelector("#text"))).toBe("rgb(1, 2, 3)");
   });
 });
+
+describe("the hm-text class", () => {
+  // A host page with its own type, as a host's stylesheet would set on body.
+  const HOST =
+    '<div id="host" style="font-family: serif; font-size: 30px; font-weight: 700; letter-spacing: 3px; line-height: 3; color: rgb(1, 2, 3)">';
+
+  /** What a token resolves to for a property, inside an element. */
+  function resolved(element: Element, property: string, token: string): string {
+    const probe = document.createElement("span");
+    probe.style.setProperty(property, `var(--hm-${token})`);
+    element.append(probe);
+    const value = getComputedStyle(probe).getPropertyValue(property);
+    probe.remove();
+    return value;
+  }
+
+  const TOKENS = [
+    ["color", "color-text"],
+    ["font-family", "font-family"],
+    ["font-size", "font-size-body"],
+    ["font-weight", "font-weight-regular"],
+    ["letter-spacing", "letter-spacing"],
+  ] as const;
+
+  it("gives text ui's type and colour, whatever the page around it sets", () => {
+    const root = mount(
+      `${HOST}<div class="hm-text"><p id="text">Hi</p></div><p id="plain">Hi</p></div>`,
+    );
+    const text = root.querySelector("#text") as Element;
+    const plain = root.querySelector("#plain") as Element;
+    for (const [property, token] of TOKENS) {
+      const expected = resolved(root, property, token);
+      expect(getComputedStyle(text).getPropertyValue(property), property).toBe(expected);
+      expect(getComputedStyle(plain).getPropertyValue(property), property).not.toBe(expected);
+    }
+    // The line height is a number, so it's compared as lengths.
+    expect(Number.parseFloat(getComputedStyle(text).lineHeight)).toBeLessThan(
+      Number.parseFloat(getComputedStyle(text).fontSize) * 3,
+    );
+    // Not the browser's default serif, which is what an SDK's own text got.
+    expect(getComputedStyle(text).fontFamily).not.toBe("serif");
+  });
+
+  it("leaves the page alone without the class", () => {
+    const root = mount(`${HOST}<p id="plain">Hi</p></div>`);
+    const plain = getComputedStyle(root.querySelector("#plain") as Element);
+    expect(plain.fontFamily).toBe("serif");
+    expect(plain.fontSize).toBe("30px");
+    expect(plain.color).toBe("rgb(1, 2, 3)");
+  });
+
+  it("follows the theme and density it's in", () => {
+    const root = mount(
+      '<div data-hm-theme="light" class="hm-text" id="light">Hi</div><div data-hm-theme="dark" class="hm-text" id="dark">Hi</div>',
+    );
+    const light = root.querySelector("#light") as Element;
+    const dark = root.querySelector("#dark") as Element;
+    expect(colour(dark)).toBe(themeText(dark));
+    expect(colour(dark)).not.toBe(colour(light));
+  });
+
+  it("loses to an SDK's rule in hm.sdk and to unlayered host CSS", () => {
+    addStyle(
+      "@layer hm.sdk { .sdk-editor { font-size: 11px; } } .host-text { color: rgb(4, 5, 6); }",
+    );
+    const root = mount('<div class="hm-text sdk-editor host-text" id="text">Hi</div>');
+    const text = getComputedStyle(root.querySelector("#text") as Element);
+    expect(text.fontSize).toBe("11px");
+    expect(text.color).toBe("rgb(4, 5, 6)");
+  });
+});

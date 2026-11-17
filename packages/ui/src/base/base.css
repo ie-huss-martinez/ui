@@ -16,6 +16,22 @@
   }
 
   /*
+   * An opt-in root for text that isn't inside a component, such as an SDK
+   * editor's own labels and values: ui's type and text colour, instead of
+   * whatever the host page sets around it. Components set their own, so they
+   * don't need it. It's in the lowest layer, so an SDK's rules in hm.sdk and
+   * any host CSS still win.
+   */
+  .hm-text {
+    color: var(--hm-color-text);
+    font-family: var(--hm-font-family);
+    font-size: var(--hm-font-size-body);
+    font-weight: var(--hm-font-weight-regular);
+    letter-spacing: var(--hm-letter-spacing);
+    line-height: var(--hm-line-height-body);
+  }
+
+  /*
    * ThemeProvider's wrapper. Custom properties still inherit through it,
    * because inheritance follows the DOM tree, not boxes.
    */

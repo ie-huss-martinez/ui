@@ -10,7 +10,7 @@ const withTheme: Decorator = (Story, context) => {
   const density = context.globals["density"] === "compact" ? "compact" : "comfortable";
   return (
     <ThemeProvider {...choice} density={density}>
-      <div className="hm-catalogue-canvas">
+      <div className="hm-catalogue-canvas hm-text">
         <Story />
       </div>
     </ThemeProvider>
