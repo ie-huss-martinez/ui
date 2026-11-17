@@ -49,6 +49,7 @@ for (const app of apps) {
         'data-hm-icon="undo"',
         'role="tooltip"',
         'class="hm-text-field"',
+        'class="hm-text-field hm-text-area"',
         'class="hm-color-field"',
         'aria-pressed="false"',
         'class="hm-spinner"',
@@ -100,6 +101,13 @@ for (const app of apps) {
       const fileName = page.getByRole("textbox", { name: "File name" });
       await fileName.fill("final");
       await expect(fileName).toHaveValue("final");
+
+      // The text area is named by its Field, and Enter adds a line.
+      const caption = page.getByRole("textbox", { name: "Caption" });
+      await caption.fill("One");
+      await caption.press("Enter");
+      await caption.pressSequentially("Two");
+      await expect(caption).toHaveValue("One\nTwo");
 
       // The colour field commits a typed colour, and its swatches select.
       const fill = page.getByRole("textbox", { name: "Fill" });

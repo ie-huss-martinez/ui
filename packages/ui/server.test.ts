@@ -105,6 +105,7 @@ describe("the built package on a server", () => {
       IconButton: { label: "Rotate", icon },
       ToggleButton: { label: "Loop", icon, defaultPressed: true },
       TextField: { label: "File name", defaultValue: "report" },
+      TextArea: { label: "Caption", defaultValue: "One\nTwo" },
       ColorField: {
         label: "Fill",
         defaultValue: "#1570ef",

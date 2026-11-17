@@ -672,6 +672,7 @@ export type ComponentTokenName =
   | "text-field-placeholder-fg"
   | "text-field-border-color"
   | "text-field-invalid-border-color"
+  | "text-area-padding-y"
   | "color-field-gap"
   | "color-field-swatch-size"
   | "color-field-swatch-radius"
@@ -816,6 +817,7 @@ const component = {
   "text-field-placeholder-fg": { fallback: "color-text-muted" },
   "text-field-border-color": { fallback: "color-border-strong" },
   "text-field-invalid-border-color": { fallback: "color-danger-text" },
+  "text-area-padding-y": { fallback: "inset-tight" },
   "color-field-gap": { fallback: "gap-tight" },
   "color-field-swatch-size": { fallback: "control-height-small" },
   "color-field-swatch-radius": { fallback: "radius-control" },
