@@ -231,12 +231,15 @@ export interface IconButtonProps extends Omit<ButtonProps, "startIcon" | "endIco
 export type IconComponent = (props: IconProps) => ReactElement;
 
 // @public
-export type IconName = "add" | "arrow" | "check" | "chevron-down" | "chevron-left" | "chevron-right" | "close" | "crop" | "delete" | "download" | "duplicate" | "ellipse" | "fade-in" | "fade-out" | "fit" | "flip-horizontal" | "flip-vertical" | "hidden" | "highlighter" | "info" | "layers" | "loop" | "menu" | "more" | "move-down" | "move-up" | "muted" | "open" | "page-add" | "page-grid" | "page-single" | "pan" | "pause" | "pen" | "play" | "rectangle" | "redact" | "redo" | "remove" | "rotate-left" | "rotate-right" | "search" | "select" | "skip-back" | "skip-forward" | "snap" | "split" | "stop" | "text" | "trim-end" | "trim-start" | "undo" | "upload" | "visible" | "volume" | "warning" | "zoom-in" | "zoom-out";
+export type IconName = "add" | "arrow" | "check" | "chevron-down" | "chevron-left" | "chevron-right" | "close" | "crop" | "delete" | "download" | "duplicate" | "ellipse" | "fade-in" | "fade-out" | "fit" | "flip-horizontal" | "flip-vertical" | "hidden" | "highlighter" | "image" | "info" | "layers" | "loop" | "menu" | "more" | "move-down" | "move-up" | "muted" | "open" | "page-add" | "page-grid" | "page-single" | "pan" | "pause" | "pen" | "play" | "rectangle" | "redact" | "redo" | "remove" | "rotate-left" | "rotate-right" | "search" | "select" | "skip-back" | "skip-forward" | "snap" | "split" | "stop" | "text" | "trim-end" | "trim-start" | "undo" | "upload" | "visible" | "volume" | "warning" | "zoom-in" | "zoom-out";
 
 // @public
 export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "children" | "dangerouslySetInnerHTML" | "ref"> {
     readonly label?: string | undefined;
 }
+
+// @public
+export function ImageIcon(props: IconProps): ReactElement;
 
 // @public
 export function InfoIcon(props: IconProps): ReactElement;

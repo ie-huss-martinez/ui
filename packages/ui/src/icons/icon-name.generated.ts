@@ -29,6 +29,7 @@ export type IconName =
   | "flip-vertical"
   | "hidden"
   | "highlighter"
+  | "image"
   | "info"
   | "layers"
   | "loop"
