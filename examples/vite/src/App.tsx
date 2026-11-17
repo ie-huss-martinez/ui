@@ -20,6 +20,7 @@ import {
   TextField,
   ThemeProvider,
   Timeline,
+  TimelineClips,
   TimelineLayer,
   TimelinePlayhead,
   ToggleButton,
@@ -103,9 +104,21 @@ function Layers() {
 /** A timeline of 300 frames at 30 a second, with the playhead's time as text. */
 function Clock() {
   const [frame, setFrame] = useState(60);
+  const [selected, setSelected] = useState<readonly string[]>(["intro"]);
   return (
     <Timeline label="Timeline" length={300}>
       <TimelineLayer />
+      <TimelineClips
+        label="Clips"
+        selectionMode="multiple"
+        clips={[
+          { key: "intro", length: 90, label: "Clip 1 of 3, Intro", content: "Intro" },
+          { key: "talk", length: 150, label: "Clip 2 of 3, Talk", content: "Talk" },
+          { key: "outro", length: 60, label: "Clip 3 of 3, Outro", content: "Outro" },
+        ]}
+        selectedKeys={selected}
+        onSelectedKeysChange={setSelected}
+      />
       <TimelinePlayhead
         label="Playhead"
         position={frame}

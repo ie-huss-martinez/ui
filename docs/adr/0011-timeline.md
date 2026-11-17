@@ -125,7 +125,16 @@ Then each SDK replaces its own timeline in its own pull request: video-sdk's `Vi
 - **`seekOnPress`** on the playhead turns off moving it with a press on the track, for an SDK whose layer handles presses itself, as audio-sdk's range selection does.
 - **`onVisibleRangeChange`** on the timeline, and `visibleRange()` on the scale, for a layer that draws only what's in view, such as a waveform on a canvas. The range isn't React state, so scrolling renders nothing.
 - **A track is at most eight million pixels wide.** Engines stop laying out boxes somewhere above sixteen million, so the zoom stops before `maxPixelsPerUnit` on a very long timeline.
-- **Sizes are set in effects, not layout effects,** which warn when rendered on a server in React 18. The first paint in a browser shows the track unmeasured, for one frame.
+- **Sizes are measured and set in ref callbacks,** which React runs when it commits, before the browser paints, and only in a browser. Step 1 used plain effects, which left one unsized frame; step 2 replaced them, with a test that the first frame committed is sized. The usual answer, `useLayoutEffect` in a browser and `useEffect` on a server, chooses between them by reading `typeof document` when the module loads, and this package reads nothing of the browser on import or in a server render; its server test fails on that read.
+
+**Step 2,** the clip track:
+
+- **The ref handle is the part's, not the timeline's:** `TimelineClips`' ref gives `focusClip(key)`, and the playhead's ref is its slider, which has `focus()`.
+- **Ctrl or ⌘ moves focus without selecting in both modes,** not only with several clips, so a single-selection track can be explored without changing what the editor shows.
+- **Each clip is a memoised option,** so a change of selection or focus renders only the clips it changes.
+- **Alt with an arrow isn't taken yet.** The track takes it in step 3, with moving. Until then it's the browser's, as on any page.
+- **A selected clip has a thicker border as well as a colour,** so selection isn't shown by colour alone.
+- **Measured with 2,000 clips,** as the review asked, with React's development build, in the pinned image, on each engine: mounting takes 0.64 to 0.79 seconds, once; a key that moves focus and selection takes 19 to 51 milliseconds and changes two options. **Recommended: no windowing yet.** A press is within a few frames, and mounting happens once. It's worth revisiting when an SDK has a real document with several thousand clips, or if zooming, which resizes every clip, proves slow; neither is measured here.
 
 ### Tests
 

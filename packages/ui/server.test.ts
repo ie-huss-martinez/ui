@@ -144,6 +144,12 @@ describe("the built package on a server", () => {
         ],
       },
       TimelineLayer: { children: "Layer" },
+      TimelineClips: {
+        label: "Clips",
+        clips: [{ key: "a", length: 30, label: "Clip 1 of 1", content: "Intro" }],
+        selectedKeys: ["a"],
+        onSelectedKeysChange: noop,
+      },
       TimelinePlayhead: { label: "Playhead", position: 0, onPositionChange: noop },
       VisuallyHidden: { children: "Hidden" },
       Toolbar: { label: "Tools", children: createElement(component("ToolbarSeparator")) },

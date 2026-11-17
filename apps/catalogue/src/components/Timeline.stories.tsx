@@ -1,5 +1,7 @@
 import {
   Timeline,
+  type TimelineClip,
+  TimelineClips,
   TimelineLayer,
   TimelinePlayhead,
   useTimelineScale,
@@ -9,8 +11,8 @@ import { useEffect, useRef, useState } from "react";
 
 /**
  * A timeline over whole units, such as frames: a track as wide as its length
- * at the current zoom, a playhead, and layers for an editor's own drawing.
- * The clip track comes next.
+ * at the current zoom, a clip track, a playhead, and layers for an editor's
+ * own drawing. Moving and trimming clips come next.
  */
 const meta = {
   title: "Components/Timeline",
@@ -62,13 +64,63 @@ function Seconds() {
   );
 }
 
-function Editor({ label = "Timeline", zoom = 1, start = 120, unstyled = false }) {
+const CLIPS: TimelineClip[] = [
+  { key: "intro", length: 60, label: "Clip 1 of 4, Intro, 0.00 to 2.00 seconds", content: "Intro" },
+  {
+    key: "talk",
+    length: 120,
+    label: "Clip 2 of 4, Interview, 2.00 to 6.00 seconds",
+    content: "Interview",
+  },
+  {
+    key: "cut",
+    length: 30,
+    label: "Clip 3 of 4, Cutaway, 6.00 to 7.00 seconds",
+    content: "Cutaway",
+  },
+  {
+    key: "outro",
+    length: 90,
+    label: "Clip 4 of 4, Outro, 7.00 to 10.00 seconds",
+    content: "Outro",
+  },
+];
+
+function Editor({
+  label = "Timeline",
+  zoom = 1,
+  start = 120,
+  unstyled = false,
+  clips = false,
+  selected: first = ["talk"],
+}: {
+  label?: string;
+  zoom?: number;
+  start?: number;
+  unstyled?: boolean;
+  clips?: false | "single" | "multiple";
+  selected?: readonly string[];
+}) {
   const [frame, setFrame] = useState(start);
+  const [selected, setSelected] = useState(first);
   return (
     <Timeline label={label} length={FRAMES} zoom={zoom} snapTargets={[150]} unstyled={unstyled}>
-      <TimelineLayer>
-        <Seconds />
-      </TimelineLayer>
+      {/* Layers and clips share one lane, so the ruler is shown where there are no clips. */}
+      {clips ? null : (
+        <TimelineLayer>
+          <Seconds />
+        </TimelineLayer>
+      )}
+      {clips ? (
+        <TimelineClips
+          label={`${label} clips`}
+          clips={CLIPS}
+          selectionMode={clips}
+          selectedKeys={selected}
+          onSelectedKeysChange={setSelected}
+          unstyled={unstyled}
+        />
+      ) : null}
       <TimelinePlayhead
         label={`${label} playhead`}
         position={frame}
@@ -105,7 +157,23 @@ export const AtTheEnds: Story = {
   ),
 };
 
-/** Visual styles dropped: the native slider, with no line. */
+/**
+ * With a clip track: a listbox with one Tab stop. ← and → move between clips
+ * and select. Each clip's name says its place and range, which a screen
+ * reader can't see on the track.
+ */
+export const WithClips: Story = {
+  name: "With clips",
+  render: () => <Editor clips="single" />,
+};
+
+/** Several clips selected: Shift extends, Ctrl or ⌘ moves without selecting, and Space adds or removes. */
+export const SeveralSelected: Story = {
+  name: "Several selected",
+  render: () => <Editor clips="multiple" selected={["talk", "cut"]} start={30} />,
+};
+
+/** Visual styles dropped: the native slider, with no line, and clips with no colours. */
 export const Unstyled: Story = {
-  render: () => <Editor unstyled />,
+  render: () => <Editor unstyled clips="single" />,
 };

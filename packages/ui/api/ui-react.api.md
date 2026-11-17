@@ -521,6 +521,35 @@ export interface ThemeProviderSingleProps extends ThemeProviderBaseProps {
 export const Timeline: ForwardRefExoticComponent<TimelineProps & RefAttributes<HTMLElement>>;
 
 // @public
+export interface TimelineClip {
+    readonly attributes?: Readonly<Record<`data-${string}`, string | undefined>> | undefined;
+    readonly content?: ReactNode;
+    readonly key: string;
+    readonly label: string;
+    readonly length: number;
+}
+
+// @public
+export const TimelineClips: ForwardRefExoticComponent<TimelineClipsProps & RefAttributes<TimelineClipsHandle>>;
+
+// @public
+export interface TimelineClipsHandle {
+    focusClip(key: string): boolean;
+}
+
+// @public
+export type TimelineClipsPart = "root" | "clip" | "content";
+
+// @public
+export interface TimelineClipsProps extends StyleProps<TimelineClipsPart> {
+    readonly clips: readonly TimelineClip[];
+    readonly label: string;
+    readonly onSelectedKeysChange: (keys: readonly string[]) => void;
+    readonly selectedKeys: readonly string[];
+    readonly selectionMode?: "single" | "multiple" | undefined;
+}
+
+// @public
 export const TimelineLayer: ForwardRefExoticComponent<TimelineLayerProps & RefAttributes<HTMLDivElement>>;
 
 // @public

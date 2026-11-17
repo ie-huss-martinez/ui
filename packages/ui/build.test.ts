@@ -314,9 +314,9 @@ describe("ReorderableList", () => {
 describe("Timeline", () => {
   it("ships with its playhead's slider, and without the lists and the fields", async () => {
     await expectShipped(
-      'import { Timeline, TimelineLayer, TimelinePlayhead } from "./react.js"; export const app = [Timeline, TimelineLayer, TimelinePlayhead];',
+      'import { Timeline, TimelineClips, TimelineLayer, TimelinePlayhead } from "./react.js"; export const app = [Timeline, TimelineClips, TimelineLayer, TimelinePlayhead];',
       {
-        includes: ["hm-timeline", "hm-slider"],
+        includes: ["hm-timeline", "hm-timeline-clips", "hm-slider"],
         excludes: ["hm-reorderable-list", "hm-number-field", "hm-color-field", "hm-tooltip"],
       },
     );

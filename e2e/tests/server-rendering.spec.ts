@@ -53,6 +53,7 @@ for (const app of apps) {
         'class="hm-color-field"',
         'role="grid"',
         'class="hm-timeline"',
+        'role="listbox"',
         'aria-pressed="false"',
         'class="hm-spinner"',
         "<progress",
@@ -197,20 +198,29 @@ for (const app of apps) {
       await page.getByRole("button", { name: "Move layer down" }).click();
       await expect(layers.getByRole("row").last()).toHaveAttribute("data-hm-id", "Title");
 
-      // The timeline's playhead moves with the slider's keys and with a
-      // press on the track, and reads its time as text.
+      // The timeline's playhead moves with the slider's keys, and reads its
+      // time as text.
       const playhead = page.getByRole("slider", { name: "Playhead" });
       await expect(playhead).toHaveAttribute("aria-valuetext", "2.0 seconds");
       await playhead.focus();
       await page.keyboard.press("PageUp");
       await expect(playhead).toHaveAttribute("aria-valuetext", "3.0 seconds");
-      const trackBox = await page.locator(".hm-timeline-track").boundingBox();
-      if (!trackBox) {
-        throw new Error("the timeline's track has no box");
-      }
-      // The middle of the track is the middle of the timeline.
-      await page.mouse.click(trackBox.x + trackBox.width / 2, trackBox.y + trackBox.height - 4);
-      await expect(playhead).toHaveValue("150");
+      const clipsList = page.getByRole("listbox", { name: "Clips" });
+      await expect(clipsList.getByRole("option")).toHaveCount(3);
+      // The clips: one Tab stop, arrows select, Shift extends.
+      await clipsList.getByRole("option", { name: "Clip 1 of 3, Intro" }).focus();
+      await page.keyboard.press("ArrowRight");
+      await expect(clipsList.getByRole("option", { selected: true })).toHaveAccessibleName(
+        "Clip 2 of 3, Talk",
+      );
+      await page.keyboard.press("Shift+ArrowRight");
+      await expect(clipsList.getByRole("option", { selected: true })).toHaveCount(2);
+      // Each clip is as wide as its length: 150 frames to 60.
+      const talk = await clipsList.getByRole("option", { name: "Clip 2 of 3, Talk" }).boundingBox();
+      const outro = await clipsList
+        .getByRole("option", { name: "Clip 3 of 3, Outro" })
+        .boundingBox();
+      expect((talk?.width ?? 0) / (outro?.width ?? 1)).toBeCloseTo(2.5, 1);
 
       // The segmented control selects with the arrow keys.
       await page.getByRole("radio", { name: "Single" }).focus();
