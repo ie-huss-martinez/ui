@@ -63,6 +63,8 @@ export type { SliderProps } from "./components/slider/Slider.js";
 export { Slider } from "./components/slider/Slider.js";
 export type { SpinnerProps } from "./components/spinner/Spinner.js";
 export { Spinner } from "./components/spinner/Spinner.js";
+export type { TextAreaProps } from "./components/text-area/TextArea.js";
+export { TextArea } from "./components/text-area/TextArea.js";
 export type { TextFieldProps, TextFieldType } from "./components/text-field/TextField.js";
 export { TextField } from "./components/text-field/TextField.js";
 export type {

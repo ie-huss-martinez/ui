@@ -290,6 +290,15 @@ describe("TextField", () => {
   });
 });
 
+describe("TextArea", () => {
+  it("ships without the other fields", async () => {
+    await expectShipped('import { TextArea } from "./react.js"; export const app = TextArea;', {
+      includes: ["hm-text-area"],
+      excludes: ["hm-number-field", "hm-color-field", "hm-slider", "hm-tooltip", ROVING_FOCUS],
+    });
+  });
+});
+
 describe("ColorField", () => {
   it("ships without the other fields", async () => {
     await expectShipped('import { ColorField } from "./react.js"; export const app = ColorField;', {

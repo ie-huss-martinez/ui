@@ -13,6 +13,7 @@ import {
   ProgressBar,
   Slider,
   Spinner,
+  TextArea,
   TextField,
   ThemeProvider,
   ToggleButton,
@@ -60,6 +61,9 @@ export default function Page() {
         </Field>
         <Field label="File name">
           <TextField defaultValue="report" />
+        </Field>
+        <Field label="Caption">
+          <TextArea defaultValue="A page" />
         </Field>
         <Field label="Fill">
           <ColorField

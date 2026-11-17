@@ -19,6 +19,7 @@ import { RefAttributes } from 'react';
 import { RefObject } from 'react';
 import type { ShortcutPart } from '@hussmartinez/sdk-core';
 import type { SVGProps } from 'react';
+import { TextareaHTMLAttributes } from 'react';
 
 // @public
 export function AddIcon(props: IconProps): ReactElement;
@@ -413,6 +414,15 @@ export interface StyleProps<Part extends string> {
     readonly className?: string | undefined;
     readonly classNames?: ClassNames<Part> | undefined;
     readonly unstyled?: boolean | undefined;
+}
+
+// @public
+export const TextArea: ForwardRefExoticComponent<TextAreaProps & RefAttributes<HTMLTextAreaElement>>;
+
+// @public
+export interface TextAreaProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "className">, StyleProps<"root"> {
+    readonly label?: string | undefined;
+    readonly onValueChange?: ((value: string) => void) | undefined;
 }
 
 // @public

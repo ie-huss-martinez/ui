@@ -1,0 +1,20 @@
+@layer hm.components {
+  /*
+   * A text field with several lines: text-field.css gives it the field's
+   * size floor, focus ring, colours, border and states, and this adds what
+   * lines of text need. Kept with unstyled.
+   */
+  .hm-text-area {
+    max-inline-size: 100%;
+    padding-block: var(--hm-text-area-padding-y, var(--hm-inset-tight));
+    /* Taller only: a wider area would break the layout around it. */
+    resize: vertical;
+    /* An inline box would leave room for descenders under it. */
+    vertical-align: top;
+  }
+
+  /* Visual styles, dropped with unstyled. */
+  .hm-text-area:not([data-hm-unstyled]) {
+    line-height: var(--hm-line-height-body);
+  }
+}

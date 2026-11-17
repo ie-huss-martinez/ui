@@ -303,6 +303,7 @@ export const tokenDescriptions: Readonly<Record<TokenName, string>> = {
   "text-field-border-color": "Border of a text field. It needs 3:1 contrast with the surface.",
   "text-field-invalid-border-color":
     "Border of a text field marked invalid. It needs 3:1 contrast with the surface.",
+  "text-area-padding-y": "Space above and below a text area's text.",
   "color-field-gap": "Space between a colour field's preview, input and swatches.",
   "color-field-swatch-size": "Width and height of a colour field's swatch.",
   "color-field-swatch-radius": "Corner radius of a colour field's preview and swatches.",
