@@ -61,11 +61,32 @@
     flex: 1 1 0;
     min-inline-size: 0;
     overflow: hidden;
+    position: relative;
     user-select: none;
   }
 
   .hm-timeline-clips[data-hm-measured] > .hm-timeline-clip {
     flex: none;
+  }
+
+  /*
+   * A clip's edges, for dragging: at most a third of the clip each, so a
+   * narrow clip keeps a middle to press.
+   */
+  .hm-timeline-clip-edge {
+    cursor: ew-resize;
+    inline-size: min(var(--hm-timeline-clip-edge-size, var(--hm-gap-normal)), 33%);
+    inset-block: 0;
+    position: absolute;
+    touch-action: none;
+  }
+
+  .hm-timeline-clip-edge[data-hm-edge="start"] {
+    inset-inline-start: 0;
+  }
+
+  .hm-timeline-clip-edge[data-hm-edge="end"] {
+    inset-inline-end: 0;
   }
 
   /* Inside the clip, where its neighbours and the track's edge can't cover it. */
@@ -143,5 +164,10 @@
     background: var(--hm-timeline-clip-selected-bg, var(--hm-color-accent-subtle));
     border-color: var(--hm-timeline-clip-selected-border-color, var(--hm-color-accent));
     border-width: var(--hm-focus-ring-width);
+  }
+
+  /* The clip whose edge is being dragged. */
+  .hm-timeline-clips:not([data-hm-unstyled]) > .hm-timeline-clip[data-hm-dragging] {
+    border-color: var(--hm-timeline-clip-selected-border-color, var(--hm-color-accent));
   }
 }

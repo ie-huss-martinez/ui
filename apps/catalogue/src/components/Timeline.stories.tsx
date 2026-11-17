@@ -1,4 +1,5 @@
 import {
+  Button,
   Timeline,
   type TimelineClip,
   TimelineClips,
@@ -12,7 +13,7 @@ import { useEffect, useRef, useState } from "react";
 /**
  * A timeline over whole units, such as frames: a track as wide as its length
  * at the current zoom, a clip track, a playhead, and layers for an editor's
- * own drawing. Moving and trimming clips come next.
+ * own drawing. Edits are reported, and the editor renders the result.
  */
 const meta = {
   title: "Components/Timeline",
@@ -171,6 +172,102 @@ export const WithClips: Story = {
 export const SeveralSelected: Story = {
   name: "Several selected",
   render: () => <Editor clips="multiple" selected={["talk", "cut"]} start={30} />,
+};
+
+/** An editor that applies what the track reports: its clips are its own state. */
+function Editable() {
+  const [clips, setClips] = useState(CLIPS);
+  const [selected, setSelected] = useState<readonly string[]>(["talk"]);
+  const [frame, setFrame] = useState(90);
+  const length = clips.reduce((sum, item) => sum + item.length, 0);
+  const move = (keys: readonly string[], direction: -1 | 1) =>
+    setClips((order) => {
+      const moving = order.filter((item) => keys.includes(item.key));
+      const rest = order.filter((item) => !keys.includes(item.key));
+      const at = order.findIndex((item) => item.key === keys[0]);
+      const before = order.slice(0, at).filter((item) => !keys.includes(item.key)).length;
+      const to = Math.min(Math.max(before + direction, 0), rest.length);
+      return [...rest.slice(0, to), ...moving, ...rest.slice(to)];
+    });
+  const trim = (key: string, delta: number) =>
+    setClips((all) =>
+      all.map((item) =>
+        item.key === key ? { ...item, length: Math.max(1, item.length + delta) } : item,
+      ),
+    );
+  const only = selected.length === 1 ? selected[0] : undefined;
+  return (
+    <div style={{ display: "grid", gap: "var(--hm-gap-normal)" }}>
+      <Timeline label="Timeline" length={length}>
+        <TimelineClips
+          label="Clips"
+          clips={clips}
+          selectionMode="multiple"
+          selectedKeys={selected}
+          onSelectedKeysChange={setSelected}
+          onMove={move}
+          onTrim={(key, _edge, delta) => trim(key, delta)}
+          trimStep={RATE / 2}
+          trimLimits={() => ({ max: RATE * 2 })}
+        />
+        <TimelinePlayhead
+          label="Playhead"
+          position={Math.min(frame, length)}
+          onPositionChange={setFrame}
+          largeStep={RATE}
+          formatValue={time}
+        />
+      </Timeline>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--hm-gap-tight)" }}>
+        <Button
+          size="small"
+          aria-keyshortcuts="Alt+ArrowLeft"
+          disabled={selected.length === 0}
+          focusableWhenDisabled
+          onClick={() => move(selected, -1)}
+        >
+          Move earlier
+        </Button>
+        <Button
+          size="small"
+          aria-keyshortcuts="Alt+ArrowRight"
+          disabled={selected.length === 0}
+          focusableWhenDisabled
+          onClick={() => move(selected, 1)}
+        >
+          Move later
+        </Button>
+        <Button
+          size="small"
+          aria-keyshortcuts="Alt+BracketRight"
+          disabled={only === undefined}
+          focusableWhenDisabled
+          onClick={() => only !== undefined && trim(only, -RATE / 2)}
+        >
+          Shorten
+        </Button>
+        <Button
+          size="small"
+          aria-keyshortcuts="Alt+Shift+BracketRight"
+          disabled={only === undefined}
+          focusableWhenDisabled
+          onClick={() => only !== undefined && trim(only, RATE / 2)}
+        >
+          Lengthen
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Moving and trimming. Alt+← and Alt+→ move the selected clips; Alt+[ and
+ * Alt+] shorten the focused one, and with Shift lengthen it; dragging an
+ * edge trims it. **The buttons are required:** they're the path for touch
+ * and for people who don't know the keys, with the keys named on them.
+ */
+export const Editing: Story = {
+  render: () => <Editable />,
 };
 
 /** Visual styles dropped: the native slider, with no line, and clips with no colours. */

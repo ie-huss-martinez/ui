@@ -5,6 +5,7 @@ import {
   type KeyboardEvent,
   type MouseEvent,
   memo,
+  type PointerEvent,
   type ReactNode,
   useEffect,
   useImperativeHandle,
@@ -77,6 +78,51 @@ export interface TimelineClipsProps extends StyleProps<TimelineClipsPart> {
   readonly selectedKeys: readonly string[];
   /** Called with the new selection, in the clips' order. */
   readonly onSelectedKeysChange: (keys: readonly string[]) => void;
+  /**
+   * Called when the user moves clips with Alt+← or Alt+→ (Option on macOS),
+   * with the keys to move, in order, and `-1` for earlier or `1` for later.
+   * They're the selected clips when the focused one is selected, and the
+   * focused clip otherwise. Render the clips in the new order, or leave them
+   * when the move isn't allowed. The keys are taken at the first and last
+   * clips too, and without `onMove`, so the browser never goes back instead.
+   */
+  readonly onMove?: ((keys: readonly string[], direction: -1 | 1) => void) | undefined;
+  /**
+   * Called when the user changes a clip's length at one edge, by dragging
+   * the edge or with Alt+`[` and Alt+`]`, with the change in units:
+   * positive makes the clip longer at that edge, negative shorter. A drag
+   * calls it once, when it ends. With it, each clip has edges to drag.
+   */
+  readonly onTrim?: ((key: string, edge: TimelineClipEdge, delta: number) => void) | undefined;
+  /**
+   * Called for `[` and `]` on a focused clip: set its start or its end to
+   * the playhead. You know where the playhead is.
+   */
+  readonly onTrimToPlayhead?: ((key: string, edge: TimelineClipEdge) => void) | undefined;
+  /** What Alt+`[` and Alt+`]` change an edge by, in units. Defaults to 1. */
+  readonly trimStep?: number | undefined;
+  /**
+   * How far an edge can go, as `onTrim`'s `delta`, such as up to its
+   * source's end. A drag stops there. Without it, a clip can shrink to one
+   * unit and grow without limit.
+   */
+  readonly trimLimits?:
+    | ((key: string, edge: TimelineClipEdge) => { readonly min?: number; readonly max?: number })
+    | undefined;
+}
+
+/**
+ * A clip's edge: its start, or its end.
+ *
+ * @public
+ */
+export type TimelineClipEdge = "start" | "end";
+
+/** An edge being dragged, and how far it has gone, as `onTrim`'s `delta`. */
+interface Drag {
+  readonly key: string;
+  readonly edge: TimelineClipEdge;
+  readonly delta: number;
 }
 
 interface ClipProps {
@@ -85,6 +131,10 @@ interface ClipProps {
   readonly tabStop: boolean;
   readonly clipClass: string | undefined;
   readonly contentClass: string | undefined;
+  /** Whether the clip has edges to drag. */
+  readonly edges: boolean;
+  /** The edge of this clip being dragged, if one is. */
+  readonly dragging: TimelineClipEdge | undefined;
 }
 
 /** One option. Memoised, so a change of selection renders only the clips it changes. */
@@ -94,6 +144,8 @@ const Clip = /* @__PURE__ */ memo(function Clip({
   tabStop,
   clipClass,
   contentClass,
+  edges,
+  dragging,
 }: ClipProps) {
   return (
     <div
@@ -103,9 +155,17 @@ const Clip = /* @__PURE__ */ memo(function Clip({
       aria-label={clip.label}
       tabIndex={tabStop ? 0 : -1}
       data-hm-key={clip.key}
+      data-hm-dragging={dragging}
       className={clipClass}
     >
       {clip.content == null ? null : <span className={contentClass}>{clip.content}</span>}
+      {/* For a pointer only: the keys and the host's buttons are the other ways. */}
+      {edges ? (
+        <>
+          <span className="hm-timeline-clip-edge" data-hm-edge="start" aria-hidden="true" />
+          <span className="hm-timeline-clip-edge" data-hm-edge="end" aria-hidden="true" />
+        </>
+      ) : null}
     </div>
   );
 });
@@ -155,6 +215,11 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
       selectionMode = "single",
       selectedKeys,
       onSelectedKeysChange,
+      onMove,
+      onTrim,
+      onTrimToPlayhead,
+      trimStep = 1,
+      trimLimits,
       className,
       classNames,
       unstyled,
@@ -185,6 +250,8 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
     const anchor = useRef<string | null>(null);
     // Whether focus was last seen on the track, and where.
     const held = useRef<{ readonly key: string; readonly index: number } | null>(null);
+    // Whether the last key asked the host to move clips.
+    const moved = useRef(false);
 
     const selected = useMemo(() => new Set(selectedKeys), [selectedKeys]);
     const tabStop =
@@ -233,15 +300,26 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
     // Widths go through the CSSOM, as the track's does, from a ref callback,
     // so they're there in the frame React commits. Only when the clips or the
     // scale changed: a change of selection sizes nothing.
-    const sized = useRef<{ clips: readonly TimelineClip[]; scale: number } | null>(null);
+    const [drag, setDrag] = useState<Drag | null>(null);
+    const sized = useRef<{
+      clips: readonly TimelineClip[];
+      scale: number;
+      drag: Drag | null;
+    } | null>(null);
     const sizeClips = (element: HTMLDivElement): void => {
-      if (sized.current?.clips === clips && sized.current.scale === pixelsPerUnit) {
+      if (
+        sized.current?.clips === clips &&
+        sized.current.scale === pixelsPerUnit &&
+        sized.current.drag === drag
+      ) {
         return;
       }
-      sized.current = { clips, scale: pixelsPerUnit };
+      sized.current = { clips, scale: pixelsPerUnit, drag };
       const elements = element.children;
       for (let index = 0; index < elements.length; index++) {
-        const length = clips[index]?.length ?? 0;
+        const clip = clips[index];
+        // A dragged edge shows its clip at the length it would have.
+        const length = (clip?.length ?? 0) + (clip && drag?.key === clip.key ? drag.delta : 0);
         (elements[index] as HTMLElement).style.inlineSize =
           pixelsPerUnit > 0 ? `${length * pixelsPerUnit}px` : "";
       }
@@ -252,9 +330,20 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
     // Never from elsewhere: only when nothing has focus.
     useEffect(() => {
       const was = held.current;
-      if (!was || clips.some((clip) => clip.key === was.key)) {
+      if (!was) {
         return;
       }
+      if (clips.some((clip) => clip.key === was.key)) {
+        // After a move, the browser may have dropped focus from the clip as
+        // React put it in its new place: it goes back, if nothing else has it.
+        const active = document.activeElement;
+        if (moved.current && (!active || active === document.body)) {
+          focusClip(was.key);
+        }
+        moved.current = false;
+        return;
+      }
+      moved.current = false;
       held.current = null;
       const active = document.activeElement;
       if (active && active !== document.body) {
@@ -267,6 +356,91 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
         context?.track.current?.querySelector<HTMLElement>(".hm-timeline-playhead-slider")?.focus();
       }
     });
+
+    // An edge being dragged: where it started, and what bounds it.
+    const dragging = useRef<{
+      readonly pointerId: number;
+      readonly x: number;
+      readonly key: string;
+      readonly edge: TimelineClipEdge;
+      readonly boundary: number;
+      readonly min: number;
+      readonly max: number;
+      /** How far the edge has gone; kept here too, for the moment the drag ends. */
+      delta: number;
+    } | null>(null);
+
+    const handlePointerDown = (event: PointerEvent<HTMLDivElement>): void => {
+      const handle = (event.target as HTMLElement).closest<HTMLElement>("[data-hm-edge]");
+      const key = handle?.closest<HTMLElement>("[data-hm-key]")?.dataset["hmKey"];
+      const index = clips.findIndex((clip) => clip.key === key);
+      const clip = clips[index];
+      if (!handle || !clip || !onTrim || event.button !== 0 || pixelsPerUnit <= 0) {
+        return;
+      }
+      const edge: TimelineClipEdge = handle.dataset["hmEdge"] === "start" ? "start" : "end";
+      const limits = trimLimits?.(clip.key, edge);
+      dragging.current = {
+        pointerId: event.pointerId,
+        x: event.clientX,
+        key: clip.key,
+        edge,
+        boundary: offsets[edge === "start" ? index : index + 1] ?? 0,
+        // Never shorter than one unit.
+        min: Math.max(limits?.min ?? Number.NEGATIVE_INFINITY, 1 - clip.length),
+        max: limits?.max ?? Number.POSITIVE_INFINITY,
+        delta: 0,
+      };
+      try {
+        handle.setPointerCapture(event.pointerId);
+      } catch {
+        // The pointer is up already; its events still arrive here.
+      }
+      setDrag({ key: clip.key, edge, delta: 0 });
+    };
+
+    const handlePointerMove = (event: PointerEvent<HTMLDivElement>): void => {
+      const start = dragging.current;
+      if (!start || event.pointerId !== start.pointerId || pixelsPerUnit <= 0) {
+        return;
+      }
+      const rtl = getComputedStyle(event.currentTarget).direction === "rtl";
+      const along = rtl ? start.x - event.clientX : event.clientX - start.x;
+      const to = Math.max(0, start.boundary + Math.round(along / pixelsPerUnit));
+      // Alt turns snapping off for this drag.
+      const snapped = event.altKey ? to : (context?.scale.snap(to) ?? to);
+      // The start's edge makes the clip longer as it moves earlier.
+      const change = start.edge === "start" ? start.boundary - snapped : snapped - start.boundary;
+      const delta = Math.min(Math.max(change, start.min), start.max);
+      start.delta = delta;
+      setDrag((current) => (current && current.delta !== delta ? { ...current, delta } : current));
+    };
+
+    const endDrag = (commit: boolean): void => {
+      const start = dragging.current;
+      dragging.current = null;
+      setDrag(null);
+      if (commit && start && start.delta !== 0) {
+        onTrim?.(start.key, start.edge, start.delta);
+      }
+    };
+
+    // Escape cancels a drag, wherever focus is.
+    const isDragging = drag !== null;
+    useEffect(() => {
+      if (!isDragging) {
+        return;
+      }
+      const onKeyDown = (event: globalThis.KeyboardEvent): void => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          dragging.current = null;
+          setDrag(null);
+        }
+      };
+      document.addEventListener("keydown", onKeyDown, true);
+      return () => document.removeEventListener("keydown", onKeyDown, true);
+    }, [isDragging]);
 
     const select = (keys: Iterable<string>): void => {
       const wanted = new Set(keys);
@@ -295,7 +469,7 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
     };
 
     const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
-      if (event.defaultPrevented || event.altKey || event.nativeEvent.isComposing) {
+      if (event.defaultPrevented || event.nativeEvent.isComposing) {
         return;
       }
       const key = (event.target as HTMLElement).dataset["hmKey"];
@@ -308,6 +482,42 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
       const rtl = getComputedStyle(event.currentTarget).direction === "rtl";
       const forward = rtl ? "ArrowLeft" : "ArrowRight";
       const backward = rtl ? "ArrowRight" : "ArrowLeft";
+      // By position, not character: Alt changes what the brackets type on
+      // Apple's layouts, and other layouts put them elsewhere.
+      const edge: TimelineClipEdge | undefined =
+        event.code === "BracketLeft" ? "start" : event.code === "BracketRight" ? "end" : undefined;
+
+      if (event.altKey) {
+        if (mod) {
+          return;
+        }
+        if ((event.key === forward || event.key === backward) && !event.shiftKey) {
+          // Always taken in the track, at its ends and without onMove too:
+          // unprevented, Alt with an arrow is the browser's Back or Forward.
+          event.preventDefault();
+          if (onMove) {
+            moved.current = true;
+            onMove(
+              selected.has(current.key)
+                ? clips.filter((clip) => selected.has(clip.key)).map((clip) => clip.key)
+                : [current.key],
+              event.key === forward ? 1 : -1,
+            );
+          }
+        } else if (edge && onTrim) {
+          // Inward, which shortens the clip; with Shift, outward.
+          event.preventDefault();
+          onTrim(current.key, edge, event.shiftKey ? trimStep : -trimStep);
+        }
+        return;
+      }
+      if (edge && !mod && !event.shiftKey) {
+        if (onTrimToPlayhead) {
+          event.preventDefault();
+          onTrimToPlayhead(current.key, edge);
+        }
+        return;
+      }
 
       let to: number | undefined;
       if (event.key === forward) {
@@ -421,6 +631,10 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
         data-hm-measured={pixelsPerUnit > 0 ? "" : undefined}
         onKeyDown={handleKeyDown}
         onClick={handleClick}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={() => endDrag(true)}
+        onPointerCancel={() => endDrag(false)}
         onFocus={handleFocus}
         onBlur={handleBlur}
       >
@@ -432,6 +646,8 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
             tabStop={clip === tabStop}
             clipClass={clipClass}
             contentClass={contentClass}
+            edges={onTrim !== undefined}
+            dragging={drag?.key === clip.key ? drag.edge : undefined}
           />
         ))}
       </div>

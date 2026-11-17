@@ -86,6 +86,7 @@ export type {
 export { Timeline, TimelineLayer, useTimelineScale } from "./components/timeline/Timeline.js";
 export type {
   TimelineClip,
+  TimelineClipEdge,
   TimelineClipsHandle,
   TimelineClipsPart,
   TimelineClipsProps,

@@ -265,13 +265,17 @@ describe("TimelineClips", () => {
     expect((container.querySelector('input[type="range"]') as HTMLInputElement).value).toBe("0");
   });
 
-  it("takes no key with Alt, with Shift and Ctrl together, in a field, or that it doesn't know", async () => {
+  it("takes no key with Shift and Ctrl together, in a field, or that it doesn't know", async () => {
     const onChange = vi.fn();
     const container = render(<Fixture mode="multiple" onChange={onChange} />);
     clip(container, "c2").focus();
     for (const keys of [
-      "{Alt>}{ArrowRight}{/Alt}",
       "{Alt>}{Home}{/Alt}",
+      "{Alt>}{ArrowUp}{/Alt}",
+      "{Alt>}{Shift>}{ArrowRight}{/Shift}{/Alt}",
+      "{Alt>}{Control>}{ArrowRight}{/Control}{/Alt}",
+      "{BracketLeft}",
+      "{Alt>}{BracketRight}{/Alt}",
       "{Shift>}{Control>}{ArrowRight}{/Control}{/Shift}",
       "{ArrowDown}",
       "x",

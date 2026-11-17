@@ -272,6 +272,7 @@ Fine-grained overrides for one component. `ui` never declares them: each compone
 | `--hm-timeline-clip-padding-x` | `--hm-gap-tight` | Space at the start and end of what a clip shows. |
 | `--hm-timeline-clip-selected-bg` | `--hm-color-accent-subtle` | Background of a selected clip. |
 | `--hm-timeline-clip-selected-border-color` | `--hm-color-accent` | Border of a selected clip. It needs 3:1 contrast with the track. |
+| `--hm-timeline-clip-edge-size` | `--hm-gap-normal` | Width of the part of a clip's edge that a pointer drags to trim it. |
 | `--hm-color-field-gap` | `--hm-gap-tight` | Space between a colour field's preview, input and swatches. |
 | `--hm-color-field-swatch-size` | `--hm-control-height-small` | Width and height of a colour field's swatch. |
 | `--hm-color-field-swatch-radius` | `--hm-radius-control` | Corner radius of a colour field's preview and swatches. |
