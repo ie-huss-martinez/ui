@@ -2,7 +2,7 @@
 
 - **Status:** Proposed
 - **Date:** 2026-11-17
-- **Amended:** 2026-11-17, with the component. Ctrl or ⌘ with an arrow moves focus without selecting, as in pdf-sdk's thumbnails, and so do Ctrl or ⌘ with Home and End, so that modifier never changes the selection. `classNames` is split between the list (`root`) and its items (`root`, `item`, `control`). With focus elsewhere, the Tab stop follows a selection made elsewhere
+- **Amended:** 2026-11-17, twice. After [ADR 0011](0011-timeline.md)'s finding, the tests claim a prevented default and no scrolling, not "no navigation". Before that, with the component. Ctrl or ⌘ with an arrow moves focus without selecting, as in pdf-sdk's thumbnails, and so do Ctrl or ⌘ with Home and End, so that modifier never changes the selection. `classNames` is split between the list (`root`) and its items (`root`, `item`, `control`). With focus elsewhere, the Tab stop follows a selection made elsewhere
 
 ## Context
 
@@ -117,7 +117,7 @@ The keys are an addition. **A host that passes `onMove` must also offer buttons 
 As pdf-sdk ADR 0008 requires of its listbox, on Chromium, Firefox and WebKit:
 
 - **Every key in the table** does its action and has its default prevented, including the move keys at both ends.
-- **The page neither scrolls nor navigates:** the test page is taller than the window and has a history entry behind it.
+- **The page doesn't scroll:** the test page is taller than the window. The tests don't show that a key can't navigate: a shortcut such as Back belongs to the browser's own interface, which automation doesn't have, so the page stays whatever it does ([ADR 0011](0011-timeline.md)). They show `defaultPrevented`, which is what stops the browser.
 - **A key typed in a text field does nothing,** and nor does a key with another modifier.
 - **Focus** after each move and removal, the stale-restore case above, and one Tab stop into and out of the list.
 - **axe** on every story, and the end-to-end examples with a role locator next to it.

@@ -2,6 +2,7 @@
 
 - **Status:** Proposed
 - **Date:** 2026-11-17
+- **Amended:** 2026-11-17, with the reviewer's rulings on the four open decisions, and with what the key tests do and don't prove
 
 ## Context
 
@@ -117,19 +118,20 @@ Then each SDK replaces its own timeline in its own pull request: video-sdk's `Vi
 ### Tests
 
 - **Every key, on three engines,** with its default prevented, as for `ReorderableList`: the listbox's keys in both modes, the move and trim keys including at the first and last clips, none with other modifiers or in a text field, and right-to-left.
+- **What those tests prove: `defaultPrevented`, and that the page doesn't scroll. Not that it doesn't navigate.** Back and Forward belong to the browser's own interface, which an automated browser doesn't have. In the pinned image, on a page with a history entry behind it, Alt+← leaves the page where it is in Chromium, Firefox and WebKit even when nothing prevents the key. So an assertion that the URL didn't change can't fail, and no test here makes one. A prevented default is what stops a real browser's shortcut, and that's what's asserted; the manual check below covers the rest.
 - **The scale:** a pointer's unit and a unit's pixel agree in both directions, at several zooms and in both reading directions, and snapping picks what `snap` picks.
 - **Rendering cost:** moving the playhead re-renders `TimelinePlayhead` only, counted in a test.
 - **axe** on every story, with clips, a selection, a drag in progress and an empty track; visual baselines in every theme and density.
 - **A server render and hydration without warnings,** and no `style` attribute in the markup.
 
-## Open decisions
+## Decided in review
 
-These need the reviewer before any code.
+The reviewer ruled on the four questions this record first left open, on 2026-11-17.
 
-1. **Alt+← and Alt+→ to move clips.** video-sdk uses them. pdf-sdk ADR 0008 lists them as Back and Forward in Chrome and Firefox on Windows and Linux, and chose not to use them. On a horizontal track there's no other natural key, and they match `ReorderableList`'s Alt with the arrow along its axis. A page can prevent the browser's shortcut, but **the tests can't show that**: in the pinned image, Alt+← doesn't navigate in any engine even when the page doesn't prevent it, because the shortcut belongs to the browser's own interface, which automation doesn't have. So it needs a manual check in Chrome and Firefox on Windows or Linux. The risk if it fails is leaving an editor with unsaved work. The alternative is no key, and the SDK's move buttons only. **Recommended:** keep the keys, prevented everywhere in the track including at both ends, and make the manual check a condition of accepting this record.
-2. **Range selection stays in audio-sdk,** as a layer, with `useTimelineScale` for its pointer mapping and snapping. It has one consumer today. video-sdk's record mentions deleting a range as a later tool; if it builds one, the range moves to `ui` then, by the rule of two consumers. **Recommended.**
-3. **Both selection modes in the first version.** Unlike `ReorderableList`, both are needed now: one SDK each. **Recommended.**
-4. **No windowing of clips in the first version.** Every clip is an option in the DOM. That's fine for hundreds; thousands, such as an hour of audio split at every silence, will need the options drawn only where visible, with `aria-setsize` and `aria-posinset`. **Recommended:** leave it out, measure with 2,000 clips in the first pull request, and decide from the number.
+1. **Alt+← and Alt+→ move clips,** with their default prevented everywhere in the track, including at the first and last clips. video-sdk uses them. pdf-sdk ADR 0008 lists them as Back and Forward in Chrome and Firefox on Windows and Linux, and chose not to use them; on a horizontal track there's no other natural key, and they match `ReorderableList`'s Alt with the arrow along its axis. The risk if prevention failed is leaving an editor with unsaved work, and the automated tests can't show that it holds (see Tests). So **a manual check in real Chrome and Firefox, on Windows or Linux, is a condition of this record becoming Accepted.** Move buttons stay required, as for `ReorderableList`.
+2. **Range selection stays in audio-sdk,** as a layer, with `useTimelineScale` for its pointer mapping and snapping. It has one consumer today. If video-sdk builds a range tool, it moves to `ui` then, by the rule of two consumers.
+3. **Both selection modes are in the first version,** because each SDK needs one.
+4. **No windowing of clips in the first version.** Every clip is an option in the DOM. The first pull request measures a track of 2,000 clips, and the number decides whether options are then drawn only where visible, with `aria-setsize` and `aria-posinset`.
 
 ## Alternatives considered
 
@@ -146,5 +148,5 @@ These need the reviewer before any code.
 - audio-sdk and video-sdk get one clip track, with the same keys, names and focus rule, and each keeps its media's drawing and its session.
 - **video-sdk's timeline changes when it adopts this:** its sizes move from `style` to the CSSOM, and its snap button and zoom become props it passes. Its keys and behaviour shouldn't change; its end-to-end tests are the check.
 - **`ui` takes on its largest component,** in three pull requests, each raising the React entry's size budget from its measurement. It's 15.94 kB of 16 kB today.
-- **Not tried with a screen reader,** like `ReorderableList`. A horizontal multi-select listbox next to a slider needs a manual pass with NVDA and VoiceOver before this record is accepted.
+- **Two manual checks stand between this record and Accepted:** the Alt and arrow keys in real Chrome and Firefox, above, and a pass with NVDA and VoiceOver, because nothing here has been tried with a screen reader, like `ReorderableList`.
 - Only the parts an application imports are shipped, so an editor without a timeline pays nothing.
