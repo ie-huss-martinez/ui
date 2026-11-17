@@ -299,6 +299,18 @@ describe("TextArea", () => {
   });
 });
 
+describe("ReorderableList", () => {
+  it("ships without the fields and the overlays", async () => {
+    await expectShipped(
+      'import { ReorderableList, ReorderableListItem } from "./react.js"; export const app = [ReorderableList, ReorderableListItem];',
+      {
+        includes: ["hm-reorderable-list", ROVING_FOCUS],
+        excludes: ["hm-number-field", "hm-color-field", "hm-slider", "hm-tooltip", "hm-dialog"],
+      },
+    );
+  });
+});
+
 describe("ColorField", () => {
   it("ships without the other fields", async () => {
     await expectShipped('import { ColorField } from "./react.js"; export const app = ColorField;', {

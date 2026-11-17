@@ -21,6 +21,7 @@ export const uiMessages = /* @__PURE__ */ defineMessages({
   "fileDropZone.hint": "or drop it here",
   "fileDropZone.hintMultiple": "or drop them here",
   "progress.label": "Progress",
+  "reorderableList.moved": "{label} moved to position {position} of {count}",
   "spinner.label": "Loading",
   "errors.INVALID_THEME_TOKEN": "The theme setting {token} has a value that can't be used.",
   "errors.INVALID_THEME_SELECTOR": "The theme can't be applied to the selector {selector}.",

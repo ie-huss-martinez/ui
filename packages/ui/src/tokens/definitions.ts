@@ -673,6 +673,14 @@ export type ComponentTokenName =
   | "text-field-border-color"
   | "text-field-invalid-border-color"
   | "text-area-padding-y"
+  | "reorderable-list-gap"
+  | "reorderable-list-row-height"
+  | "reorderable-list-row-padding-x"
+  | "reorderable-list-row-radius"
+  | "reorderable-list-row-fg"
+  | "reorderable-list-row-bg-hover"
+  | "reorderable-list-row-selected-bg"
+  | "reorderable-list-row-selected-border-color"
   | "color-field-gap"
   | "color-field-swatch-size"
   | "color-field-swatch-radius"
@@ -818,6 +826,14 @@ const component = {
   "text-field-border-color": { fallback: "color-border-strong" },
   "text-field-invalid-border-color": { fallback: "color-danger-text" },
   "text-area-padding-y": { fallback: "inset-tight" },
+  "reorderable-list-gap": { fallback: "gap-tight" },
+  "reorderable-list-row-height": { fallback: "control-height" },
+  "reorderable-list-row-padding-x": { fallback: "control-padding-x" },
+  "reorderable-list-row-radius": { fallback: "radius-control" },
+  "reorderable-list-row-fg": { fallback: "color-text" },
+  "reorderable-list-row-bg-hover": { fallback: "color-control-hover" },
+  "reorderable-list-row-selected-bg": { fallback: "color-accent-subtle" },
+  "reorderable-list-row-selected-border-color": { fallback: "color-accent" },
   "color-field-gap": { fallback: "gap-tight" },
   "color-field-swatch-size": { fallback: "control-height-small" },
   "color-field-swatch-radius": { fallback: "radius-control" },

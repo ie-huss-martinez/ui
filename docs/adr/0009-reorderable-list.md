@@ -2,6 +2,7 @@
 
 - **Status:** Proposed
 - **Date:** 2026-11-17
+- **Amended:** 2026-11-17, with the component. Ctrl or ⌘ with an arrow moves focus without selecting, as in pdf-sdk's thumbnails, and so do Ctrl or ⌘ with Home and End, so that modifier never changes the selection. `classNames` is split between the list (`root`) and its items (`root`, `item`, `control`). With focus elsewhere, the Tab stop follows a selection made elsewhere
 
 ## Context
 
@@ -71,7 +72,7 @@ The component has to give:
 - **Order is the order shown.** "Up" is towards the first row. image-sdk shows the top layer first, so up the list is up the stack; that mapping is the host's.
 - **`label` on an item is required** and is the row's accessible name, because its content can be anything, such as a thumbnail.
 - **One row is selected, or none.** Several at once, as pdf-sdk's thumbnails have, is a later addition (see below).
-- **The component contract applies** ([ADR 0003](0003-component-contract.md)): `className`, `classNames` for `root`, `row`, `item` and `control`, `unstyled`, refs, and component tokens with semantic fallbacks.
+- **The component contract applies** ([ADR 0003](0003-component-contract.md)): `className`, `classNames`, `unstyled`, refs, and component tokens with semantic fallbacks. The list's `classNames` has `root`; an item's has `root` for its row, `item` and `control`.
 
 ### Keys
 
@@ -80,21 +81,22 @@ They work only while focus is inside the list, and never when the target is a te
 | Key | Action |
 |---|---|
 | ↑ / ↓ | Focus the same cell in the previous or next row, and select that row |
+| Ctrl+↑ / Ctrl+↓ (⌘ on macOS) | The same, without selecting, as in pdf-sdk's thumbnails |
 | ← / → | Focus the previous or next cell in the row, following the reading direction |
 | Home / End | Focus the row's first or last cell |
-| Ctrl+Home / Ctrl+End (⌘ on macOS) | Focus the first or last row, and select it |
+| Ctrl+Home / Ctrl+End (⌘ on macOS) | Focus the first or last row, without selecting |
 | Space or Enter, on a row's first cell | Select the row |
 | Space or Enter, on a control | The control's own action |
 | **Alt+↑ / Alt+↓** (Option on macOS) | Move the focused row up or down one place |
 | **Delete, Backspace** | Remove the focused row, when the host passes `onRemove` |
 
 - **The move and remove keys are pdf-sdk ADR 0008's,** with its table of what each browser and system reserves. This record doesn't repeat that check; it adopts the result. There is no key to move to the start or end, for that record's reason: Alt+Home opens the home page in Chrome and Firefox.
-- **Selection follows focus between rows,** as in a single-selection listbox and in pdf-sdk's thumbnails, so an editor's stage shows the row the user is on.
+- **Selection follows focus between rows,** as in a single-selection listbox and in pdf-sdk's thumbnails, so an editor's stage shows the row the user is on. Ctrl or ⌘ never changes the selection, and nor does moving between a row's cells. Either modifier works on every platform, so the list doesn't have to detect one.
 - **A pointer press on a row selects it;** a press on a control only acts on the control.
 
 ### Focus
 
-- **The Tab stop** is the cell that last had focus; before that, the selected row's first cell; with no selection, the first row's. The controls inside rows are taken out of the Tab order by the list, the way `Toolbar` manages its items, so the server renders no `tabindex` on them and hydration can't mismatch.
+- **The Tab stop** is the cell that last had focus; before that, the selected row's first cell; with no selection, the first row's. While focus is outside the list, a selection made elsewhere, such as on an editor's stage, moves the Tab stop to that row. The controls inside rows are taken out of the Tab order by the list, the way `Toolbar` manages its items, so the server renders no `tabindex` on them and hydration can't mismatch.
 - **After a move,** focus stays on the same cell of the moved row.
 - **After a removal,** focus goes to the same cell of the row now at that position, or of the new last row. When the list becomes empty, the host decides where focus goes, because only it knows what's next to the list.
 - **Focus is restored only after a real change, and only if it was dropped or is still in the list.** image-sdk found the bug this rule prevents: a move key at the top set "put focus back", nothing rendered, and the next render pulled focus from wherever the user had gone.
@@ -140,5 +142,5 @@ As pdf-sdk ADR 0008 requires of its listbox, on Chromium, Firefox and WebKit:
 - image-sdk's layers panel goes from two Tab stops a layer to one for the list, and the track lists get the same keys and focus rules as pdf-sdk's pages.
 - **A grid is announced as a table by some screen readers,** with "row 2 of 5" rather than "2 of 5". That's the accepted cost of rows that hold controls.
 - **This design hasn't been tried with a real screen reader.** The claim that a grid receives these keys comes from the Authoring Practices and from pdf-sdk's record for a listbox. The browser tests can't check it. NVDA with Firefox and Chrome, and VoiceOver with Safari, need a manual pass before the status changes to Accepted, and the record is amended with what they find.
-- The React entry is at 14.43 kB of 15 kB, so the pull request that adds the list raises the budget from its measurement.
+- The React entry was at 14.43 kB of 15 kB. With the list it measures 15.9 kB, so its budget is 16 kB.
 - A row's controls are limited to one control per cell. A text field in a row, for renaming in place, needs an editing mode (Enter or F2 to edit, Escape to leave) and its own record.

@@ -253,6 +253,14 @@ Fine-grained overrides for one component. `ui` never declares them: each compone
 | `--hm-text-field-border-color` | `--hm-color-border-strong` | Border of a text field. It needs 3:1 contrast with the surface. |
 | `--hm-text-field-invalid-border-color` | `--hm-color-danger-text` | Border of a text field marked invalid. It needs 3:1 contrast with the surface. |
 | `--hm-text-area-padding-y` | `--hm-inset-tight` | Space above and below a text area's text. |
+| `--hm-reorderable-list-gap` | `--hm-gap-tight` | Space between a reorderable list's rows, and between a row's cells. |
+| `--hm-reorderable-list-row-height` | `--hm-control-height` | Height of a reorderable list's row. |
+| `--hm-reorderable-list-row-padding-x` | `--hm-control-padding-x` | Space at the start and end of a reorderable list's item. |
+| `--hm-reorderable-list-row-radius` | `--hm-radius-control` | Corner radius of a reorderable list's row. |
+| `--hm-reorderable-list-row-fg` | `--hm-color-text` | Text of a reorderable list's row. |
+| `--hm-reorderable-list-row-bg-hover` | `--hm-color-control-hover` | Background of a row under the pointer. |
+| `--hm-reorderable-list-row-selected-bg` | `--hm-color-accent-subtle` | Background of the selected row. |
+| `--hm-reorderable-list-row-selected-border-color` | `--hm-color-accent` | Border of the selected row. It needs 3:1 contrast with the surface. |
 | `--hm-color-field-gap` | `--hm-gap-tight` | Space between a colour field's preview, input and swatches. |
 | `--hm-color-field-swatch-size` | `--hm-control-height-small` | Width and height of a colour field's swatch. |
 | `--hm-color-field-swatch-radius` | `--hm-radius-control` | Corner radius of a colour field's preview and swatches. |

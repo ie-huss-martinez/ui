@@ -51,6 +51,7 @@ for (const app of apps) {
         'class="hm-text-field"',
         'class="hm-text-field hm-text-area"',
         'class="hm-color-field"',
+        'role="grid"',
         'aria-pressed="false"',
         'class="hm-spinner"',
         "<progress",
@@ -147,6 +148,30 @@ for (const app of apps) {
         return drop.defaultPrevented;
       });
       expect(strayDrop).toBe(true);
+
+      // The reorderable list: one Tab stop, arrows select, and Alt with an
+      // arrow moves the row without scrolling the page or leaving it.
+      const layers = page.getByRole("grid", { name: "Layers" });
+      await expect(layers.locator('[tabindex="0"]')).toHaveCount(1);
+      await layers.getByRole("gridcell", { name: "Photo", exact: true }).focus();
+      const url = page.url();
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.keyboard.press("Alt+ArrowUp");
+      await expect(layers.getByRole("row").first()).toHaveAttribute("data-hm-id", "Photo");
+      await expect(layers.getByRole("gridcell", { name: "Photo", exact: true })).toBeFocused();
+      await expect(page.getByText("Photo moved to position 1 of 3")).toBeAttached();
+      // Taken at the first row too.
+      await page.keyboard.press("Alt+ArrowUp");
+      await page.keyboard.press("ArrowDown");
+      await expect(layers.getByRole("row", { selected: true })).toHaveAttribute(
+        "data-hm-id",
+        "Title",
+      );
+      expect(await page.evaluate(() => window.scrollY)).toBe(0);
+      expect(page.url()).toBe(url);
+      // The buttons do the same without the keys.
+      await page.getByRole("button", { name: "Move layer down" }).click();
+      await expect(layers.getByRole("row").last()).toHaveAttribute("data-hm-id", "Title");
 
       // The segmented control selects with the arrow keys.
       await page.getByRole("radio", { name: "Single" }).focus();
