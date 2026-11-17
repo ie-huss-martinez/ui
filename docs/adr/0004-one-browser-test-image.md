@@ -1,6 +1,6 @@
 # 0004. One browser test image, in one place
 
-- **Status:** Accepted
+- **Status:** Accepted; the unit tests of the image are replaced by [0007](0007-browser-tests-in-the-pinned-image.md)
 - **Date:** 2026-11-12
 
 ## Context

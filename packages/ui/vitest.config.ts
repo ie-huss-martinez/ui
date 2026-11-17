@@ -15,8 +15,6 @@ const setColorScheme: BrowserCommand<[scheme: "light" | "dark"]> = async (contex
 
 const ALL_BROWSERS = ["chromium", "firefox", "webkit"] as const;
 
-// Browser tests run on Chromium locally, and on all three engines in CI or
-// with --mode all-browsers (ADR 0015).
 /** Emulates `prefers-reduced-motion`, so browser tests can check motion fallbacks. */
 const setReducedMotion: BrowserCommand<[reduce: boolean]> = async (context, reduce) => {
   if (context.provider.name !== "playwright") {
@@ -25,6 +23,9 @@ const setReducedMotion: BrowserCommand<[reduce: boolean]> = async (context, redu
   await context.page.emulateMedia({ reducedMotion: reduce ? "reduce" : "no-preference" });
 };
 
+// Browser tests run on Chromium locally, and on all three engines in CI or
+// with --mode all-browsers (ADR 0015), always in the browser test image
+// (docs/adr/0007).
 export default defineConfig(({ mode }) => {
   const browsers =
     process.env["CI"] || mode === "all-browsers" ? ALL_BROWSERS : (["chromium"] as const);

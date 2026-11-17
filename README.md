@@ -10,7 +10,7 @@ This repository will publish **`@hussmartinez/ui`**. It follows the family stand
 
 This repository is a pnpm workspace. The published package lives in [`packages/ui`](packages/ui), the component catalogue, built with Storybook, in [`apps/catalogue`](apps/catalogue), and two example applications that use the built package as hosts do in [`examples`](examples), tested from [`e2e`](e2e). `pnpm --filter @hussmartinez/ui-catalogue dev` starts it.
 
-You need Node 24 (see [`.node-version`](.node-version)), pnpm, and Docker for the visual tests. The exact pnpm version is pinned in `package.json`, and pnpm switches to it automatically.
+You need Node 24 (see [`.node-version`](.node-version)), pnpm, and Docker for the browser tests. The exact pnpm version is pinned in `package.json`, and pnpm switches to it automatically.
 
 ```sh
 pnpm install       # also installs the git hooks
@@ -28,9 +28,9 @@ pnpm verify:fast   # the subset the pre-push hook runs
 | Dependency rules | `lint:deps` | dependency-cruiser, through `hm-lint-deps` |
 | Build | `build` | Vite, then api-extractor for the type declarations |
 | Unit tests | `test` | Vitest |
-| Browser tests | `test:browser` | Vitest, and every catalogue story with axe, in Chromium, and in Firefox and WebKit too in CI |
-| Visual tests | `test:visual` | Every story in three themes and two densities, in a pinned Playwright image (needs Docker) |
-| End-to-end tests | `test:e2e` | Playwright against production builds of the [Next.js](examples/next) and [Vite](examples/vite) examples: server rendering, hydration without warnings, interaction, axe, and no requests to other origins |
+| Browser tests | `test:browser` | Vitest, and every catalogue story with axe, in Chromium, and in Firefox and WebKit too in CI, in a pinned Playwright image (needs Docker) |
+| Visual tests | `test:visual` | Every story in three themes and two densities, in the same image |
+| End-to-end tests | `test:e2e` | Playwright against production builds of the [Next.js](examples/next) and [Vite](examples/vite) examples: server rendering, hydration without warnings, interaction, axe, and no requests to other origins, in the same image |
 | Size budgets | `check:size` | size-limit, brotli size of each entry point |
 | API reports | `check:api` | api-extractor, one report per entry point in `packages/ui/api` |
 | Package checks | `check:package` | publint and Are the Types Wrong? |

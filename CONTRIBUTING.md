@@ -20,9 +20,14 @@ pnpm verify        # everything CI runs
 pnpm verify:fast   # the subset the pre-push hook runs
 ```
 
-Browser tests need Playwright's browsers once: `pnpm --filter @hussmartinez/ui exec playwright install chromium firefox webkit`.
+**Browser tests need [Docker](https://docs.docker.com/get-docker/).** `pnpm verify` runs the browser, visual and end-to-end tests inside a pinned Playwright image, through `sdk-config`'s `hm-in-image`, so they use CI's browsers on every machine and screenshots match pixel for pixel ([ADR 0007](docs/adr/0007-browser-tests-in-the-pinned-image.md), [ADR 0002](docs/adr/0002-visual-regression-in-a-pinned-container.md)). You don't install Playwright's browsers yourself. The first run downloads the image, about 2 GB, and installs the dependencies into the container's own volumes. Without Docker, `pnpm verify` stops at the first browser step and says how to fix it.
 
-**Visual tests need [Docker](https://docs.docker.com/get-docker/).** `pnpm verify` runs them inside a pinned Playwright image, so screenshots match on every machine ([ADR 0002](docs/adr/0002-visual-regression-in-a-pinned-container.md)). The first run downloads the image, about 2 GB. Without Docker, `pnpm verify` stops at `test:visual` and says how to fix it.
+```sh
+pnpm test:browser                       # the package's browser tests and every story, in Chromium
+pnpm -r --if-present test:browser:all   # the same in Chromium, Firefox and WebKit, as CI runs them
+```
+
+The visual tests compare every story with committed baselines:
 
 ```sh
 pnpm test:visual          # compare every story with its baselines

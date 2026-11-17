@@ -7,6 +7,7 @@ const ALL_BROWSERS = ["chromium", "firefox", "webkit"] as const;
 
 // Screenshots depend on fonts and rendering libraries, so visual tests only run
 // in the pinned Playwright image, where baselines match pixel for pixel.
+// hm-in-image, which the test:visual scripts use, runs them there.
 if (process.argv.includes("visual") && process.env["HM_VISUAL_CONTAINER"] !== "1") {
   throw new Error(
     "Visual tests run only in the pinned Playwright image. Use pnpm test:visual, or pnpm test:visual:update to update the baselines.",
@@ -15,7 +16,8 @@ if (process.argv.includes("visual") && process.env["HM_VISUAL_CONTAINER"] !== "1
 
 export default defineConfig(({ mode }) => {
   // Stories run on Chromium locally, and on all three engines in CI or with
-  // --mode all-browsers (ADR 0015).
+  // --mode all-browsers (ADR 0015), always in the browser test image
+  // (docs/adr/0007).
   const browsers =
     process.env["CI"] || mode === "all-browsers" ? ALL_BROWSERS : (["chromium"] as const);
   return {

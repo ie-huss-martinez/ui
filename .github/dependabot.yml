@@ -22,12 +22,12 @@ updates:
         patterns: ["*"]
 
   # The pinned Playwright image of the browser tests, read by CI's verify jobs
-  # through sdk-ci's image action and by the visual tests, from one place
-  # (docs/adr/0004). Its tag must move
-  # together with the playwright package; a unit test in apps/catalogue fails
-  # until both match. The short directory keeps titles such as "ci: bump
-  # playwright from v1.65.0-noble to v1.66.0-noble in /ci" within the
-  # 65-character limit, as Dependabot always appends "in /<directory>".
+  # through sdk-ci's image action and by hm-in-image locally, from one place
+  # (docs/adr/0004). Its tag moves together with the "playwright" npm group
+  # below, in one pull request: hm-check-playwright-image fails until both
+  # match (ADR 0025, in sdk-core). The short directory keeps titles such as
+  # "ci: bump playwright from v1.65.0-noble to v1.66.0-noble in /ci" within
+  # the 65-character limit, as Dependabot always appends "in /<directory>".
   - package-ecosystem: docker
     directory: /ci
     schedule:
@@ -59,8 +59,15 @@ updates:
       - dependency-name: "@types/node"
         versions: [">=25"]
     groups:
+      # Playwright's packages are pinned exactly to the browser test image's
+      # version (ADR 0025, in sdk-core), so they're proposed together, apart
+      # from the rest. Merge them in the same pull request as the docker
+      # update above.
+      playwright:
+        patterns: ["playwright", "playwright-core", "@playwright/test"]
       # Minor and patch updates arrive together; each major gets its own pull
       # request, because it may need code or configuration changes.
       npm:
         patterns: ["*"]
+        exclude-patterns: ["playwright", "playwright-core", "@playwright/test"]
         update-types: [minor, patch]
