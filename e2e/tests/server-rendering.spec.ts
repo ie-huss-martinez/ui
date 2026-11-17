@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "../fixtures.js";
 
 /**
  * The same checks against both examples: the package renders on the server,
@@ -166,5 +166,36 @@ for (const app of apps) {
       const results = await new AxeBuilder({ page }).analyze();
       expect(results.violations).toEqual([]);
     });
+
+    // A tooltip of each type, closed and open (ui#61). The role locators and
+    // axe both compute the trigger's name, as an SDK's tests do.
+    for (const tooltip of [
+      { type: "label", trigger: "Undo", text: "Undo" },
+      { type: "description", trigger: "Redo", text: "Repeats the change you last undid" },
+    ] as const) {
+      test(`passes axe with a ${tooltip.type} tooltip, closed and open`, async ({ page }) => {
+        await page.goto(app.url);
+        await expect(page.locator("[data-hydrated]")).toBeAttached();
+        const trigger = page.getByRole("button", { name: tooltip.trigger, exact: true });
+        const open = page.locator('[role="tooltip"]:popover-open');
+
+        // Closed, the tooltip still names or describes its trigger.
+        await expect(open).toHaveCount(0);
+        if (tooltip.type === "label") {
+          await expect(trigger).toHaveAccessibleName(tooltip.text);
+          await expect(trigger).toHaveAccessibleDescription("");
+        } else {
+          await expect(trigger).toHaveAccessibleDescription(tooltip.text);
+        }
+        expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+
+        // Open, its text is on the page too, and checked for contrast.
+        await trigger.hover();
+        await expect(open).toHaveText(tooltip.text);
+        const results = await new AxeBuilder({ page }).analyze();
+        expect(results.violations).toEqual([]);
+        expect(results.passes.map((rule) => rule.id)).toContain("button-name");
+      });
+    }
   });
 }
