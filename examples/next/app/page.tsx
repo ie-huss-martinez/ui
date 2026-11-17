@@ -43,7 +43,9 @@ export default function Page() {
             <Tooltip type="label" content="Undo">
               <IconButton variant="quiet" label="Undo" icon={<UndoIcon />} />
             </Tooltip>
-            <Button variant="quiet">Redo</Button>
+            <Tooltip content="Repeats the change you last undid">
+              <Button variant="quiet">Redo</Button>
+            </Tooltip>
           </ToolbarGroup>
           <ToolbarSeparator />
           <ToggleButton variant="quiet">Loop</ToggleButton>
