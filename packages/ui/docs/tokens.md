@@ -265,6 +265,13 @@ Fine-grained overrides for one component. `ui` never declares them: each compone
 | `--hm-timeline-track-radius` | `--hm-radius-control` | Corner radius of a timeline's track. |
 | `--hm-timeline-lane-height` | `--hm-control-height` | Least height of a timeline's lane, where its layers and clips are. |
 | `--hm-timeline-playhead-color` | `--hm-color-accent` | Line of a timeline's playhead. It needs 3:1 contrast with the track. |
+| `--hm-timeline-clip-bg` | `--hm-color-control` | Background of a clip on a timeline. |
+| `--hm-timeline-clip-fg` | `--hm-color-text` | Text of a clip on a timeline. |
+| `--hm-timeline-clip-border-color` | `--hm-color-border-strong` | Border of a clip. It needs 3:1 contrast with the track. |
+| `--hm-timeline-clip-radius` | `--hm-radius-control` | Corner radius of a clip on a timeline. |
+| `--hm-timeline-clip-padding-x` | `--hm-gap-tight` | Space at the start and end of what a clip shows. |
+| `--hm-timeline-clip-selected-bg` | `--hm-color-accent-subtle` | Background of a selected clip. |
+| `--hm-timeline-clip-selected-border-color` | `--hm-color-accent` | Border of a selected clip. It needs 3:1 contrast with the track. |
 | `--hm-color-field-gap` | `--hm-gap-tight` | Space between a colour field's preview, input and swatches. |
 | `--hm-color-field-swatch-size` | `--hm-control-height-small` | Width and height of a colour field's swatch. |
 | `--hm-color-field-swatch-radius` | `--hm-radius-control` | Corner radius of a colour field's preview and swatches. |

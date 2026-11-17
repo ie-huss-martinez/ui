@@ -324,4 +324,12 @@ export const tokenDescriptions: Readonly<Record<TokenName, string>> = {
   "timeline-track-radius": "Corner radius of a timeline's track.",
   "timeline-lane-height": "Least height of a timeline's lane, where its layers and clips are.",
   "timeline-playhead-color": "Line of a timeline's playhead. It needs 3:1 contrast with the track.",
+  "timeline-clip-bg": "Background of a clip on a timeline.",
+  "timeline-clip-fg": "Text of a clip on a timeline.",
+  "timeline-clip-border-color": "Border of a clip. It needs 3:1 contrast with the track.",
+  "timeline-clip-radius": "Corner radius of a clip on a timeline.",
+  "timeline-clip-padding-x": "Space at the start and end of what a clip shows.",
+  "timeline-clip-selected-bg": "Background of a selected clip.",
+  "timeline-clip-selected-border-color":
+    "Border of a selected clip. It needs 3:1 contrast with the track.",
 };

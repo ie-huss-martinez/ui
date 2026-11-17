@@ -43,6 +43,45 @@
     box-sizing: border-box;
   }
 
+  /*
+   * The clips, side by side. Until the timeline has measured itself, as on
+   * a server, they share the track equally; then TimelineClips.tsx sets each
+   * one's inline size.
+   */
+  .hm-timeline-clips {
+    box-sizing: border-box;
+    display: flex;
+  }
+
+  .hm-timeline-clip {
+    align-items: center;
+    box-sizing: border-box;
+    cursor: pointer;
+    display: flex;
+    flex: 1 1 0;
+    min-inline-size: 0;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  .hm-timeline-clips[data-hm-measured] > .hm-timeline-clip {
+    flex: none;
+  }
+
+  /* Inside the clip, where its neighbours and the track's edge can't cover it. */
+  .hm-timeline-clip:focus-visible {
+    outline: var(--hm-focus-ring);
+    outline-offset: calc(var(--hm-focus-ring-width) * -1);
+  }
+
+  .hm-timeline-clip-content {
+    min-inline-size: 0;
+    overflow: hidden;
+    padding-inline: var(--hm-timeline-clip-padding-x, var(--hm-gap-tight));
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   /* Over both rows, and above the layers; only its slider takes the pointer. */
   .hm-timeline-playhead {
     grid-row: 1 / 3;
@@ -85,5 +124,24 @@
   .hm-timeline-playhead:not([data-hm-unstyled]) .hm-timeline-playhead-line {
     border-inline-start: var(--hm-focus-ring-width) solid
       var(--hm-timeline-playhead-color, var(--hm-color-accent));
+  }
+
+  .hm-timeline-clips:not([data-hm-unstyled]) > .hm-timeline-clip {
+    background: var(--hm-timeline-clip-bg, var(--hm-color-control));
+    border: var(--hm-border-width) solid
+      var(--hm-timeline-clip-border-color, var(--hm-color-border-strong));
+    border-radius: var(--hm-timeline-clip-radius, var(--hm-radius-control));
+    color: var(--hm-timeline-clip-fg, var(--hm-color-text));
+    font-family: var(--hm-font-family);
+    font-size: var(--hm-font-size-small);
+    letter-spacing: var(--hm-letter-spacing);
+    line-height: var(--hm-line-height-tight);
+  }
+
+  /* A thicker border as well as a colour, so selection isn't shown by colour alone. */
+  .hm-timeline-clips:not([data-hm-unstyled]) > .hm-timeline-clip[aria-selected="true"] {
+    background: var(--hm-timeline-clip-selected-bg, var(--hm-color-accent-subtle));
+    border-color: var(--hm-timeline-clip-selected-border-color, var(--hm-color-accent));
+    border-width: var(--hm-focus-ring-width);
   }
 }

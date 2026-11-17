@@ -685,6 +685,13 @@ export type ComponentTokenName =
   | "timeline-track-radius"
   | "timeline-lane-height"
   | "timeline-playhead-color"
+  | "timeline-clip-bg"
+  | "timeline-clip-fg"
+  | "timeline-clip-border-color"
+  | "timeline-clip-radius"
+  | "timeline-clip-padding-x"
+  | "timeline-clip-selected-bg"
+  | "timeline-clip-selected-border-color"
   | "color-field-gap"
   | "color-field-swatch-size"
   | "color-field-swatch-radius"
@@ -842,6 +849,13 @@ const component = {
   "timeline-track-radius": { fallback: "radius-control" },
   "timeline-lane-height": { fallback: "control-height" },
   "timeline-playhead-color": { fallback: "color-accent" },
+  "timeline-clip-bg": { fallback: "color-control" },
+  "timeline-clip-fg": { fallback: "color-text" },
+  "timeline-clip-border-color": { fallback: "color-border-strong" },
+  "timeline-clip-radius": { fallback: "radius-control" },
+  "timeline-clip-padding-x": { fallback: "gap-tight" },
+  "timeline-clip-selected-bg": { fallback: "color-accent-subtle" },
+  "timeline-clip-selected-border-color": { fallback: "color-accent" },
   "color-field-gap": { fallback: "gap-tight" },
   "color-field-swatch-size": { fallback: "control-height-small" },
   "color-field-swatch-radius": { fallback: "radius-control" },

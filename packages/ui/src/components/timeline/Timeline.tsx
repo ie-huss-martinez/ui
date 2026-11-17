@@ -226,20 +226,26 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
   const lead = useRef(0);
   const targets = useRef(new Set<() => readonly number[]>());
 
+  // Measured and sized when React commits, through ref callbacks, so the
+  // first frame painted is already sized. A ref callback runs only in a
+  // browser, so nothing here reads the browser on a server, and there's no
+  // layout effect for React 18 to warn about there.
+  const measure = (element: HTMLDivElement): void => {
+    const style = getComputedStyle(element);
+    const padding = Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight);
+    lead.current = Number.parseFloat(style.paddingInlineStart) || 0;
+    // The same width again changes nothing, so this settles in one more render.
+    setRoom(Math.max(0, element.clientWidth - padding));
+  };
+  const remeasure = useRef(measure);
+  remeasure.current = measure;
   useEffect(() => {
     const element = viewport.current;
     if (!element) {
       return;
     }
-    const measure = (): void => {
-      const style = getComputedStyle(element);
-      const padding = Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight);
-      lead.current = Number.parseFloat(style.paddingInlineStart) || 0;
-      setRoom(Math.max(0, element.clientWidth - padding));
-    };
-    const observer = new ResizeObserver(measure);
+    const observer = new ResizeObserver(() => remeasure.current(element));
     observer.observe(element);
-    measure();
     return () => observer.disconnect();
   }, []);
 
@@ -260,12 +266,9 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
 
   // Sizes go through the CSSOM: a style attribute would be blocked by a
   // strict Content Security Policy when rendered on a server.
-  useEffect(() => {
-    const element = track.current;
-    if (element) {
-      element.style.inlineSize = pixelsPerUnit > 0 ? `${length * pixelsPerUnit}px` : "";
-    }
-  }, [length, pixelsPerUnit]);
+  const sizeTrack = (element: HTMLDivElement): void => {
+    element.style.inlineSize = pixelsPerUnit > 0 ? `${length * pixelsPerUnit}px` : "";
+  };
 
   const settings = useRef({ snapping, snapTargets });
   settings.current = { snapping, snapTargets };
@@ -352,11 +355,25 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
       data-hm-unstyled={unstyledAttribute(unstyled)}
     >
       <div
-        ref={viewport}
+        // A new function each render, so React calls it at every commit.
+        ref={(node) => {
+          viewport.current = node;
+          if (node) {
+            measure(node);
+          }
+        }}
         className={cx("hm-timeline-viewport", classNames?.viewport)}
         onScroll={reportRange}
       >
-        <div ref={track} className={cx("hm-timeline-track", classNames?.track)}>
+        <div
+          ref={(node) => {
+            track.current = node;
+            if (node) {
+              sizeTrack(node);
+            }
+          }}
+          className={cx("hm-timeline-track", classNames?.track)}
+        >
           <TimelineContext.Provider value={context}>{children}</TimelineContext.Provider>
         </div>
       </div>

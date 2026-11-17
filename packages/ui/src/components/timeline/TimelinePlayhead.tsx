@@ -84,7 +84,6 @@ export const TimelinePlayhead = /* @__PURE__ */ forwardRef<HTMLInputElement, Tim
     const length = scale?.length ?? 0;
     const pixelsPerUnit = scale?.pixelsPerUnit ?? 0;
     const position = Math.min(Math.max(Math.round(rawPosition) || 0, 0), length);
-    const line = useRef<HTMLDivElement | null>(null);
 
     const latest = useRef({ position, onPositionChange });
     latest.current = { position, onPositionChange };
@@ -93,12 +92,11 @@ export const TimelinePlayhead = /* @__PURE__ */ forwardRef<HTMLInputElement, Tim
     const addTargets = context?.addTargets;
     useEffect(() => addTargets?.(() => [latest.current.position]), [addTargets]);
 
-    // The line's place goes through the CSSOM, as the track's size does.
-    useEffect(() => {
-      if (line.current) {
-        line.current.style.insetInlineStart = `${position * pixelsPerUnit}px`;
-      }
-    }, [position, pixelsPerUnit]);
+    // The line's place goes through the CSSOM, as the track's size does,
+    // from a ref callback, so it's there in the frame React commits.
+    const placeLine = (element: HTMLDivElement): void => {
+      element.style.insetInlineStart = `${position * pixelsPerUnit}px`;
+    };
 
     // Scrolling: to keep the playhead in view while following; to bring it
     // back after a zoom, which moves everything under the viewport; and to
@@ -166,7 +164,11 @@ export const TimelinePlayhead = /* @__PURE__ */ forwardRef<HTMLInputElement, Tim
           className={cx("hm-timeline-playhead-slider", classNames?.slider)}
         />
         <div
-          ref={line}
+          ref={(node) => {
+            if (node) {
+              placeLine(node);
+            }
+          }}
           className={cx("hm-timeline-playhead-line", classNames?.line)}
           aria-hidden="true"
         />

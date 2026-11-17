@@ -29,12 +29,13 @@ export default [
     name: "React entry (./react), with the shared code it loads",
     path: ["dist/react.js", "dist/shared/*.js"],
     brotli: true,
-    // 18 kB. It measures 17.71 kB with the timeline's region, scale and
-    // playhead, which are about 1.8 kB; ReorderableList before them took it
-    // from 15 kB to 16 kB. A budget is raised by the pull request whose
-    // component needs it, to its measurement rounded up to the next 0.5 kB.
-    // Applications ship only the components they import: see build.test.ts.
-    limit: "18 kB",
+    // 19.5 kB. It measures 19.14 kB with the timeline's clip track, which
+    // is about 1.4 kB; the timeline's region, scale and playhead before it
+    // took it from 16 kB to 18 kB. A budget is raised by the pull request
+    // whose component needs it, to its measurement rounded up to the next
+    // 0.5 kB. Applications ship only the components they import: see
+    // build.test.ts.
+    limit: "19.5 kB",
   },
   {
     name: "Stylesheet (./styles.css)",
