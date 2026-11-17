@@ -1,5 +1,11 @@
 # @hussmartinez/ui
 
+## 0.8.0
+
+### Minor Changes
+
+- [#66](https://github.com/ie-huss-martinez/ui/pull/66) [`82f6294`](https://github.com/ie-huss-martinez/ui/commit/82f629465fb16ca53bc517792b03fbf8edceab35) Thanks [@hussmartinez](https://github.com/hussmartinez)! - Add twelve icons, for layer panels, shape tools and page tools: `VisibleIcon`, `HiddenIcon`, `LayersIcon`, `TextIcon`, `RectangleIcon`, `EllipseIcon`, `ArrowIcon`, `RedactIcon`, `DuplicateIcon`, `MoveUpIcon`, `MoveDownIcon` and `PageAddIcon`. Their `IconName`s are `visible`, `hidden`, `layers`, `text`, `rectangle`, `ellipse`, `arrow`, `redact`, `duplicate`, `move-up`, `move-down` and `page-add`.
+
 ## 0.7.0
 
 ### Minor Changes
