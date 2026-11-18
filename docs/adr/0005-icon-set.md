@@ -1,8 +1,19 @@
 # 0005. An icon set generated from Lucide
 
-- **Status:** Accepted
+- **Status:** Accepted; amended 2026-11-18 to allow a few glyphs ui draws itself, for icons Lucide has none for
 - **Date:** 2026-11-12
 - **Amended:** 2026-11-12, after the set was built. Each icon is a plain module-level function, such as `function UndoIcon(props)`, calling a shared `renderIcon`, rather than a `createIcon()` factory with a pure annotation. Biome rejects component factories, and function declarations tree-shake without any annotation. `IconName` is generated into its own module with no imports, `icon-name.generated.ts`, so the server-safe entry exports it without reaching React, even as types, as sdk-core's `entry-no-react` rule requires
+
+## Amendment: glyphs ui draws itself
+
+- **Date:** 2026-11-18
+- **Why:** audio-sdk's toolbar needs icons for a range's start and end, and Lucide has no glyph for either. The nearest read as "go to the start" (`chevron-first`) or look like the trim glyphs already in the same toolbar (`arrow-right-from-line`). Drawing our own was rejected for the whole set, because it's slow and hard to keep consistent across dozens of glyphs; for a few that Lucide lacks, that cost is small.
+- **The rule:**
+  - **Only for an icon Lucide has no glyph for,** and only after checking its current release. When Lucide adds one, the manifest switches to it, and the name stays.
+  - **Drawn as Lucide's are:** a 24-unit grid, a stroke of 2 with round caps and joins, and only the shapes and attributes the generator allows.
+  - **Through the same generator and validation.** They live in `src/icons/own-glyphs.ts`, as data in Lucide's format, and the manifest names one with `own` instead of `lucide`. A test checks that an own glyph with a disallowed element or attribute stops generation, as Lucide's data does.
+  - **They're ui's code, under ui's licence,** not Lucide's; `THIRD_PARTY_NOTICES.md` says which they are.
+- **The first:** `range-start` and `range-end`, a bracket with a dotted span, `[···` and `···]`. They mirror in right-to-left text. `ripple` is Lucide's `fold-horizontal`.
 
 ## Context
 

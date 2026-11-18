@@ -51,6 +51,39 @@ describe("the generated icons", () => {
     expect(componentName("page-grid")).toBe("PageGridIcon");
   });
 
+  it("validate ui's own glyphs as they do Lucide's, and fail for one that isn't there", () => {
+    expect(() => generateIconsSource({}, "0.0.0", { mine: { own: "missing" } }, {})).toThrow(
+      /own-glyphs.ts has no glyph missing/,
+    );
+    expect(() =>
+      generateIconsSource(
+        {},
+        "0.0.0",
+        { mine: { own: "bad" } },
+        {
+          bad: [["path", { d: "M0 0", onload: "x" }]],
+        },
+      ),
+    ).toThrow(/the attribute onload isn't allowed/);
+    expect(() =>
+      generateIconsSource(
+        {},
+        "0.0.0",
+        { mine: { own: "bad" } },
+        { bad: [["image", { href: "x" }]] },
+      ),
+    ).toThrow(/the element image isn't allowed/);
+    const { "src/icons/icons.generated.tsx": source } = generateIconsSource(
+      {},
+      "0.0.0",
+      { mine: { own: "ok", mirror: true } },
+      { ok: [["path", { d: "M9 4H5v16h4" }]] },
+    );
+    expect(source).toContain(
+      "The `mine` icon: ui's own `ok` glyph, mirrored in right-to-left text.",
+    );
+  });
+
   it("fail generation for a glyph lucide-static doesn't have", () => {
     expect(() => generateIconsSource({}, "0.0.0", { gone: { lucide: "no-such-glyph" } })).toThrow(
       /no glyph no-such-glyph/,

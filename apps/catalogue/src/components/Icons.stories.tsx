@@ -86,3 +86,28 @@ export const InUse: Story = {
     </div>
   ),
 };
+
+/**
+ * Tools for editing time, as an audio or video editor's toolbar has them,
+ * left to right and right to left. `range-start` and `range-end` are ui's own
+ * glyphs, drawn on Lucide's grid and stroke because Lucide has none for them;
+ * they sit beside Lucide's trim and split glyphs here so they can be told
+ * apart at a glance.
+ */
+export const EditingTime: Story = {
+  name: "Editing time",
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--hm-gap-normal)" }}>
+      {(["ltr", "rtl"] as const).map((dir) => (
+        <div key={dir} dir={dir} style={{ display: "flex", gap: "var(--hm-gap-tight)" }}>
+          <IconButton variant="quiet" label="Set the range's start" icon={<ui.RangeStartIcon />} />
+          <IconButton variant="quiet" label="Set the range's end" icon={<ui.RangeEndIcon />} />
+          <IconButton variant="quiet" label="Ripple" icon={<ui.RippleIcon />} />
+          <IconButton variant="quiet" label="Trim the start" icon={<ui.TrimStartIcon />} />
+          <IconButton variant="quiet" label="Trim the end" icon={<ui.TrimEndIcon />} />
+          <IconButton variant="quiet" label="Split" icon={<ui.SplitIcon />} />
+        </div>
+      ))}
+    </div>
+  ),
+};

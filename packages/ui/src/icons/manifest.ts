@@ -7,9 +7,17 @@
  * right-to-left text. Media controls, rotations and physical directions, such
  * as the chevrons, don't.
  *
+ * `own` names a glyph ui draws itself, in `own-glyphs.ts`, for an icon
+ * Lucide has no glyph for (docs/adr/0005, as amended).
+ *
  * Development-time only: `pnpm --filter @hussmartinez/ui icons` reads it to
  * write `icons.generated.tsx`. Add an icon here, then regenerate.
  */
+/** Where an icon's glyph comes from: Lucide's data, or ui's own. */
+export type IconSource =
+  | { readonly lucide: string; readonly own?: undefined; readonly mirror?: boolean }
+  | { readonly own: string; readonly lucide?: undefined; readonly mirror?: boolean };
+
 export const iconManifest = {
   add: { lucide: "plus" },
   arrow: { lucide: "move-up-right" },
@@ -47,10 +55,13 @@ export const iconManifest = {
   pause: { lucide: "pause" },
   pen: { lucide: "pen" },
   play: { lucide: "play" },
+  "range-end": { own: "range-end", mirror: true },
+  "range-start": { own: "range-start", mirror: true },
   rectangle: { lucide: "rectangle-horizontal" },
   redact: { lucide: "rectangle-ellipsis" },
   redo: { lucide: "redo-2", mirror: true },
   remove: { lucide: "minus" },
+  ripple: { lucide: "fold-horizontal" },
   "rotate-left": { lucide: "rotate-ccw" },
   "rotate-right": { lucide: "rotate-cw" },
   search: { lucide: "search" },
@@ -70,4 +81,4 @@ export const iconManifest = {
   warning: { lucide: "triangle-exclamation-point" },
   "zoom-in": { lucide: "zoom-in" },
   "zoom-out": { lucide: "zoom-out" },
-} as const satisfies Record<string, { readonly lucide: string; readonly mirror?: boolean }>;
+} as const satisfies Record<string, IconSource>;
