@@ -24,6 +24,9 @@ export default defineConfig(({ mode }) => {
   return {
     resolve: { alias: uiSourceAliases },
     test: {
+      // The default report, and each browser file as it starts, so a crashed
+      // page names the file it was running (file-start-reporter.ts).
+      reporters: ["default", "./file-start-reporter.ts"],
       projects: [
         {
           extends: true,
