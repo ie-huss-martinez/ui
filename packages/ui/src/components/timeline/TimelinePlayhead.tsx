@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useRef } from "react";
 import { cx, type StyleProps, unstyledAttribute } from "../shared/style-props.js";
 import { Slider } from "../slider/Slider.js";
+import { setStyle } from "./set-style.js";
 import { useTimelineContext } from "./Timeline.js";
 
 /**
@@ -95,13 +96,15 @@ export const TimelinePlayhead = /* @__PURE__ */ forwardRef<HTMLInputElement, Tim
     // The line's place goes through the CSSOM, as the track's size does,
     // from a ref callback, so it's there in the frame React commits.
     const placeLine = (element: HTMLDivElement): void => {
-      element.style.insetInlineStart = `${position * pixelsPerUnit}px`;
+      setStyle(element, "inset-inline-start", `${position * pixelsPerUnit}px`);
     };
 
     // Scrolling: to keep the playhead in view while following; to bring it
     // back after a zoom, which moves everything under the viewport; and to
     // start with it in view, once the timeline has measured itself.
     const viewport = context?.viewport;
+    const header = context?.headerWidth ?? 0;
+    const lanes = context?.lanes.length ?? 0;
     const lastScale = useRef(0);
     useEffect(() => {
       const element = viewport?.current;
@@ -113,14 +116,15 @@ export const TimelinePlayhead = /* @__PURE__ */ forwardRef<HTMLInputElement, Tim
       }
       const at = position * pixelsPerUnit;
       const start = Math.abs(element.scrollLeft);
-      const width = element.clientWidth;
+      // What's left of the view beside the lanes' headers, which cover its start.
+      const width = element.clientWidth - header;
       if (zoomed || at < start || at > start + width) {
         // In the middle after a zoom and at the start; a tenth in while
         // following, so there's more ahead of the playhead than behind it.
         const to = Math.max(0, at - (zoomed || first ? width / 2 : width / 10));
         element.scrollLeft = getComputedStyle(element).direction === "rtl" ? -to : to;
       }
-    }, [viewport, position, pixelsPerUnit, following]);
+    }, [viewport, position, pixelsPerUnit, following, header]);
 
     const track = context?.track;
     useEffect(() => {
@@ -147,6 +151,12 @@ export const TimelinePlayhead = /* @__PURE__ */ forwardRef<HTMLInputElement, Tim
 
     return (
       <div
+        // With lanes, the line runs down all of them.
+        ref={(node) => {
+          if (node) {
+            setStyle(node, "grid-row", lanes > 0 ? `1 / span ${lanes + 1}` : "");
+          }
+        }}
         className={cx("hm-timeline-playhead", classNames?.root, className)}
         data-hm-unstyled={unstyledAttribute(unstyled)}
       >

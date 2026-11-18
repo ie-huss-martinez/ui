@@ -29,21 +29,23 @@ export default [
     name: "React entry (./react), with the shared code it loads",
     path: ["dist/react.js", "dist/shared/*.js"],
     brotli: true,
-    // 20 kB. It measures 19.94 kB with moving and trimming on the
-    // timeline's clip track, about 0.8 kB; the clip track before them took
-    // it from 18 kB to 19.5 kB. A budget is raised by the pull request whose
-    // component needs it, to its measurement rounded up to the next 0.5 kB.
-    // Applications ship only the components they import: see build.test.ts.
-    limit: "20 kB",
+    // 22 kB. It measures 21.81 kB with the timeline's lanes, about 1.9 kB:
+    // their registry, the headers' column and its measuring, and the arrows
+    // between lanes. Moving and trimming before them took it from 19.5 kB to
+    // 20 kB. A budget is raised by the pull request whose component needs
+    // it, to its measurement rounded up to the next 0.5 kB. Applications
+    // ship only the components they import: see build.test.ts.
+    limit: "22 kB",
   },
   {
     name: "Stylesheet (./styles.css)",
     path: "dist/styles.css",
     brotli: true,
-    // 8.5 kB. It measures 8.08 kB with the timeline's clip edges, which took
-    // it over the 8 kB it started with. Raised as the React entry's is: to
-    // the measurement, rounded up to the next 0.5 kB. Every application
-    // loads the whole stylesheet, so this one is the cost of every component.
-    limit: "8.5 kB",
+    // 9 kB. It measures 8.64 kB with the timeline's lanes; the clip edges
+    // before them took it from 8 kB to 8.5 kB. Raised as the React entry's
+    // is: to the measurement, rounded up to the next 0.5 kB. Every
+    // application loads the whole stylesheet, so this one is the cost of
+    // every component.
+    limit: "9 kB",
   },
 ];

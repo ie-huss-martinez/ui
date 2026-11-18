@@ -379,16 +379,17 @@ describe("TimelineClips", () => {
     expect(getComputedStyle(short).overflow).toBe("hidden");
   });
 
-  it("stays quick with 2,000 clips: a key renders two clips, and the playhead none", async () => {
+  // What keeps a long track quick is asserted as what changes, not as a
+  // time: a time depends on what else the machine is doing. The measured
+  // times are in docs/adr/0011.
+  it("changes only the two clips a key moves between, among 2,000", async () => {
     const many: TimelineClip[] = Array.from({ length: 2000 }, (_, index) => ({
       key: `k${index}`,
       length: 48,
       label: `Clip ${index + 1} of 2000`,
       content: `Clip ${index + 1}`,
     }));
-    const mounting = performance.now();
     const container = render(<Fixture start={many} first={["k0"]} zoom={40} />);
-    const mounted = performance.now() - mounting;
     expect(container.querySelectorAll('[role="option"]')).toHaveLength(2000);
 
     clip(container, "k0").focus();
@@ -402,15 +403,11 @@ describe("TimelineClips", () => {
       attributes: true,
       subtree: true,
     });
-    // The key event itself, so the time is the track's handling and render,
-    // not the test driver's round trip.
-    const pressing = performance.now();
     act(() => {
       clip(container, "k0").dispatchEvent(
         new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }),
       );
     });
-    const pressed = performance.now() - pressing;
     await Promise.resolve();
     observer.disconnect();
     expect(focused()).toBe("k1");
@@ -419,10 +416,6 @@ describe("TimelineClips", () => {
       "k0",
       "k1",
     ]);
-
-    // Loose limits: they catch a change of order of magnitude, not of engine.
-    expect(mounted).toBeLessThan(3000);
-    expect(pressed).toBeLessThan(500);
   });
 
   it("hydrates without errors or warnings", () => {

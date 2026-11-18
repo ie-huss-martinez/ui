@@ -333,4 +333,7 @@ export const tokenDescriptions: Readonly<Record<TokenName, string>> = {
   "timeline-clip-selected-border-color":
     "Border of a selected clip. It needs 3:1 contrast with the track.",
   "timeline-clip-edge-size": "Width of the part of a clip's edge that a pointer drags to trim it.",
+  "timeline-header-max-width": "Widest a lane's header grows before its controls are cut off.",
+  "timeline-header-bg": "Background of the lanes' headers, and of the slider's row above lanes.",
+  "timeline-lane-border-color": "Line between a timeline's lanes.",
 };

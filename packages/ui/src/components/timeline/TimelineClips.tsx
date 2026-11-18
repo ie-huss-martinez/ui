@@ -7,6 +7,7 @@ import {
   memo,
   type PointerEvent,
   type ReactNode,
+  useContext,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -15,7 +16,7 @@ import {
 } from "react";
 import { warnInDevelopment } from "../../internal/development.js";
 import { cx, type StyleProps, unstyledAttribute } from "../shared/style-props.js";
-import { useTimelineContext } from "./Timeline.js";
+import { type LaneClips, TimelineLaneContext, useTimelineContext } from "./Timeline.js";
 
 declare const process: { readonly env: { readonly NODE_ENV?: string } };
 
@@ -32,7 +33,8 @@ export interface TimelineClip {
   /**
    * The clip's accessible name, with its place and range, such as
    * "Clip 2 of 5, 0:04.00 to 0:09.20, muted". Use text from your message
-   * catalogue.
+   * catalogue. When `content` shows text, start the name with that text, so
+   * what's seen is in what's heard (WCAG 2.5.3).
    */
   readonly label: string;
   /** What the clip shows, such as its name or a thumbnail. It's cut off where the clip ends. */
@@ -279,7 +281,14 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
       const viewport = context?.viewport.current;
       if (viewport) {
         const box = element.getBoundingClientRect();
-        const view = viewport.getBoundingClientRect();
+        const bounds = viewport.getBoundingClientRect();
+        // The lanes' headers cover the start of the view.
+        const header = context?.headerWidth ?? 0;
+        const rtl = getComputedStyle(viewport).direction === "rtl";
+        const view = {
+          left: bounds.left + (rtl ? 0 : header),
+          right: bounds.right - (rtl ? header : 0),
+        };
         if (box.left < view.left) {
           viewport.scrollLeft -= view.left - box.left;
         } else if (box.right > view.right) {
@@ -290,6 +299,41 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
       return true;
     };
     useImperativeHandle(ref, () => ({ focusClip }));
+
+    // What the other lanes need of this one, for ↑ and ↓ between them.
+    const laneId = useContext(TimelineLaneContext);
+    const forLanes = useRef<LaneClips>({ any: () => false, focusNearest: () => undefined });
+    forLanes.current = {
+      any: () => clips.length > 0,
+      focusNearest: (unit, andSelect) => {
+        let nearest: TimelineClip | undefined;
+        let distance = Number.POSITIVE_INFINITY;
+        clips.forEach((clip, index) => {
+          const start = offsets[index] ?? 0;
+          const end = start + clip.length;
+          const away = unit < start ? start - unit : unit >= end ? unit - end + 1 : 0;
+          if (away < distance) {
+            nearest = clip;
+            distance = away;
+          }
+        });
+        if (nearest && focusClip(nearest.key) && andSelect) {
+          anchor.current = nearest.key;
+          select([nearest.key]);
+        }
+      },
+    };
+    const setLaneClips = context?.setLaneClips;
+    useEffect(() => {
+      if (laneId === undefined || !setLaneClips) {
+        return;
+      }
+      setLaneClips(laneId, {
+        any: () => forLanes.current.any(),
+        focusNearest: (unit, andSelect) => forLanes.current.focusNearest(unit, andSelect),
+      });
+      return () => setLaneClips(laneId, null);
+    }, [laneId, setLaneClips]);
 
     // The clips' boundaries are snap targets for the timeline's other parts.
     const addTargets = context?.addTargets;
@@ -442,9 +486,16 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
       return () => document.removeEventListener("keydown", onKeyDown, true);
     }, [isDragging]);
 
-    const select = (keys: Iterable<string>): void => {
+    // `selectedKeys` is the whole timeline's selection, which every lane is
+    // given. A plain selection replaces it; adding, removing and extending
+    // keep the other lanes' clips. With one lane there are no others.
+    const select = (keys: Iterable<string>, keepOthers = false): void => {
       const wanted = new Set(keys);
+      const own = new Set(clips.map((clip) => clip.key));
       const next = clips.filter((clip) => wanted.has(clip.key)).map((clip) => clip.key);
+      if (keepOthers) {
+        next.push(...selectedKeys.filter((key) => !own.has(key)));
+      }
       if (next.length !== selectedKeys.length || next.some((key, i) => key !== selectedKeys[i])) {
         onSelectedKeysChange(next);
       }
@@ -465,7 +516,7 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
         next.add(key);
       }
       anchor.current = key;
-      select(next);
+      select(next, true);
     };
 
     const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
@@ -497,9 +548,14 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
           event.preventDefault();
           if (onMove) {
             moved.current = true;
+            const own = new Set(clips.map((clip) => clip.key));
             onMove(
               selected.has(current.key)
-                ? clips.filter((clip) => selected.has(clip.key)).map((clip) => clip.key)
+                ? [
+                    ...clips.filter((clip) => selected.has(clip.key)).map((clip) => clip.key),
+                    // The selection is the timeline's: other lanes' clips move with it.
+                    ...selectedKeys.filter((key) => !own.has(key)),
+                  ]
                 : [current.key],
               event.key === forward ? 1 : -1,
             );
@@ -516,6 +572,21 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
           event.preventDefault();
           onTrimToPlayhead(current.key, edge);
         }
+        return;
+      }
+
+      // Between lanes: to the clip nearest in time on the next lane with
+      // clips. Taken on every clip of a timeline with several lanes, at the
+      // top and bottom too, so the page doesn't scroll instead.
+      if ((event.key === "ArrowUp" || event.key === "ArrowDown") && laneId !== undefined) {
+        if (event.shiftKey || (context?.lanes.length ?? 0) < 2) {
+          return;
+        }
+        event.preventDefault();
+        const middle = (offsets[index] ?? 0) + current.length / 2;
+        context
+          ?.nextLaneClips(laneId, event.key === "ArrowDown" ? 1 : -1)
+          ?.focusNearest(middle, !mod);
         return;
       }
 
@@ -538,7 +609,7 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
         event.preventDefault();
         focusClip(target.key);
         if (event.shiftKey) {
-          select(range(to));
+          select(range(to), true);
         } else if (!mod) {
           anchor.current = target.key;
           select([target.key]);
@@ -551,7 +622,7 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
         if (!multiple) {
           select([current.key]);
         } else if (event.shiftKey) {
-          select(range(index));
+          select(range(index), true);
         } else if (event.key === " ") {
           toggle(current.key);
         } else {
@@ -560,7 +631,10 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
         }
       } else if (multiple && mod && !event.shiftKey && event.key.toLowerCase() === "a") {
         event.preventDefault();
-        select(clips.map((clip) => clip.key));
+        select(
+          clips.map((clip) => clip.key),
+          true,
+        );
       }
     };
 
@@ -573,7 +647,7 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
       }
       setFocusKey(key);
       if (multiple && event.shiftKey) {
-        select(range(index));
+        select(range(index), true);
       } else if (multiple && (event.ctrlKey || event.metaKey)) {
         toggle(key);
       } else {

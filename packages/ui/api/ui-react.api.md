@@ -561,6 +561,26 @@ export interface TimelineClipsProps extends StyleProps<TimelineClipsPart> {
 }
 
 // @public
+export const TimelineLane: ForwardRefExoticComponent<TimelineLaneProps & RefAttributes<HTMLDivElement>>;
+
+// @public
+export type TimelineLanePart = "root" | "header";
+
+// @public
+export interface TimelineLaneProps extends Omit<HTMLAttributes<HTMLDivElement>, "className" | "role" | "id">, StyleProps<TimelineLanePart> {
+    readonly children?: ReactNode;
+    readonly header?: ReactNode;
+    readonly id: string;
+    readonly label: string;
+}
+
+// @public
+export interface TimelineLanes {
+    readonly laneAt: (clientY: number) => string | undefined;
+    readonly lanes: readonly string[];
+}
+
+// @public
 export const TimelineLayer: ForwardRefExoticComponent<TimelineLayerProps & RefAttributes<HTMLDivElement>>;
 
 // @public
@@ -748,6 +768,9 @@ export function useAnnounce(): Announce;
 
 // @public
 export function usePlatform(): Platform;
+
+// @public
+export function useTimelineLanes(): TimelineLanes;
 
 // @public
 export function useTimelineScale(): TimelineScale;

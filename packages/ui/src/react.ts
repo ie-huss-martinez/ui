@@ -77,13 +77,19 @@ export { TextArea } from "./components/text-area/TextArea.js";
 export type { TextFieldProps, TextFieldType } from "./components/text-field/TextField.js";
 export { TextField } from "./components/text-field/TextField.js";
 export type {
+  TimelineLanes,
   TimelineLayerProps,
   TimelinePart,
   TimelineProps,
   TimelineRange,
   TimelineScale,
 } from "./components/timeline/Timeline.js";
-export { Timeline, TimelineLayer, useTimelineScale } from "./components/timeline/Timeline.js";
+export {
+  Timeline,
+  TimelineLayer,
+  useTimelineLanes,
+  useTimelineScale,
+} from "./components/timeline/Timeline.js";
 export type {
   TimelineClip,
   TimelineClipEdge,
@@ -92,6 +98,11 @@ export type {
   TimelineClipsProps,
 } from "./components/timeline/TimelineClips.js";
 export { TimelineClips } from "./components/timeline/TimelineClips.js";
+export type {
+  TimelineLanePart,
+  TimelineLaneProps,
+} from "./components/timeline/TimelineLane.js";
+export { TimelineLane } from "./components/timeline/TimelineLane.js";
 export type {
   TimelinePlayheadPart,
   TimelinePlayheadProps,
