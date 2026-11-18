@@ -16,6 +16,7 @@ import {
 } from "react";
 import { warnInDevelopment } from "../../internal/development.js";
 import { cx, type StyleProps, unstyledAttribute } from "../shared/style-props.js";
+import { setStyle } from "./set-style.js";
 import { type LaneClips, TimelineLaneContext, useTimelineContext } from "./Timeline.js";
 
 declare const process: { readonly env: { readonly NODE_ENV?: string } };
@@ -30,6 +31,12 @@ export interface TimelineClip {
   readonly key: string;
   /** The clip's length, in the timeline's units: a whole number, at least 1. */
   readonly length: number;
+  /**
+   * The unit the clip starts on, for a track with room between its clips.
+   * Give it to every clip of the track, in time order and without overlap,
+   * or to none: without it, each clip starts where the one before ends.
+   */
+  readonly at?: number | undefined;
   /**
    * The clip's accessible name, with its place and range, such as
    * "Clip 2 of 5, 0:04.00 to 0:09.20, muted". Use text from your message
@@ -137,6 +144,8 @@ interface ClipProps {
   readonly edges: boolean;
   /** The edge of this clip being dragged, if one is. */
   readonly dragging: TimelineClipEdge | undefined;
+  /** Whether the clip runs past the timeline's length. */
+  readonly pastEnd: boolean;
 }
 
 /** One option. Memoised, so a change of selection renders only the clips it changes. */
@@ -148,6 +157,7 @@ const Clip = /* @__PURE__ */ memo(function Clip({
   contentClass,
   edges,
   dragging,
+  pastEnd,
 }: ClipProps) {
   return (
     <div
@@ -158,6 +168,7 @@ const Clip = /* @__PURE__ */ memo(function Clip({
       tabIndex={tabStop ? 0 : -1}
       data-hm-key={clip.key}
       data-hm-dragging={dragging}
+      data-hm-past-end={pastEnd ? "" : undefined}
       className={clipClass}
     >
       {clip.content == null ? null : <span className={contentClass}>{clip.content}</span>}
@@ -230,6 +241,8 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
   ) {
     const context = useTimelineContext("TimelineClips");
     const pixelsPerUnit = context?.scale.pixelsPerUnit ?? 0;
+    // Without a timeline around it, nothing is past the end.
+    const timelineLength = context?.scale.length ?? Number.POSITIVE_INFINITY;
     const multiple = selectionMode === "multiple";
 
     // A clip has a whole, positive length (sdk-core ADR 0042); others are left out.
@@ -244,7 +257,37 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
       }
       return valid;
     }, [given]);
-    const offsets = useMemo(() => sequenceOffsets(clips.map((clip) => clip.length)), [clips]);
+    // Where each clip starts. Back to back, each starts where the one before
+    // ends (sdk-core's offsets); positioned, where its `at` says.
+    const starts = useMemo(() => {
+      const placed = clips.filter((clip) => clip.at !== undefined).length;
+      if (placed === 0) {
+        return sequenceOffsets(clips.map((clip) => clip.length)).slice(0, clips.length);
+      }
+      let end = 0;
+      let mistake: string | undefined;
+      if (placed !== clips.length) {
+        mistake = "gives some clips `at` and not others: give it to every clip, or to none";
+      }
+      const result = clips.map((clip) => {
+        const valid = clip.at !== undefined && Number.isSafeInteger(clip.at) && clip.at >= 0;
+        const start = valid ? (clip.at as number) : end;
+        if (clip.at !== undefined && !valid) {
+          mistake ??= "has a clip whose `at` isn't a whole number of at least 0";
+        } else if (start < end) {
+          mistake ??= "has clips that overlap or aren't in time order";
+        }
+        end = Math.max(end, start + clip.length);
+        return start;
+      });
+      if (mistake) {
+        if (typeof process !== "undefined" && process.env.NODE_ENV !== "production") {
+          warnInDevelopment(`TimelineClips ${mistake}.`);
+        }
+      }
+      return result;
+    }, [clips]);
+    const positioned = clips.some((clip) => clip.at !== undefined);
 
     const list = useRef<HTMLDivElement | null>(null);
     const [focusKey, setFocusKey] = useState<string | null>(null);
@@ -309,7 +352,7 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
         let nearest: TimelineClip | undefined;
         let distance = Number.POSITIVE_INFINITY;
         clips.forEach((clip, index) => {
-          const start = offsets[index] ?? 0;
+          const start = starts[index] ?? 0;
           const end = start + clip.length;
           const away = unit < start ? start - unit : unit >= end ? unit - end + 1 : 0;
           if (away < distance) {
@@ -337,8 +380,17 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
 
     // The clips' boundaries are snap targets for the timeline's other parts.
     const addTargets = context?.addTargets;
-    const boundaries = useRef(offsets);
-    boundaries.current = offsets;
+    // Every clip's start and end, on this lane: another lane's clip snaps to them.
+    const edges = useMemo(
+      () => [
+        ...new Set(
+          clips.flatMap((clip, index) => [starts[index] ?? 0, (starts[index] ?? 0) + clip.length]),
+        ),
+      ],
+      [clips, starts],
+    );
+    const boundaries = useRef(edges);
+    boundaries.current = edges;
     useEffect(() => addTargets?.(() => boundaries.current), [addTargets]);
 
     // Widths go through the CSSOM, as the track's does, from a ref callback,
@@ -360,12 +412,33 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
       }
       sized.current = { clips, scale: pixelsPerUnit, drag };
       const elements = element.children;
+      // Where the clip before ended, as drawn: a clip's margin is the room
+      // between that and its own start, which is nothing back to back.
+      let end = 0;
       for (let index = 0; index < elements.length; index++) {
         const clip = clips[index];
-        // A dragged edge shows its clip at the length it would have.
-        const length = (clip?.length ?? 0) + (clip && drag?.key === clip.key ? drag.delta : 0);
-        (elements[index] as HTMLElement).style.inlineSize =
-          pixelsPerUnit > 0 ? `${length * pixelsPerUnit}px` : "";
+        const node = elements[index] as HTMLElement;
+        let start = starts[index] ?? end;
+        let length = clip?.length ?? 0;
+        // A dragged edge shows its clip as it would be: longer or shorter,
+        // and on a positioned track with its other edge held still.
+        if (clip && drag?.key === clip.key) {
+          length += drag.delta;
+          if (drag.edge === "start" && positioned) {
+            start -= drag.delta;
+          }
+        }
+        if (!positioned) {
+          start = end;
+        }
+        const measured = pixelsPerUnit > 0;
+        setStyle(node, "inline-size", measured ? `${length * pixelsPerUnit}px` : "");
+        setStyle(
+          node,
+          "margin-inline-start",
+          measured && start !== end ? `${(start - end) * pixelsPerUnit}px` : "",
+        );
+        end = start + length;
       }
     };
 
@@ -429,7 +502,7 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
         x: event.clientX,
         key: clip.key,
         edge,
-        boundary: offsets[edge === "start" ? index : index + 1] ?? 0,
+        boundary: (starts[index] ?? 0) + (edge === "start" ? 0 : clip.length),
         // Never shorter than one unit.
         min: Math.max(limits?.min ?? Number.NEGATIVE_INFINITY, 1 - clip.length),
         max: limits?.max ?? Number.POSITIVE_INFINITY,
@@ -583,7 +656,7 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
           return;
         }
         event.preventDefault();
-        const middle = (offsets[index] ?? 0) + current.length / 2;
+        const middle = (starts[index] ?? 0) + current.length / 2;
         context
           ?.nextLaneClips(laneId, event.key === "ArrowDown" ? 1 : -1)
           ?.focusNearest(middle, !mod);
@@ -712,7 +785,7 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
         onFocus={handleFocus}
         onBlur={handleBlur}
       >
-        {clips.map((clip) => (
+        {clips.map((clip, index) => (
           <Clip
             key={clip.key}
             clip={clip}
@@ -722,6 +795,7 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
             contentClass={contentClass}
             edges={onTrim !== undefined}
             dragging={drag?.key === clip.key ? drag.edge : undefined}
+            pastEnd={(starts[index] ?? 0) + clip.length > timelineLength}
           />
         ))}
       </div>

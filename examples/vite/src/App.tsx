@@ -170,9 +170,10 @@ function Mix() {
   const [selected, setSelected] = useState<readonly string[]>(["voice-1"]);
   const [muted, setMuted] = useState<readonly string[]>([]);
   const [frame, setFrame] = useState(0);
-  const tracks = [
+  // Voice lies back to back; Music's clips have a start each, with room between.
+  const tracks: { id: string; name: string; clips: number[]; at?: number[] }[] = [
     { id: "voice", name: "Voice", clips: [120, 180] },
-    { id: "music", name: "Music", clips: [100, 100, 100] },
+    { id: "music", name: "Music", clips: [60, 100, 80], at: [20, 100, 220] },
   ];
   return (
     <Timeline label="Mix" length={300}>
@@ -202,6 +203,7 @@ function Mix() {
             clips={track.clips.map((length, index) => ({
               key: `${track.id}-${index + 1}`,
               length,
+              at: track.at?.[index],
               label: `${track.name} ${index + 1}, clip ${index + 1} of ${track.clips.length}`,
               content: `${track.name} ${index + 1}`,
             }))}

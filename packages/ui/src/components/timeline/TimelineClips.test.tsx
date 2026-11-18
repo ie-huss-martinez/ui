@@ -87,4 +87,47 @@ describe("TimelineClips on the server", () => {
     expect(tags(html)).toHaveLength(3);
     expect(warn).toHaveBeenLastCalledWith(expect.stringMatching(/TimelineClips left out a clip/));
   });
+
+  it("takes clips with a start, and warns in development when they overlap or only some have one", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const placed = render({
+      clips: [
+        { key: "a", at: 20, length: 60, label: "Audio 1" },
+        { key: "b", at: 120, length: 50, label: "Audio 2" },
+      ],
+    });
+    // The same listbox, and nothing placed until a browser measures it.
+    expect(tags(placed)).toHaveLength(2);
+    expect(placed).not.toContain("style=");
+    expect(warn).not.toHaveBeenCalled();
+
+    render({
+      clips: [
+        { key: "a", at: 20, length: 60, label: "Audio 1" },
+        { key: "b", at: 70, length: 50, label: "Audio 2" },
+      ],
+    });
+    expect(warn).toHaveBeenLastCalledWith(expect.stringMatching(/overlap or aren't in time order/));
+    render({
+      clips: [
+        { key: "a", at: 20, length: 60, label: "Audio 1" },
+        { key: "b", length: 50, label: "Audio 2" },
+      ],
+    });
+    expect(warn).toHaveBeenLastCalledWith(expect.stringMatching(/some clips `at` and not others/));
+    render({ clips: [{ key: "a", at: 1.5, length: 60, label: "Audio 1" }] });
+    expect(warn).toHaveBeenLastCalledWith(expect.stringMatching(/isn't a whole number/));
+  });
+
+  it("marks a clip that runs past the timeline's length", () => {
+    const html = render({
+      clips: [
+        { key: "a", at: 0, length: 300, label: "Audio 1" },
+        { key: "b", at: 300, length: 40, label: "Audio 2" },
+      ],
+    });
+    const options = tags(html);
+    expect(options[0]).not.toContain("data-hm-past-end");
+    expect(options[1]).toContain('data-hm-past-end=""');
+  });
 });

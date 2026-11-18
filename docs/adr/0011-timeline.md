@@ -299,6 +299,14 @@ Three pull requests, each raising the size budgets from its measurement:
 - **Measured again, on real lanes,** with React's development build, in the pinned image, across the three engines: 16 lanes of 125 clips mount in 0.64 to 0.96 seconds and zoom in 0.23 to 0.58; 64 lanes of 125, which is 8,000 clips, mount in 1.75 to 2.09 seconds and zoom in 0.48 to 1.36. That's the stand-in's result again: the cost follows the clips, and nothing within either SDK's limits needs windowing.
 - **No test asserts a time.** The scale tests first had loose time limits, and they failed when other work shared the machine: mounting 64 lanes took 10.7 seconds instead of two. They now assert what changes instead: a key among 2,000 clips, on one lane or sixteen, changes the two clips it moves between and nothing else. That found what a time limit hadn't, each lane writing its unchanged styles again at every render, which the parts no longer do.
 
+**Clips with a start,** the second step:
+
+- **A positioned clip is placed by a margin, not by absolute positioning.** Each clip's margin is the room between the end of the clip before and its own start, set through the CSSOM with its width. The clips stay in the lane's flow, so the lane is as tall as they are and the back-to-back layout is the same code with no margins.
+- **`extent` fits, not `length`.** A zoom of 1 fits everything that's drawn, the part past `length` too. The playhead's slider is as wide as `length` at the zoom.
+- **`unitAt` and `visibleRange` reach to `extent`,** and `TimelineScale` has `extent` beside `length`, so a layer can draw and hit-test past the length.
+- **A clip past `length` is marked, not styled.** `data-hm-past-end` is on a clip that ends after `length`; how it looks is the SDK's.
+- **Mistakes in the clips warn in development and aren't corrected:** clips that overlap or aren't in time order, an `at` that isn't a whole number, and a track where only some clips have one.
+
 ### Decided in review
 
 The reviewer ruled on the six questions this amendment first left open, on 2026-11-18.

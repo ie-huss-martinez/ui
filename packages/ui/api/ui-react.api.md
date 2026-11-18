@@ -522,6 +522,7 @@ export const Timeline: ForwardRefExoticComponent<TimelineProps & RefAttributes<H
 
 // @public
 export interface TimelineClip {
+    readonly at?: number | undefined;
     readonly attributes?: Readonly<Record<`data-${string}`, string | undefined>> | undefined;
     readonly content?: ReactNode;
     readonly key: string;
@@ -612,6 +613,7 @@ export interface TimelinePlayheadProps extends StyleProps<TimelinePlayheadPart> 
 // @public
 export interface TimelineProps extends Omit<HTMLAttributes<HTMLElement>, "className">, StyleProps<TimelinePart> {
     readonly children?: ReactNode;
+    readonly extent?: number | undefined;
     readonly label: string;
     readonly length: number;
     readonly maxPixelsPerUnit?: number | undefined;
@@ -632,6 +634,7 @@ export interface TimelineRange {
 
 // @public
 export interface TimelineScale {
+    readonly extent: number;
     readonly length: number;
     readonly pixelsPerUnit: number;
     readonly snap: (unit: number) => number;

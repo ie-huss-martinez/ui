@@ -47,8 +47,13 @@ export interface TimelineRange {
  * @public
  */
 export interface TimelineScale {
-  /** The timeline's length, in units. */
+  /** The timeline's length, in units: as far as the playhead goes. */
   readonly length: number;
+  /**
+   * How far the track is drawn, in units: `length`, or more when clips run
+   * past it.
+   */
+  readonly extent: number;
   /**
    * CSS pixels for one unit at the current zoom. It's 0 until the timeline
    * has measured itself, which is after the first render in a browser, and
@@ -58,7 +63,7 @@ export interface TimelineScale {
   /** A unit's distance from the start of the track, in CSS pixels. */
   readonly toPixels: (unit: number) => number;
   /**
-   * The unit under a pointer, from its `clientX`, within `0…length`. It
+   * The unit under a pointer, from its `clientX`, within `0…extent`. It
    * follows the reading direction. With `snap`, it snaps to the timeline's
    * targets when `snapping` is on.
    */
@@ -130,6 +135,7 @@ export function useTimelineContext(part: string): TimelineContextValue | undefin
 
 const NO_SCALE: TimelineScale = {
   length: 0,
+  extent: 0,
   pixelsPerUnit: 0,
   toPixels: () => 0,
   unitAt: () => 0,
@@ -174,6 +180,13 @@ export interface TimelineProps
   readonly label: string;
   /** The length of what's on the timeline, in whole units, such as frames or samples. */
   readonly length: number;
+  /**
+   * How far to draw the track, in units, when clips run past `length`, such
+   * as audio that outlasts its video. The playhead still ends at `length`,
+   * and a clip that passes it is marked `data-hm-past-end`. Defaults to
+   * `length`, and is never less.
+   */
+  readonly extent?: number | undefined;
   /**
    * The zoom, as a multiple of fitting `length` to the timeline's width.
    * Defaults to 1, which fits; less than 1 fits too.
@@ -241,6 +254,7 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
   {
     label,
     length: rawLength,
+    extent: rawExtent,
     zoom = 1,
     maxPixelsPerUnit = 48,
     onMaxZoomChange,
@@ -256,6 +270,11 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
   ref,
 ) {
   const length = Number.isSafeInteger(rawLength) && rawLength > 0 ? rawLength : 0;
+  // What's drawn: the length, or further when clips run past it.
+  const extent =
+    rawExtent !== undefined && Number.isSafeInteger(rawExtent)
+      ? Math.max(rawExtent, length)
+      : length;
   const viewport = useRef<HTMLDivElement | null>(null);
   const track = useRef<HTMLDivElement | null>(null);
   // The width the track has to fit into; 0 until it's measured.
@@ -344,10 +363,10 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
     };
   }, []);
 
-  const fit = length > 0 && room > 0 ? room / length : 0;
+  const fit = extent > 0 && room > 0 ? room / extent : 0;
   // Never closer than one unit to maxPixelsPerUnit, nor a track too wide to
   // lay out, and never further than fitting.
-  const closest = Math.max(fit, Math.min(maxPixelsPerUnit, MAX_TRACK_PIXELS / Math.max(length, 1)));
+  const closest = Math.max(fit, Math.min(maxPixelsPerUnit, MAX_TRACK_PIXELS / Math.max(extent, 1)));
   const pixelsPerUnit = Math.min(Math.max(fit * zoom, fit), closest);
   const maxZoom = fit > 0 ? closest / fit : 1;
 
@@ -362,7 +381,7 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
   // Sizes go through the CSSOM: a style attribute would be blocked by a
   // strict Content Security Policy when rendered on a server.
   const sizeTrack = (element: HTMLDivElement): void => {
-    setStyle(element, "inline-size", pixelsPerUnit > 0 ? `${length * pixelsPerUnit}px` : "");
+    setStyle(element, "inline-size", pixelsPerUnit > 0 ? `${extent * pixelsPerUnit}px` : "");
   };
 
   const headerColumn = useRef(headerWidth);
@@ -385,6 +404,7 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
     };
     return {
       length,
+      extent,
       pixelsPerUnit,
       toPixels: (unit) => unit * pixelsPerUnit,
       unitAt: (clientX, options) => {
@@ -394,14 +414,14 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
         }
         const box = element.getBoundingClientRect();
         const offset = isRtl(element) ? box.right - clientX : clientX - box.left;
-        const unit = Math.min(Math.max(Math.round(offset / pixelsPerUnit), 0), length);
-        return options?.snap ? Math.min(snap(unit), length) : unit;
+        const unit = Math.min(Math.max(Math.round(offset / pixelsPerUnit), 0), extent);
+        return options?.snap ? Math.min(snap(unit), extent) : unit;
       },
       snap,
       visibleRange: () => {
         const element = viewport.current;
         if (!element || pixelsPerUnit <= 0) {
-          return { start: 0, end: length };
+          return { start: 0, end: extent };
         }
         // scrollLeft is negative in right-to-left text. The track starts
         // after the viewport's padding.
@@ -410,12 +430,12 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
         const start = (scrolled + headerColumn.current) / pixelsPerUnit;
         const end = (scrolled + element.clientWidth) / pixelsPerUnit;
         return {
-          start: Math.min(Math.max(Math.floor(start), 0), length),
-          end: Math.min(Math.max(Math.ceil(end), 0), length),
+          start: Math.min(Math.max(Math.floor(start), 0), extent),
+          end: Math.min(Math.max(Math.ceil(end), 0), extent),
         };
       },
     };
-  }, [length, pixelsPerUnit]);
+  }, [length, extent, pixelsPerUnit]);
 
   const addTargets = useCallback((read: () => readonly number[]) => {
     targets.current.add(read);

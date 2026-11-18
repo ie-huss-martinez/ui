@@ -277,6 +277,18 @@ for (const app of apps) {
       await expect(music.getByRole("option", { selected: true })).toHaveAccessibleName(
         "Music 3, clip 3 of 3",
       );
+      // Music's clips have a start each: there's room before the first and
+      // between them, where Voice's lie back to back.
+      const [first, second] = await Promise.all(
+        [0, 1].map((index) => music.getByRole("option").nth(index).boundingBox()),
+      );
+      const [voiceFirst, voiceSecond] = await Promise.all(
+        [0, 1].map((index) => voice.getByRole("option").nth(index).boundingBox()),
+      );
+      expect(first?.x ?? 0).toBeGreaterThan((voiceFirst?.x ?? 0) + 5);
+      expect(second?.x ?? 0).toBeGreaterThan((first?.x ?? 0) + (first?.width ?? 0) + 5);
+      expect(voiceSecond?.x ?? 0).toBeCloseTo((voiceFirst?.x ?? 0) + (voiceFirst?.width ?? 0), 0);
+
       // The header stays beside its lane, before the lane's first clip.
       const head = await mix.getByRole("toolbar", { name: "Music track" }).boundingBox();
       const firstClip = await music.getByRole("option").first().boundingBox();
