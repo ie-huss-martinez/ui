@@ -1,5 +1,21 @@
 # @hussmartinez/ui
 
+## 0.14.0
+
+### Minor Changes
+
+- [#98](https://github.com/ie-huss-martinez/ui/pull/98) [`0e4a8a9`](https://github.com/ie-huss-martinez/ui/commit/0e4a8a96cbc589f44d1faa16ba48f3aa21e0bfc3) Thanks [@hussmartinez](https://github.com/hussmartinez)! - Add three icons for editing time: `RangeStartIcon` and `RangeEndIcon`, for setting where a selected range starts and ends, and `RippleIcon`, for closing the gap a deletion leaves. Their `IconName`s are `range-start`, `range-end` and `ripple`. The range icons follow the reading direction, mirrored in right-to-left text.
+  
+  Lucide has no glyph for a range's start and end, so ui draws those two itself, on Lucide's grid and stroke so they sit with the rest. `RippleIcon` is Lucide's `fold-horizontal`.
+
+- [#96](https://github.com/ie-huss-martinez/ui/pull/96) [`4ab2aaa`](https://github.com/ie-huss-martinez/ui/commit/4ab2aaa633e16bec1cc8ef50a0f0717fb5e41efd) Thanks [@hussmartinez](https://github.com/hussmartinez)! - In a `Timeline` with lanes, a press on a lane's empty space, or on a clip's body when `moveHandle="title"`, now reaches a layer under the lanes, so an editor can select a range of time by dragging across tracks. Before, the lanes stopped it.
+  
+  - **Write the layer that takes those presses before the lanes:** it's under them, and `useTimelineScale().unitAt` and `useTimelineLanes().laneAt` tell it where the press was. Draw what must show over the clips, such as the selected range, in a second layer written after the lanes, with `pointer-events: none`.
+  - **A `TimelineLayer` inside a `TimelineLane` no longer takes presses by default.** If yours handles presses itself, add the new `interactive` prop to keep it doing so: `<TimelineLayer interactive>`. Layers that only draw need nothing.
+  - Lane headers, clips, a clip's title and its edges keep their presses, and with `seekOnPress` a press still moves the playhead.
+  
+  A timeline without lanes is unchanged.
+
 ## 0.13.0
 
 ### Minor Changes
