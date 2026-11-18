@@ -1,6 +1,6 @@
 # 0012. Size budgets for what applications import, beside each entry's
 
-- **Status:** Proposed
+- **Status:** Accepted, 2026-11-18, with its four open decisions ruled as recommended
 - **Date:** 2026-11-18
 
 ## Context
@@ -67,7 +67,7 @@ The server-safe entry and the stylesheet get no scenarios. Each is loaded whole:
 
 ### Open decisions
 
-Each has a recommendation, which the Decision above follows.
+Each had a recommendation, which the Decision above follows. Review ruled all four as recommended on 2026-11-18.
 
 1. **Does the scenario table replace the React entry's two-number table in review?** Recommended: yes. The minified whole-entry number has the same blind spot as the unminified one. The stylesheet keeps its two-number table.
 2. **`size-limit` with esbuild, or size assertions in `build.test.ts`?** Recommended: `size-limit`. It's the family's tool and report, and the cost is one package from the same maintainer.
@@ -92,4 +92,22 @@ Each has a recommendation, which the Decision above follows.
 
 ### Implementation
 
-One pull request, after this record is accepted. It adds the plugin and the scenarios to `.size-limit.js`, each with its budget and a comment on what it guards. It adds the size rule to `CONTRIBUTING.md`, and moves this record to Accepted with the measurements from `size-limit` itself. Those can differ slightly from the table above, which was measured with a script that follows `build.test.ts`.
+Built in the pull request that accepted this record:
+
+- **`@size-limit/esbuild` 14.3.0,** in the catalog beside `@size-limit/file`. Its peer dependency pins `size-limit` exactly, so the two move together. Its only dependency is esbuild 0.28.2, the copy the workspace already has, and esbuild's install script stays blocked.
+- **The entry budgets opt out of bundling** with `disablePlugins: ["@size-limit/esbuild"]`, so they measure the files in dist exactly as before.
+- **Each scenario** imports from `dist/react.js`, and is bundled as an ES module with `process.env.NODE_ENV` set to `"production"`, as a host's production build does. `react`, `react-dom` and `@hussmartinez/sdk-core` are left out. The icon list is read from the built entry's exports, so a new icon joins the scenario without an edit.
+
+The scenarios as `size-limit` measures them:
+
+| Scenario | Measures | Budget |
+|---|---|---|
+| `Button` | 0.73 kB | 1 kB |
+| `IconButton` with one icon | 1.05 kB | 1.5 kB |
+| `Dialog` | 1.86 kB | 2 kB |
+| `ReorderableList` | 2.51 kB | 3 kB |
+| The timeline with lanes | 8.52 kB | 9 kB |
+| Every icon (62) | 3.00 kB | 3.5 kB |
+| An editor (26) | 7.17 kB | 7.5 kB |
+
+They're 0.03 kB to 0.31 kB under the script's esbuild figures above. `size-limit` subtracts the cost of an empty esbuild bundle, and its entry passes the imports to `console.log` rather than exporting them, which saves their names; the more names, the larger the gap. The React entry measures 23.99 kB of its 24 kB budget after #90's dependency updates.
