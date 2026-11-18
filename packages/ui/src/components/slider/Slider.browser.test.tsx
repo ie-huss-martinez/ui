@@ -61,6 +61,30 @@ function Gain() {
   );
 }
 
+/** A controlled gain, as an editor's track has it, with a spy on each callback. */
+function Committed(props: {
+  readonly onChange: (value: number) => void;
+  readonly onCommit: (value: number) => void;
+}) {
+  const [gain, setGain] = useState(0);
+  return (
+    <div style={{ inlineSize: "300px" }}>
+      <Slider
+        label="Gain"
+        min={-60}
+        max={12}
+        value={gain}
+        onValueChange={(value) => {
+          props.onChange(value);
+          setGain(value);
+        }}
+        onValueCommit={props.onCommit}
+      />
+      <button type="button">After</button>
+    </div>
+  );
+}
+
 describe("Slider", () => {
   it("is a slider to assistive technology, named by its label", () => {
     const input = renderSlider();
@@ -286,5 +310,146 @@ describe("Slider", () => {
     input.focus();
     await userEvent.keyboard("{ArrowLeft}");
     expect(input.getAttribute("aria-valuetext")).toBe("-7 dB");
+  });
+
+  describe("Slider, onValueCommit", () => {
+    function setUp() {
+      const onChange = vi.fn();
+      const onCommit = vi.fn();
+      const container = render(<Committed onChange={onChange} onCommit={onCommit} />);
+      const input = container.querySelector("input") as HTMLInputElement;
+      input.focus();
+      return { onChange, onCommit, input, container };
+    }
+
+    /**
+     * Holds a key down as the browser does: a keydown, then repeats, each its
+     * own event, with no time between them. Nothing waits, so a slow machine
+     * and a fast one see the same thing.
+     */
+    function hold(input: HTMLInputElement, key: string, repeats: number): void {
+      for (let press = 0; press <= repeats; press++) {
+        act(() => {
+          input.dispatchEvent(
+            new KeyboardEvent("keydown", {
+              key,
+              bubbles: true,
+              cancelable: true,
+              repeat: press > 0,
+            }),
+          );
+        });
+      }
+    }
+    function release(input: HTMLInputElement, key: string): void {
+      act(() => {
+        input.dispatchEvent(new KeyboardEvent("keyup", { key, bubbles: true }));
+      });
+    }
+
+    it("commits once for a key pressed and let go, with the value it ended on", async () => {
+      const { onChange, onCommit } = setUp();
+      await userEvent.keyboard("{ArrowRight}");
+      expect(onChange.mock.calls).toEqual([[1]]);
+      expect(onCommit.mock.calls).toEqual([[1]]);
+      // Each press is its own gesture.
+      await userEvent.keyboard("{PageUp}");
+      expect(onCommit.mock.calls).toEqual([[1], [8]]);
+    });
+
+    it("commits once for a held key, however many times it repeats, with no time between", () => {
+      const { onChange, onCommit, input } = setUp();
+      // Thirty repeats: it reaches 12, the end, on the twelfth.
+      hold(input, "ArrowRight", 30);
+      expect(onChange).toHaveBeenCalledTimes(12);
+      expect(onCommit).not.toHaveBeenCalled();
+      release(input, "ArrowRight");
+      expect(onCommit.mock.calls).toEqual([[12]]);
+    });
+
+    it("commits once when keys overlap, after the last is let go", () => {
+      const { onCommit, input } = setUp();
+      hold(input, "ArrowLeft", 3);
+      hold(input, "PageDown", 0);
+      release(input, "ArrowLeft");
+      expect(onCommit).not.toHaveBeenCalled();
+      release(input, "PageDown");
+      expect(onCommit.mock.calls).toEqual([[-11]]);
+    });
+
+    it("commits what's pending when focus leaves before a key is let go", async () => {
+      const { onCommit, input, container } = setUp();
+      hold(input, "ArrowRight", 4);
+      (container.querySelector("button") as HTMLElement).focus();
+      expect(onCommit.mock.calls).toEqual([[5]]);
+      // The key let go elsewhere commits nothing more.
+      release(input, "ArrowRight");
+      expect(onCommit).toHaveBeenCalledTimes(1);
+    });
+
+    it("commits nothing for a gesture that leaves the value where it was", async () => {
+      const { onCommit, input } = setUp();
+      await userEvent.keyboard("{End}");
+      expect(onCommit.mock.calls).toEqual([[12]]);
+      // At the end already: nothing moves, so nothing commits.
+      hold(input, "ArrowRight", 5);
+      release(input, "ArrowRight");
+      await userEvent.keyboard("{End}");
+      act(() => input.blur());
+      expect(onCommit).toHaveBeenCalledTimes(1);
+    });
+
+    it("commits once for a pointer dragged along the slider, when it's let go", async () => {
+      const { onChange, onCommit, input } = setUp();
+      const { width, height } = input.getBoundingClientRect();
+      await userEvent.dragAndDrop(input, input, {
+        sourcePosition: { x: width / 2, y: height / 2 },
+        targetPosition: { x: width - 2, y: height / 2 },
+      });
+      expect(onChange.mock.calls.length).toBeGreaterThanOrEqual(1);
+      expect(onCommit).toHaveBeenCalledTimes(1);
+      expect(onCommit).toHaveBeenLastCalledWith(Number(input.value));
+      expect(Number(input.value)).toBeGreaterThan(8);
+    });
+
+    it("commits once for a click on the track", async () => {
+      const { onCommit, input } = setUp();
+      const { height } = input.getBoundingClientRect();
+      await userEvent.click(input, { position: { x: 2, y: height / 2 } });
+      expect(onCommit).toHaveBeenCalledTimes(1);
+      expect(onCommit).toHaveBeenLastCalledWith(Number(input.value));
+      expect(Number(input.value)).toBeLessThan(-50);
+    });
+
+    it("commits when the value is set as assistive technology sets it, with input then change", () => {
+      const { onCommit, input } = setUp();
+      // Not the `value` property, which React watches: the native setter, as
+      // the browser itself sets it.
+      const setValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+      act(() => {
+        setValue?.call(input, "-20");
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      expect(onCommit.mock.calls).toEqual([[-20]]);
+    });
+
+    it("still calls the host's own onKeyUp, onPointerDown and onBlur", async () => {
+      const onKeyUp = vi.fn();
+      const onPointerDown = vi.fn();
+      const onBlur = vi.fn();
+      const input = renderSlider({
+        onKeyUp,
+        onPointerDown,
+        onBlur,
+        onValueCommit: () => undefined,
+      });
+      await userEvent.keyboard("{ArrowRight}");
+      await userEvent.click(input);
+      act(() => input.blur());
+      expect(onKeyUp).toHaveBeenCalled();
+      expect(onPointerDown).toHaveBeenCalled();
+      expect(onBlur).toHaveBeenCalled();
+    });
   });
 });
