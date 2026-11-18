@@ -50,7 +50,11 @@ async function callsTo(names: string[]): Promise<{ where: string; guarded: boole
   return calls;
 }
 
-describe("development warnings", () => {
+// The scan parses every source file with the TypeScript compiler. Alone that
+// takes 0.1 to 0.3 seconds; with the machine oversubscribed nine times over,
+// as when other suites run beside it, it has taken five. Thirty seconds is six
+// times the worst seen, and still fails a test that hangs.
+describe("development warnings", { timeout: 30_000 }, () => {
   it("are all called inside the inline guard, so production bundles drop them", async () => {
     const calls = await callsTo(["warnInDevelopment"]);
     // The scan found the calls, so a renamed helper can't make it pass empty.

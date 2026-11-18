@@ -36,7 +36,11 @@ function filesTheEntryReaches(): string[] {
   return program.getSourceFiles().map((file) => file.fileName);
 }
 
-describe("the server-safe entry", () => {
+// The TypeScript compiler builds a program for the entry. Alone that takes
+// about half a second; with the machine oversubscribed nine times over, as
+// when other suites run beside it, it has taken nine. Thirty seconds is three
+// times the worst seen, and still fails a test that hangs.
+describe("the server-safe entry", { timeout: 30_000 }, () => {
   it("reaches no React, not even its types (sdk-core ADR 0036)", () => {
     const files = filesTheEntryReaches();
     // The program saw the entry's own modules, so an empty graph can't pass.
