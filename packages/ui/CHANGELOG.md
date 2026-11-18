@@ -1,5 +1,29 @@
 # @hussmartinez/ui
 
+## 0.13.0
+
+### Minor Changes
+
+- [#91](https://github.com/ie-huss-martinez/ui/pull/91) [`9c775d3`](https://github.com/ie-huss-martinez/ui/commit/9c775d3fcbaf10ecad9f9dc55bfe5d9beaa7ba1f) Thanks [@hussmartinez](https://github.com/hussmartinez)! - `Slider` gains `onValueCommit(value)`, called once when a gesture that changed the value ends, with the value it ended on:
+  
+  - when the pointer is let go, after a drag or a click on the track, wherever the pointer is by then;
+  - when the last key held is let go, however many times it repeated;
+  - when the slider loses focus before that.
+  
+  A gesture that leaves the value where it was calls nothing. Use it for what should happen once per gesture, such as an undo step, and `onValueChange` for what follows the value as it moves:
+  
+  ```tsx
+  <Slider label={t("track.gain")} value={gain} onValueChange={preview} onValueCommit={(db) => session.setGain(track, db)} />
+  ```
+
+### Patch Changes
+
+- [#95](https://github.com/ie-huss-martinez/ui/pull/95) [`ae10c02`](https://github.com/ie-huss-martinez/ui/commit/ae10c02ab50ffb662e0f8584dbbd3d52c06c74c6) Thanks [@hussmartinez](https://github.com/hussmartinez)! - `ReorderableList` now selects the row whose item receives focus however focus arrives: by Tab, a click, or your own `focus()`, as well as the arrow keys. Before, Tab onto a list with nothing selected focused the first row without selecting it, so tools acting on the selected row stayed disabled until an arrow key was pressed. `onSelectedChange` is called only on a real focus, and only when the selection changes. Focus on a row's control still never changes the selection, and Ctrl or ⌘ with an arrow still moves without selecting. It now behaves as `TimelineClips` does in single selection.
+
+- [#94](https://github.com/ie-huss-martinez/ui/pull/94) [`913239f`](https://github.com/ie-huss-martinez/ui/commit/913239f3daffc6da11de6deb5bc697e6d6a21b90) Thanks [@hussmartinez](https://github.com/hussmartinez)! - `TimelineClips` with `selectionMode="single"` now keeps the selection on the focused clip however focus arrives, as its documentation said: by Tab, a click, your own `focus()`, or `focusClip`, as well as the arrow keys. Before, a clip reached by Tab or `focusClip` was focused but not selected, so tools acting on the selected clip stayed disabled until an arrow key was pressed. `onSelectedKeysChange` is called only on a real focus, and only when the selection changes, so a controlled host doesn't loop. Ctrl or ⌘ with an arrow still moves focus without selecting, and `selectionMode="multiple"` is unchanged.
+  
+  If you selected the focused clip yourself in an `onFocus` handler, you can remove it.
+
 ## 0.12.0
 
 ### Minor Changes
