@@ -4,7 +4,7 @@
 
 ## Lucide
 
-The icons in `dist/react.js`, such as `UndoIcon`, are generated from [Lucide](https://lucide.dev) (`lucide-static` 1.72.0). Their shapes are Lucide's; ui adds its own names and markup. Lucide's licence follows, as published in `lucide-static`, including the MIT licence of the icons derived from Feather.
+The icons in `dist/react.js`, such as `UndoIcon`, are generated from [Lucide](https://lucide.dev) (`lucide-static` 1.72.0). Their shapes are Lucide's; ui adds its own names and markup. The exceptions are the icons the manifest marks as ui's own glyphs, such as `RangeStartIcon` and `RangeEndIcon`, which ui draws itself for icons Lucide has no glyph for; they're ui's code, under ui's licence. Lucide's licence follows, as published in `lucide-static`, including the MIT licence of the icons derived from Feather.
 
 ```text
 ISC License

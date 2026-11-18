@@ -86,7 +86,7 @@ export interface ExtendingThemeInput extends ThemeInputBase {
 }
 
 // @public
-export type IconName = "add" | "arrow" | "check" | "chevron-down" | "chevron-left" | "chevron-right" | "close" | "crop" | "delete" | "download" | "duplicate" | "ellipse" | "fade-in" | "fade-out" | "fit" | "flip-horizontal" | "flip-vertical" | "hidden" | "highlighter" | "image" | "info" | "layers" | "loop" | "menu" | "more" | "move-down" | "move-up" | "muted" | "open" | "page-add" | "page-grid" | "page-single" | "pan" | "pause" | "pen" | "play" | "rectangle" | "redact" | "redo" | "remove" | "rotate-left" | "rotate-right" | "search" | "select" | "skip-back" | "skip-forward" | "snap" | "split" | "stop" | "text" | "trim-end" | "trim-start" | "undo" | "upload" | "visible" | "volume" | "warning" | "zoom-in" | "zoom-out";
+export type IconName = "add" | "arrow" | "check" | "chevron-down" | "chevron-left" | "chevron-right" | "close" | "crop" | "delete" | "download" | "duplicate" | "ellipse" | "fade-in" | "fade-out" | "fit" | "flip-horizontal" | "flip-vertical" | "hidden" | "highlighter" | "image" | "info" | "layers" | "loop" | "menu" | "more" | "move-down" | "move-up" | "muted" | "open" | "page-add" | "page-grid" | "page-single" | "pan" | "pause" | "pen" | "play" | "range-end" | "range-start" | "rectangle" | "redact" | "redo" | "remove" | "ripple" | "rotate-left" | "rotate-right" | "search" | "select" | "skip-back" | "skip-forward" | "snap" | "split" | "stop" | "text" | "trim-end" | "trim-start" | "undo" | "upload" | "visible" | "volume" | "warning" | "zoom-in" | "zoom-out";
 
 // @public
 export const lightTheme: Theme;
