@@ -17,7 +17,11 @@ function lintAs(path: string, css: string): { status: number | null; output: str
 // A literal colour: fine in generated output, an error in source.
 const LITERAL = ".hm-probe { color: #f00; }\n";
 
-describe("pnpm lint:css", () => {
+// Each test starts stylelint through pnpm. Alone that takes 0.2 to 0.5
+// seconds; with the machine oversubscribed nine times over, as when other
+// suites run beside it, it has taken seven. Thirty seconds is four times the
+// worst seen, and still fails a test that hangs.
+describe("pnpm lint:css", { timeout: 30_000 }, () => {
   it.each([
     "packages/ui/dist/styles.css",
     "packages/ui/temp/styles.css",
