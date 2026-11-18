@@ -598,6 +598,7 @@ export const TimelineLayer: ForwardRefExoticComponent<TimelineLayerProps & RefAt
 // @public
 export interface TimelineLayerProps extends HTMLAttributes<HTMLDivElement> {
     readonly children?: ReactNode;
+    readonly interactive?: boolean | undefined;
 }
 
 // @public

@@ -638,6 +638,13 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
 export interface TimelineLayerProps extends HTMLAttributes<HTMLDivElement> {
   /** Your drawing: a canvas, markers, a selection. Size it to the layer. */
   readonly children?: ReactNode;
+  /**
+   * Whether a layer inside a lane takes the pointer. Inside a lane, a layer
+   * lets presses through by default, so they reach a layer written under the
+   * lanes; set it for a lane's own layer that handles presses itself. A
+   * layer outside the lanes always takes the pointer.
+   */
+  readonly interactive?: boolean | undefined;
 }
 
 /**
@@ -653,7 +660,7 @@ export interface TimelineLayerProps extends HTMLAttributes<HTMLDivElement> {
  * @public
  */
 export const TimelineLayer = /* @__PURE__ */ forwardRef<HTMLDivElement, TimelineLayerProps>(
-  function TimelineLayer({ className, children, ...props }, ref) {
+  function TimelineLayer({ className, interactive, children, ...props }, ref) {
     // Written outside the lanes of a timeline that has them, it covers them all.
     const lanes = useContext(TimelineContext)?.lanes.length ?? 0;
     const inLane = useContext(TimelineLaneContext) !== undefined;
@@ -672,6 +679,7 @@ export const TimelineLayer = /* @__PURE__ */ forwardRef<HTMLDivElement, Timeline
           }
         }}
         className={cx("hm-timeline-layer", className)}
+        data-hm-interactive={interactive ? "" : undefined}
       >
         {children}
       </div>

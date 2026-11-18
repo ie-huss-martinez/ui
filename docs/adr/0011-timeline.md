@@ -317,6 +317,12 @@ Three pull requests, each raising the size budgets from its measurement:
 - **Focus follows a clip to another lane.** When the focused clip leaves a track and nothing else has focus, the track asks the timeline's other lanes for it before falling back.
 - **The timeline scrolls while a clip is held within 32 pixels of either end of the view,** on each animation frame, and the clip moves with the track.
 
+**Presses through lanes,** after release, from audio-sdk's range selection:
+
+- **A lane takes no press itself, and nor do its layers unless they're `interactive`.** Its header and its clips do, and a clip's title and edges when the title is the handle. So a press on empty lane space, or on a clip's body, reaches what's under the lanes. The amendment promised that for a clip's body, but the lane stopped it, so a layer covering every lane received nothing.
+- **A layer that takes presses across lanes is written before them,** so it's under them in painting order. What must show over the clips is drawn in a second layer written after them, which takes no presses. CSS has no way to put a layer under the clips for presses and over them for painting, so the two jobs are two layers.
+- **A layer outside the lanes keeps the pointer,** and a timeline without lanes is unchanged.
+
 ### Decided in review
 
 The reviewer ruled on the six questions this amendment first left open, on 2026-11-18.
