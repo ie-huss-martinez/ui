@@ -286,6 +286,19 @@ Three pull requests, each raising the size budgets from its measurement:
 2. **Clips with a start:** `at`, positioned lanes next to back-to-back ones, `extent` and `data-hm-past-end`, and the trim preview on a positioned lane.
 3. **Moving a clip:** the drag, `onDrop` and `canDrop`, `moveHandle`, Alt+↑ and Alt+↓ with `onMoveLane`, and scrolling at the edges.
 
+### As built
+
+**Lanes,** the first of the three steps:
+
+- **The headers' column is the viewport's own padding,** before the track, not a column of a subgrid as proposed. The track still starts at the first unit and is as wide as `length` at the zoom, so nothing that maps units to pixels changed, and every timeline test from before passes unedited. Each lane reaches back over that padding, so its header has a box to stay in.
+- **Sticky insets are measured from inside a scrolling box's padding,** in all three engines. So a header's inset is the padding's width, negative, set through the CSSOM with its size.
+- **The timeline measures the headers.** Each header's toolbar is as wide as its controls, up to `--hm-timeline-header-max-width`; the column is as wide as the widest, and a `ResizeObserver` follows them, on the next frame.
+- **Headers go above their lanes below 720 pixels by measurement, not a container query.** The timeline has to know the column's width to fit `length` beside it, and a query can't tell it. It's still the timeline's own width and still no prop, as ruled.
+- **Lanes say they're there when React commits,** as sizes are set, so the first frame has its rows. A server render has no lanes laid out, like its sizes.
+- **`onMove` reports the timeline's whole selection,** this lane's clips in order and then the others', when the focused clip is selected.
+- **Measured again, on real lanes,** with React's development build, in the pinned image, across the three engines: 16 lanes of 125 clips mount in 0.64 to 0.96 seconds and zoom in 0.23 to 0.58; 64 lanes of 125, which is 8,000 clips, mount in 1.75 to 2.09 seconds and zoom in 0.48 to 1.36. That's the stand-in's result again: the cost follows the clips, and nothing within either SDK's limits needs windowing.
+- **No test asserts a time.** The scale tests first had loose time limits, and they failed when other work shared the machine: mounting 64 lanes took 10.7 seconds instead of two. They now assert what changes instead: a key among 2,000 clips, on one lane or sixteen, changes the two clips it moves between and nothing else. That found what a time limit hadn't, each lane writing its unchanged styles again at every render, which the parts no longer do.
+
 ### Decided in review
 
 The reviewer ruled on the six questions this amendment first left open, on 2026-11-18.

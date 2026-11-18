@@ -21,6 +21,7 @@ import {
   ThemeProvider,
   Timeline,
   TimelineClips,
+  TimelineLane,
   TimelineLayer,
   TimelinePlayhead,
   ToggleButton,
@@ -164,6 +165,55 @@ function Clock() {
   );
 }
 
+/** A timeline of two tracks: lanes, with a header each, and one selection for both. */
+function Mix() {
+  const [selected, setSelected] = useState<readonly string[]>(["voice-1"]);
+  const [muted, setMuted] = useState<readonly string[]>([]);
+  const [frame, setFrame] = useState(0);
+  const tracks = [
+    { id: "voice", name: "Voice", clips: [120, 180] },
+    { id: "music", name: "Music", clips: [100, 100, 100] },
+  ];
+  return (
+    <Timeline label="Mix" length={300}>
+      <TimelinePlayhead label="Mix playhead" position={frame} onPositionChange={setFrame} />
+      {tracks.map((track) => (
+        <TimelineLane
+          key={track.id}
+          id={track.id}
+          label={`${track.name} track`}
+          header={
+            <>
+              <span>{track.name}</span>
+              <ToggleButton
+                variant="quiet"
+                pressed={muted.includes(track.id)}
+                onPressedChange={(on) =>
+                  setMuted((ids) => (on ? [...ids, track.id] : ids.filter((id) => id !== track.id)))
+                }
+              >
+                Mute {track.name}
+              </ToggleButton>
+            </>
+          }
+        >
+          <TimelineClips
+            label={`${track.name} clips`}
+            clips={track.clips.map((length, index) => ({
+              key: `${track.id}-${index + 1}`,
+              length,
+              label: `${track.name} ${index + 1}, clip ${index + 1} of ${track.clips.length}`,
+              content: `${track.name} ${index + 1}`,
+            }))}
+            selectedKeys={selected}
+            onSelectedKeysChange={setSelected}
+          />
+        </TimelineLane>
+      ))}
+    </Timeline>
+  );
+}
+
 function Controls() {
   const announce = useAnnounce();
   const [open, setOpen] = useState(false);
@@ -184,6 +234,7 @@ function Controls() {
       />
       <Layers />
       <Clock />
+      <Mix />
       <FileDropZone accept=".pdf,application/pdf" onFiles={([file]) => setReceived(file?.name)}>
         {/* The name comes from the file: rendered as text, never as markup. */}
         {received ? <p data-testid="received">Received {received}</p> : null}

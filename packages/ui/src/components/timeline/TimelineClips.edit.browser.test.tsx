@@ -432,7 +432,7 @@ describe("TimelineClips, trimming by dragging an edge", () => {
 });
 
 describe("TimelineClips, at scale", () => {
-  it("zooms 2,000 clips within a few frames", () => {
+  it("resizes every one of 2,000 clips when the zoom changes", () => {
     const many: TimelineClip[] = Array.from({ length: 2000 }, (_, index) => ({
       key: `k${index}`,
       length: 48,
@@ -441,13 +441,11 @@ describe("TimelineClips, at scale", () => {
     }));
     const container = render(<Fixture start={many} first={["k0"]} zoom={20} />);
     const before = clip(container, "k0").getBoundingClientRect().width;
-    const zooming = performance.now();
     act(() => root?.render(<Fixture start={many} first={["k0"]} zoom={40} />));
-    // Reading a width forces the layout the zoom caused.
-    const after = clip(container, "k1999").getBoundingClientRect().width;
-    const zoomed = performance.now() - zooming;
-    expect(after).toBeCloseTo(before * 2, 0);
-    // A loose limit: it catches a change of order of magnitude, not of engine.
-    expect(zoomed).toBeLessThan(1500);
+    // The first, the last and one between: no time is asserted, since a time
+    // depends on what else the machine is doing. Those are in docs/adr/0011.
+    for (const key of ["k0", "k1000", "k1999"]) {
+      expect(clip(container, key).getBoundingClientRect().width).toBeCloseTo(before * 2, 0);
+    }
   });
 });

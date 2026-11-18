@@ -54,6 +54,7 @@ for (const app of apps) {
         'role="grid"',
         'class="hm-timeline"',
         'role="listbox"',
+        'class="hm-timeline-lane"',
         'aria-pressed="false"',
         'class="hm-spinner"',
         "<progress",
@@ -76,8 +77,13 @@ for (const app of apps) {
       await page.goto(app.url);
       await expect(page.locator("[data-hydrated]")).toBeAttached();
 
-      // The toolbar has exactly one Tab stop after hydration.
-      await expect(page.locator('[role="toolbar"] [tabindex="0"]')).toHaveCount(1);
+      // Each toolbar has exactly one Tab stop after hydration: the page's own,
+      // and each lane's header, which is a toolbar too.
+      const toolbars = page.getByRole("toolbar");
+      await expect(toolbars).toHaveCount(3);
+      for (const toolbar of await toolbars.all()) {
+        await expect(toolbar.locator('[tabindex="0"]')).toHaveCount(1);
+      }
 
       // The tooltip names the Undo button and shows on keyboard focus.
       const undo = page.getByRole("button", { name: "Undo" });
@@ -200,12 +206,12 @@ for (const app of apps) {
 
       // The timeline's playhead moves with the slider's keys, and reads its
       // time as text.
-      const playhead = page.getByRole("slider", { name: "Playhead" });
+      const playhead = page.getByRole("slider", { name: "Playhead", exact: true });
       await expect(playhead).toHaveAttribute("aria-valuetext", "2.0 seconds");
       await playhead.focus();
       await page.keyboard.press("PageUp");
       await expect(playhead).toHaveAttribute("aria-valuetext", "3.0 seconds");
-      const clipsList = page.getByRole("listbox", { name: "Clips" });
+      const clipsList = page.getByRole("listbox", { name: "Clips", exact: true });
       await expect(clipsList.getByRole("option")).toHaveCount(3);
       // The clips: one Tab stop, arrows select, Shift extends.
       await clipsList.getByRole("option", { name: "Clip 1 of 3, Intro" }).focus();
@@ -256,6 +262,25 @@ for (const app of apps) {
         .getByRole("option", { name: "Clip 3 of 3, Outro" })
         .boundingBox();
       expect((talk?.width ?? 0) / (outro?.width ?? 1)).toBeCloseTo(2, 1);
+
+      // Lanes: each is a group with a toolbar and its clips; ↓ goes to the
+      // clip nearest in time on the next lane, and selects it there only.
+      const mix = page.getByRole("region", { name: "Mix" });
+      await expect(mix.getByRole("group")).toHaveCount(2);
+      await expect(mix.getByRole("toolbar", { name: "Music track" })).toBeVisible();
+      const voice = mix.getByRole("listbox", { name: "Voice clips" });
+      const music = mix.getByRole("listbox", { name: "Music clips" });
+      await voice.getByRole("option", { name: "Voice 2, clip 2 of 2" }).focus();
+      await page.keyboard.press("ArrowDown");
+      await expect(music.getByRole("option", { name: "Music 3, clip 3 of 3" })).toBeFocused();
+      await expect(mix.getByRole("option", { selected: true })).toHaveCount(1);
+      await expect(music.getByRole("option", { selected: true })).toHaveAccessibleName(
+        "Music 3, clip 3 of 3",
+      );
+      // The header stays beside its lane, before the lane's first clip.
+      const head = await mix.getByRole("toolbar", { name: "Music track" }).boundingBox();
+      const firstClip = await music.getByRole("option").first().boundingBox();
+      expect((head?.x ?? 0) + (head?.width ?? 0)).toBeLessThanOrEqual((firstClip?.x ?? 0) + 1);
 
       // The segmented control selects with the arrow keys.
       await page.getByRole("radio", { name: "Single" }).focus();

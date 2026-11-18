@@ -273,6 +273,9 @@ Fine-grained overrides for one component. `ui` never declares them: each compone
 | `--hm-timeline-clip-selected-bg` | `--hm-color-accent-subtle` | Background of a selected clip. |
 | `--hm-timeline-clip-selected-border-color` | `--hm-color-accent` | Border of a selected clip. It needs 3:1 contrast with the track. |
 | `--hm-timeline-clip-edge-size` | `--hm-gap-normal` | Width of the part of a clip's edge that a pointer drags to trim it. |
+| `--hm-timeline-header-max-width` | `--hm-surface-width-small` | Widest a lane's header grows before its controls are cut off. |
+| `--hm-timeline-header-bg` | `--hm-color-surface` | Background of the lanes' headers, and of the slider's row above lanes. |
+| `--hm-timeline-lane-border-color` | `--hm-color-border` | Line between a timeline's lanes. |
 | `--hm-color-field-gap` | `--hm-gap-tight` | Space between a colour field's preview, input and swatches. |
 | `--hm-color-field-swatch-size` | `--hm-control-height-small` | Width and height of a colour field's swatch. |
 | `--hm-color-field-swatch-radius` | `--hm-radius-control` | Corner radius of a colour field's preview and swatches. |

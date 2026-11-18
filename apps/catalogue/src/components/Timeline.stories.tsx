@@ -1,10 +1,13 @@
 import {
   Button,
+  Slider,
   Timeline,
   type TimelineClip,
   TimelineClips,
+  TimelineLane,
   TimelineLayer,
   TimelinePlayhead,
+  ToggleButton,
   useTimelineScale,
 } from "@hussmartinez/ui/react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -268,6 +271,104 @@ function Editable() {
  */
 export const Editing: Story = {
   render: () => <Editable />,
+};
+
+const TRACKS = [
+  { id: "voice", name: "Voice", clips: [90, 60, 150] },
+  { id: "music", name: "Music", clips: [200, 100] },
+  { id: "effects", name: "Effects", clips: [40, 110, 150] },
+];
+
+/** An editor with several tracks: a lane each, one playhead and one selection. */
+function Tracks({ zoom = 1, start = 100 }: { zoom?: number; start?: number }) {
+  const [selected, setSelected] = useState<readonly string[]>(["music-1"]);
+  const [muted, setMuted] = useState<readonly string[]>(["effects"]);
+  const [gain, setGain] = useState<Record<string, number>>({});
+  const [frame, setFrame] = useState(start);
+  return (
+    <Timeline label="Timeline" length={FRAMES} zoom={zoom}>
+      <TimelinePlayhead
+        label="Playhead"
+        position={frame}
+        onPositionChange={setFrame}
+        largeStep={RATE}
+        formatValue={time}
+      />
+      {TRACKS.map((track, index) => (
+        <TimelineLane
+          key={track.id}
+          id={track.id}
+          label={`Track ${index + 1}, ${track.name}${muted.includes(track.id) ? ", muted" : ""}`}
+          header={
+            <>
+              <span style={{ fontSize: "var(--hm-font-size-small)", minInlineSize: "4rem" }}>
+                {track.name}
+              </span>
+              <ToggleButton
+                variant="quiet"
+                size="small"
+                pressed={muted.includes(track.id)}
+                onPressedChange={(on) =>
+                  setMuted((ids) => (on ? [...ids, track.id] : ids.filter((id) => id !== track.id)))
+                }
+              >
+                Mute
+              </ToggleButton>
+              <Slider
+                label={`${track.name} gain`}
+                min={-60}
+                max={12}
+                value={gain[track.id] ?? 0}
+                onValueChange={(value) => setGain((all) => ({ ...all, [track.id]: value }))}
+                formatValue={(value) => `${value} decibels`}
+                style={{ inlineSize: "5rem" }}
+              />
+            </>
+          }
+        >
+          <TimelineClips
+            label={`${track.name} clips`}
+            clips={track.clips.map((length, clip) => ({
+              key: `${track.id}-${clip + 1}`,
+              length,
+              // The name starts with what the clip shows, then says where it is.
+              label: `${track.name} ${clip + 1}, clip ${clip + 1} of ${track.clips.length}`,
+              content: `${track.name} ${clip + 1}`,
+            }))}
+            selectionMode="multiple"
+            selectedKeys={selected}
+            onSelectedKeysChange={setSelected}
+          />
+        </TimelineLane>
+      ))}
+    </Timeline>
+  );
+}
+
+/**
+ * Several tracks, a lane each. A lane's header is a toolbar that stays in
+ * view while the timeline scrolls: one Tab stop, then the lane's clips. ↑
+ * and ↓ on a clip go to the clip nearest in time on the next lane. Every
+ * lane is given the same selection.
+ */
+export const Lanes: Story = {
+  render: () => <Tracks />,
+};
+
+/** Zoomed in: the clips scroll under the headers, which stay where they are. */
+export const LanesZoomed: Story = {
+  name: "Lanes, zoomed",
+  render: () => <Tracks zoom={3} start={200} />,
+};
+
+/** In a timeline narrower than 720 pixels, each header sits above its lane. */
+export const LanesNarrow: Story = {
+  name: "Lanes, narrow",
+  render: () => (
+    <div style={{ maxInlineSize: "32rem" }}>
+      <Tracks />
+    </div>
+  ),
 };
 
 /** Visual styles dropped: the native slider, with no line, and clips with no colours. */

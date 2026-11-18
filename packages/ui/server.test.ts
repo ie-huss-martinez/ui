@@ -144,6 +144,12 @@ describe("the built package on a server", () => {
         ],
       },
       TimelineLayer: { children: "Layer" },
+      TimelineLane: {
+        id: "music",
+        label: "Track 2, Music",
+        header: createElement("button", { type: "button" }, "Mute"),
+        children: "Lane",
+      },
       TimelineClips: {
         label: "Clips",
         clips: [{ key: "a", length: 30, label: "Clip 1 of 1", content: "Intro" }],

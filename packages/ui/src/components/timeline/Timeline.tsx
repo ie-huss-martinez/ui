@@ -15,6 +15,7 @@ import {
 import { warnInDevelopment } from "../../internal/development.js";
 import { checkSingleCopy } from "../../internal/single-copy.js";
 import { cx, type StyleProps, unstyledAttribute } from "../shared/style-props.js";
+import { setStyle } from "./set-style.js";
 
 declare const process: { readonly env: { readonly NODE_ENV?: string } };
 
@@ -68,15 +69,52 @@ export interface TimelineScale {
   readonly visibleRange: () => TimelineRange;
 }
 
-interface TimelineContextValue {
+/** What a lane's clip track lets the other lanes do, for ↑ and ↓ between them. */
+export interface LaneClips {
+  /** Whether the track has clips. */
+  readonly any: () => boolean;
+  /** Focuses the clip nearest a unit, selecting it unless told not to. */
+  readonly focusNearest: (unit: number, select: boolean) => void;
+}
+
+export interface TimelineContextValue {
   readonly scale: TimelineScale;
   readonly viewport: RefObject<HTMLDivElement | null>;
   readonly track: RefObject<HTMLDivElement | null>;
   /** Adds snap targets that change over time, such as the playhead. */
   readonly addTargets: (read: () => readonly number[]) => () => void;
+  /** The lanes' ids, in the order shown; empty in a timeline without lanes. */
+  readonly lanes: readonly string[];
+  /**
+   * The width of the column the lanes' headers share, in CSS pixels: 0 with
+   * no headers, and when the headers sit above their lanes.
+   */
+  readonly headerWidth: number;
+  /** The viewport's padding after the track, which the headers' column adds to. */
+  readonly trail: number;
+  /** A lane says it's there, with its element and its header's toolbar; `null` when it goes. */
+  readonly setLane: (
+    id: string,
+    lane: { readonly element: HTMLElement; readonly toolbar: HTMLElement | null } | null,
+  ) => void;
+  /** A lane's clip track says it's there, for the other lanes to reach. */
+  readonly setLaneClips: (id: string, clips: LaneClips | null) => void;
+  /** The clip track of the next lane with clips, above (-1) or below (1) a lane. */
+  readonly nextLaneClips: (id: string, direction: -1 | 1) => LaneClips | undefined;
 }
 
-const TimelineContext = /* @__PURE__ */ createContext<TimelineContextValue | undefined>(undefined);
+/** The lane a part is in, or `undefined` in a timeline without lanes. */
+export const TimelineLaneContext = /* @__PURE__ */ createContext<string | undefined>(undefined);
+
+export const TimelineContext = /* @__PURE__ */ createContext<TimelineContextValue | undefined>(
+  undefined,
+);
+
+/**
+ * Below this width of the timeline itself, in CSS pixels, the lanes' headers
+ * sit above their lanes rather than beside them (docs/adr/0011).
+ */
+const HEADERS_BESIDE = 720;
 
 /** The enclosing timeline's context, for its own parts. */
 export function useTimelineContext(part: string): TimelineContextValue | undefined {
@@ -225,28 +263,85 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
   // The viewport's padding before the track, which scrolls with it.
   const lead = useRef(0);
   const targets = useRef(new Set<() => readonly number[]>());
+  // The lanes: what each registered, and what's known of them as state.
+  const laneParts = useRef(
+    new Map<string, { readonly element: HTMLElement; readonly toolbar: HTMLElement | null }>(),
+  );
+  const laneClips = useRef(new Map<string, LaneClips>());
+  const [lanes, setLanes] = useState<readonly string[]>([]);
+  const [headerWidth, setHeaderWidth] = useState(0);
+  const [trail, setTrail] = useState(0);
+  const [beside, setBeside] = useState(true);
 
   // Measured and sized when React commits, through ref callbacks, so the
   // first frame painted is already sized. A ref callback runs only in a
   // browser, so nothing here reads the browser on a server, and there's no
   // layout effect for React 18 to warn about there.
   const measure = (element: HTMLDivElement): void => {
+    // Also once after the last lane has gone, to undo what the lanes set.
+    if (laneParts.current.size > 0 || order.current.length > 0) {
+      measureLanes(element);
+    }
     const style = getComputedStyle(element);
     const padding = Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight);
     lead.current = Number.parseFloat(style.paddingInlineStart) || 0;
     // The same width again changes nothing, so this settles in one more render.
     setRoom(Math.max(0, element.clientWidth - padding));
   };
+
+  // With lanes: their order, the width their headers need, and whether there's
+  // room for the headers beside the lanes. The headers' column is the
+  // viewport's own padding before the track, so the track still starts at
+  // the first unit and everything that maps units to pixels is unchanged.
+  const measureLanes = (element: HTMLDivElement): void => {
+    const order = [...laneParts.current.entries()].sort(([, a], [, b]) =>
+      a.element.compareDocumentPosition(b.element) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1,
+    );
+    const ids = order.map(([id]) => id);
+    setLanes((current) =>
+      current.length === ids.length && current.every((id, index) => id === ids[index])
+        ? current
+        : ids,
+    );
+    const wide = element.offsetWidth >= HEADERS_BESIDE;
+    setBeside(wide);
+    // Each toolbar is as wide as its content; the column is as wide as the widest.
+    const widest = Math.max(0, ...order.map(([, lane]) => lane.toolbar?.offsetWidth ?? 0));
+    const column = wide ? Math.ceil(widest) : 0;
+    setHeaderWidth(column);
+    const after = Number.parseFloat(getComputedStyle(element).paddingInlineEnd) || 0;
+    setTrail(after);
+    setStyle(element, "padding-inline-start", column > 0 ? `${column + after}px` : "");
+  };
   const remeasure = useRef(measure);
   remeasure.current = measure;
+  // Watches the viewport, and each lane's header, whose content sets its width.
+  const resized = useRef<ResizeObserver | null>(null);
   useEffect(() => {
     const element = viewport.current;
     if (!element) {
       return;
     }
-    const observer = new ResizeObserver(() => remeasure.current(element));
+    // On the next frame: measuring sets sizes, and a size set while the
+    // observer is reporting would be reported to it again at once.
+    let frame = 0;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => remeasure.current(element));
+    });
     observer.observe(element);
-    return () => observer.disconnect();
+    resized.current = observer;
+    // Headers that registered before this ran.
+    for (const lane of laneParts.current.values()) {
+      if (lane.toolbar) {
+        observer.observe(lane.toolbar);
+      }
+    }
+    return () => {
+      resized.current = null;
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
   }, []);
 
   const fit = length > 0 && room > 0 ? room / length : 0;
@@ -267,8 +362,11 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
   // Sizes go through the CSSOM: a style attribute would be blocked by a
   // strict Content Security Policy when rendered on a server.
   const sizeTrack = (element: HTMLDivElement): void => {
-    element.style.inlineSize = pixelsPerUnit > 0 ? `${length * pixelsPerUnit}px` : "";
+    setStyle(element, "inline-size", pixelsPerUnit > 0 ? `${length * pixelsPerUnit}px` : "");
   };
+
+  const headerColumn = useRef(headerWidth);
+  headerColumn.current = headerWidth;
 
   const settings = useRef({ snapping, snapTargets });
   settings.current = { snapping, snapTargets };
@@ -307,13 +405,13 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
         }
         // scrollLeft is negative in right-to-left text. The track starts
         // after the viewport's padding.
-        const start = (Math.abs(element.scrollLeft) - lead.current) / pixelsPerUnit;
+        const scrolled = Math.abs(element.scrollLeft) - lead.current;
+        // The headers' column covers the start of the view.
+        const start = (scrolled + headerColumn.current) / pixelsPerUnit;
+        const end = (scrolled + element.clientWidth) / pixelsPerUnit;
         return {
           start: Math.min(Math.max(Math.floor(start), 0), length),
-          end: Math.min(
-            Math.max(Math.ceil(start + element.clientWidth / pixelsPerUnit), 0),
-            length,
-          ),
+          end: Math.min(Math.max(Math.ceil(end), 0), length),
         };
       },
     };
@@ -341,10 +439,66 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
   // biome-ignore lint/correctness/useExhaustiveDependencies: room changes the range without changing the scale's identity when the zoom is capped.
   useEffect(reportRange, [reportRange, room]);
 
+  const setLane = useCallback<TimelineContextValue["setLane"]>((id, lane) => {
+    const before = laneParts.current.get(id);
+    if (lane) {
+      if (before?.element === lane.element && before.toolbar === lane.toolbar) {
+        return;
+      }
+      laneParts.current.set(id, lane);
+      if (lane.toolbar) {
+        resized.current?.observe(lane.toolbar);
+      }
+    } else if (before) {
+      laneParts.current.delete(id);
+      if (before.toolbar) {
+        resized.current?.unobserve(before.toolbar);
+      }
+    }
+    // The lanes changed without the timeline rendering: measure them now.
+    if (viewport.current) {
+      remeasure.current(viewport.current);
+    }
+  }, []);
+
+  const setLaneClips = useCallback<TimelineContextValue["setLaneClips"]>((id, clips) => {
+    if (clips) {
+      laneClips.current.set(id, clips);
+    } else {
+      laneClips.current.delete(id);
+    }
+  }, []);
+
+  const order = useRef(lanes);
+  order.current = lanes;
+  const nextLaneClips = useCallback<TimelineContextValue["nextLaneClips"]>((id, direction) => {
+    const ids = order.current;
+    for (let at = ids.indexOf(id) + direction; at >= 0 && at < ids.length; at += direction) {
+      const clips = laneClips.current.get(ids[at] as string);
+      if (clips?.any()) {
+        return clips;
+      }
+    }
+    return undefined;
+  }, []);
+
   const context = useMemo<TimelineContextValue>(
-    () => ({ scale, viewport, track, addTargets }),
-    [scale, addTargets],
+    () => ({
+      scale,
+      viewport,
+      track,
+      addTargets,
+      lanes,
+      headerWidth,
+      trail,
+      setLane,
+      setLaneClips,
+      nextLaneClips,
+    }),
+    [scale, addTargets, lanes, headerWidth, trail, setLane, setLaneClips, nextLaneClips],
   );
+
+  const laned = lanes.length > 0;
 
   return (
     <section
@@ -353,6 +507,8 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
       aria-label={label}
       className={cx("hm-timeline", classNames?.root, className)}
       data-hm-unstyled={unstyledAttribute(unstyled)}
+      // With lanes, the layout has rows; their headers sit beside or above them.
+      data-hm-lanes={laned ? (beside ? "beside" : "above") : undefined}
     >
       <div
         // A new function each render, so React calls it at every commit.
@@ -374,6 +530,40 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
           }}
           className={cx("hm-timeline-track", classNames?.track)}
         >
+          {/* Behind the slider, so the lanes scroll under its row. */}
+          {laned ? (
+            <div
+              className="hm-timeline-bar"
+              aria-hidden="true"
+              ref={(node) => {
+                if (node) {
+                  setStyle(
+                    node,
+                    "margin-inline-start",
+                    headerWidth > 0 ? `${-(headerWidth + trail)}px` : "",
+                  );
+                }
+              }}
+            />
+          ) : null}
+          {/* Over the slider's row where the headers' column is, so its rail passes under. */}
+          {laned && headerWidth > 0 ? (
+            <div
+              className="hm-timeline-corner"
+              aria-hidden="true"
+              ref={(node) => {
+                if (node) {
+                  setStyle(node, "margin-inline-start", `${-(headerWidth + trail)}px`);
+                  const cover = node.firstElementChild as HTMLElement;
+                  setStyle(cover, "inline-size", `${headerWidth}px`);
+                  // Measured from inside the viewport's padding, as a lane's header is.
+                  setStyle(cover, "inset-inline-start", `${-(headerWidth + trail)}px`);
+                }
+              }}
+            >
+              <div className="hm-timeline-corner-cover" />
+            </div>
+          ) : null}
           <TimelineContext.Provider value={context}>{children}</TimelineContext.Provider>
         </div>
       </div>
@@ -405,10 +595,69 @@ export interface TimelineLayerProps extends HTMLAttributes<HTMLDivElement> {
  */
 export const TimelineLayer = /* @__PURE__ */ forwardRef<HTMLDivElement, TimelineLayerProps>(
   function TimelineLayer({ className, children, ...props }, ref) {
+    // Written outside the lanes of a timeline that has them, it covers them all.
+    const lanes = useContext(TimelineContext)?.lanes.length ?? 0;
+    const inLane = useContext(TimelineLaneContext) !== undefined;
+    const rows = inLane ? 0 : lanes;
     return (
-      <div {...props} ref={ref} className={cx("hm-timeline-layer", className)}>
+      <div
+        {...props}
+        ref={(node) => {
+          if (node) {
+            setStyle(node, "grid-row", rows > 0 ? `2 / span ${rows}` : "");
+          }
+          if (typeof ref === "function") {
+            ref(node);
+          } else if (ref) {
+            ref.current = node;
+          }
+        }}
+        className={cx("hm-timeline-layer", className)}
+      >
         {children}
       </div>
     );
   },
 );
+
+/**
+ * The lanes of the {@link Timeline} around a layer, for one that covers them
+ * all, such as a selected range of time: their ids in the order shown, and
+ * the lane under a pointer.
+ *
+ * @public
+ */
+export interface TimelineLanes {
+  /** The lanes' ids, top to bottom. Empty in a timeline without lanes. */
+  readonly lanes: readonly string[];
+  /** The id of the lane under a pointer, from its `clientY`, if one is. */
+  readonly laneAt: (clientY: number) => string | undefined;
+}
+
+/**
+ * The lanes of the {@link Timeline} around a layer or a part.
+ *
+ * @public
+ */
+export function useTimelineLanes(): TimelineLanes {
+  const context = useTimelineContext("useTimelineLanes");
+  const lanes = context?.lanes;
+  const track = context?.track;
+  return useMemo(
+    () => ({
+      lanes: lanes ?? [],
+      laneAt: (clientY) => {
+        for (const element of track?.current?.querySelectorAll<HTMLElement>(
+          ":scope > [data-hm-lane]",
+        ) ?? []) {
+          const box = element.getBoundingClientRect();
+          if (clientY >= box.top && clientY < box.bottom) {
+            return element.dataset["hmLane"];
+          }
+        }
+        return undefined;
+      },
+    }),
+    [lanes, track],
+  );
+}
