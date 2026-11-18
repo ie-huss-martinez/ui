@@ -183,6 +183,19 @@ export const WithClips: Story = {
   render: () => <Editor clips="single" />,
 };
 
+/**
+ * The playhead focused on the first unit: its thumb's focus ring shows whole,
+ * above the track and past its start, which the timeline keeps room for.
+ */
+export const PlayheadFocused: Story = {
+  name: "Playhead focused at the start",
+  render: () => <Editor clips="single" start={0} />,
+  // Focused as a keyboard user would find it, so the ring is in the screenshot.
+  play: () => {
+    document.querySelector<HTMLInputElement>('.hm-timeline input[type="range"]')?.focus();
+  },
+};
+
 /** Several clips selected: Shift extends, Ctrl or ⌘ moves without selecting, and Space adds or removes. */
 export const SeveralSelected: Story = {
   name: "Several selected",
