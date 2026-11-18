@@ -175,7 +175,9 @@ function syncTabStop(list: HTMLElement, active?: Element | null): void {
  * grid with one column of rows.
  *
  * - **↑ and ↓** move between rows and select; with Ctrl or ⌘, they move
- *   without selecting. **← and →**, Home and End move between a row's
+ *   without selecting. The selection follows focus however it reaches an
+ *   item: the keys, Tab, a click, or your own `focus()`. Focus on a control
+ *   never changes it. **← and →**, Home and End move between a row's
  *   cells. Ctrl or ⌘ with Home or End goes to the first or last row.
  *   Space or Enter on an item selects it.
  * - **Alt+↑ and Alt+↓** (Option on macOS) move the focused item, through
@@ -244,6 +246,8 @@ export const ReorderableList = /* @__PURE__ */ forwardRef<HTMLDivElement, Reorde
     const list = useRef<HTMLDivElement | null>(null);
     const pending = useRef<Pending | undefined>(undefined);
     const lastSelected = useRef(selectedId);
+    // Set while the list moves focus itself, when that focus mustn't select.
+    const quiet = useRef(false);
     const announce = useAnnounce();
     const messages = useUiMessages();
 
@@ -271,7 +275,14 @@ export const ReorderableList = /* @__PURE__ */ forwardRef<HTMLDivElement, Reorde
           const cells = cellsOf(row);
           const target = cells[change.cell] ?? cells[0];
           syncTabStop(element, target);
-          target?.focus();
+          // A moved item keeps its selection as it was; after a removal, the
+          // item that took its place is focused, and selected, as any is.
+          quiet.current = change.kind === "move";
+          try {
+            target?.focus();
+          } finally {
+            quiet.current = false;
+          }
         }
         if (row && change.kind === "move" && announceMoves) {
           announce(
@@ -304,6 +315,9 @@ export const ReorderableList = /* @__PURE__ */ forwardRef<HTMLDivElement, Reorde
       }
     };
 
+    // The keys focus quietly: they choose whether to select themselves, as
+    // Ctrl or ⌘ with an arrow doesn't. Focusing is synchronous, so the flag
+    // only covers that one call.
     const focusCell = (row: HTMLElement | undefined, cell: number): void => {
       if (!row || !list.current) {
         return;
@@ -311,7 +325,12 @@ export const ReorderableList = /* @__PURE__ */ forwardRef<HTMLDivElement, Reorde
       const cells = cellsOf(row);
       const target = cells[cell] ?? cells[0];
       syncTabStop(list.current, target);
-      target?.focus();
+      quiet.current = true;
+      try {
+        target?.focus();
+      } finally {
+        quiet.current = false;
+      }
     };
 
     const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
@@ -409,9 +428,19 @@ export const ReorderableList = /* @__PURE__ */ forwardRef<HTMLDivElement, Reorde
       }
     };
 
+    // The selection follows focus however it arrives on an item: Tab, a
+    // click, or a host's own `focus()`. Not on a control, whose cell never
+    // changes the selection, and only when it would change.
     const handleFocus = (event: FocusEvent<HTMLDivElement>): void => {
       onFocus?.(event);
       syncTabStop(event.currentTarget, event.target);
+      const target = event.target as HTMLElement;
+      if (!quiet.current && target.dataset["hmCell"] === "item") {
+        const row = rowsOf(event.currentTarget).find((candidate) => candidate.contains(target));
+        if (row) {
+          select(idOf(row));
+        }
+      }
     };
 
     const handleBlur = (event: FocusEvent<HTMLDivElement>): void => {
