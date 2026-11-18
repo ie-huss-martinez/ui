@@ -261,7 +261,10 @@ describe("ReorderableList", () => {
   it("moves between a row's cells with ←, →, Home and End, and never changes the selection", async () => {
     const onSelectedChange = vi.fn();
     const container = render(<Layers calls={{ onSelectedChange }} />);
+    // Focusing an item selects its row, however focus arrives.
     item(container, "Title").focus();
+    expect(onSelectedChange.mock.calls).toEqual([["Title"]]);
+    onSelectedChange.mockClear();
     expect(await press("{ArrowRight}")).toEqual({ prevented: true, scrolled: false });
     expect(document.activeElement).toBe(toggle(container, "Title"));
     // The same cell in the next row.
@@ -493,5 +496,73 @@ describe("ReorderableList", () => {
     expect(consoleError).not.toHaveBeenCalled();
     expect(tabStops(container)).toEqual(["Photo"]);
     expect(toggle(container, "Title").tabIndex).toBe(-1);
+  });
+
+  describe("ReorderableList, the selection follows focus", () => {
+    it("selects the row whose item Tab lands on, and calls nothing when it's already selected", async () => {
+      const onSelectedChange = vi.fn();
+      const list = (selectedId?: string) => (
+        <>
+          <button type="button">Before</button>
+          <ReorderableList
+            label="Layers"
+            selectedId={selectedId}
+            onSelectedChange={onSelectedChange}
+          >
+            <ReorderableListItem id="a" label="A">
+              A
+            </ReorderableListItem>
+            <ReorderableListItem id="b" label="B">
+              B
+            </ReorderableListItem>
+          </ReorderableList>
+        </>
+      );
+      const container = render(list());
+      const before = container.querySelector("button") as HTMLElement;
+      before.focus();
+      await userEvent.tab();
+      expect(document.activeElement).toBe(item(container, "a"));
+      expect(onSelectedChange.mock.calls).toEqual([["a"]]);
+
+      // "b" selected while focus is outside the list, as from an editor's
+      // stage: the Tab stop follows it, and Tab finds nothing to change.
+      before.focus();
+      act(() => root?.render(list("b")));
+      onSelectedChange.mockClear();
+      await userEvent.tab();
+      expect(document.activeElement).toBe(item(container, "b"));
+      expect(onSelectedChange).not.toHaveBeenCalled();
+    });
+
+    it("selects the row a host focuses, but not for a focused control", () => {
+      const onSelectedChange = vi.fn();
+      const container = render(<Layers calls={{ onSelectedChange }} />);
+      act(() => item(container, "Shape").focus());
+      expect(onSelectedChange.mock.calls).toEqual([["Shape"]]);
+      act(() => toggle(container, "Background").focus());
+      expect(onSelectedChange).toHaveBeenCalledTimes(1);
+    });
+
+    it("still moves between rows without selecting with Ctrl or ⌘", async () => {
+      const onSelectedChange = vi.fn();
+      const container = render(<Layers calls={{ onSelectedChange }} />);
+      act(() => item(container, "Photo").focus());
+      expect(onSelectedChange).not.toHaveBeenCalled();
+      await userEvent.keyboard("{Control>}{ArrowDown}{/Control}");
+      expect(document.activeElement).toBe(item(container, "Shape"));
+      expect(onSelectedChange).not.toHaveBeenCalled();
+    });
+
+    it("keeps a moved row's selection as it was when focus is put back on it", async () => {
+      const onSelectedChange = vi.fn();
+      const container = render(<Layers calls={{ onSelectedChange }} />);
+      act(() => item(container, "Photo").focus());
+      await userEvent.keyboard("{Control>}{ArrowDown}{/Control}");
+      await userEvent.keyboard("{Alt>}{ArrowUp}{/Alt}");
+      expect(rows(container)).toEqual(["Title", "Shape", "Photo", "Background"]);
+      expect(document.activeElement).toBe(item(container, "Shape"));
+      expect(onSelectedChange).not.toHaveBeenCalled();
+    });
   });
 });
