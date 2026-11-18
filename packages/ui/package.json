@@ -43,7 +43,8 @@
     "check:package": "publint run --pack pnpm --strict && attw --pack . --profile esm-only --exclude-entrypoints ./styles.css",
     "api:update": "tsc -p tsconfig.build.json && api-extractor run --local && api-extractor run -c api-extractor.react.json --local && hm-check-api-reports --main api/ui.api.md --types dist/index.d.ts api/ui-react.api.md",
     "tokens": "node scripts/generate-tokens.ts",
-    "icons": "node scripts/generate-icons.ts"
+    "icons": "node scripts/generate-icons.ts",
+    "size:table": "node scripts/size-table.ts"
   },
   "dependencies": {
     "@hussmartinez/sdk-core": "catalog:"

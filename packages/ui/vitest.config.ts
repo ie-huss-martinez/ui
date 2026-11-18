@@ -37,7 +37,7 @@ export default defineConfig(({ mode }) => {
             name: "unit",
             // build.test.ts checks the built package, so it sits next to the
             // Vite config rather than in src/.
-            include: ["src/**/*.test.{ts,tsx}", "*.test.ts"],
+            include: ["src/**/*.test.{ts,tsx}", "scripts/**/*.test.ts", "*.test.ts"],
             exclude: ["src/**/*.browser.test.{ts,tsx}"],
             environment: "node",
           },
