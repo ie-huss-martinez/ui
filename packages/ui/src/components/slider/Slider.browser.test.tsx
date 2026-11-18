@@ -399,17 +399,34 @@ describe("Slider", () => {
       expect(onCommit).toHaveBeenCalledTimes(1);
     });
 
-    it("commits once for a pointer dragged along the slider, when it's let go", async () => {
+    // The drag is sent as the browser sends it, as events on the input: a
+    // press, the value changing as the thumb moves, a release off the slider,
+    // then the input's own change. Not with the page's mouse, which other
+    // test files running beside this one in the same page can move too.
+    it("commits once for a pointer dragged along the slider, when it's let go off it", () => {
       const { onChange, onCommit, input } = setUp();
-      const { width, height } = input.getBoundingClientRect();
-      await userEvent.dragAndDrop(input, input, {
-        sourcePosition: { x: width / 2, y: height / 2 },
-        targetPosition: { x: width - 2, y: height / 2 },
+      const setValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+      act(() => {
+        input.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerId: 1 }));
       });
-      expect(onChange.mock.calls.length).toBeGreaterThanOrEqual(1);
+      for (const value of ["-24", "-10", "4", "9"]) {
+        act(() => {
+          setValue?.call(input, value);
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+        });
+      }
+      expect(onChange.mock.calls).toEqual([[-24], [-10], [4], [9]]);
+      expect(onCommit).not.toHaveBeenCalled();
+      // Let go off the slider: the release reaches the window, not the input.
+      act(() => {
+        document.body.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, pointerId: 1 }));
+      });
+      expect(onCommit.mock.calls).toEqual([[9]]);
+      // The change that follows a release commits nothing more.
+      act(() => {
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      });
       expect(onCommit).toHaveBeenCalledTimes(1);
-      expect(onCommit).toHaveBeenLastCalledWith(Number(input.value));
-      expect(Number(input.value)).toBeGreaterThan(8);
     });
 
     it("commits once for a click on the track", async () => {
