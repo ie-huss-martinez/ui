@@ -35,6 +35,7 @@ afterEach(() => {
   root = undefined;
   cleanUp();
   vi.restoreAllMocks();
+  vi.useRealTimers();
   delete (navigator as { userAgentData?: unknown }).userAgentData;
 });
 
@@ -126,19 +127,25 @@ describe("Tooltip", () => {
     expect(isOpen(tooltipOf(container))).toBe(false);
   });
 
-  it("shows on hover after its delay, and stays while the pointer moves onto it", async () => {
+  it("shows on hover after its delay, and stays while the pointer moves onto it", () => {
+    // A fake clock, so "not open yet" can't race a slow machine: with real
+    // time, a runner that stalls past the delay opens it, correctly, before
+    // the check runs (#107's WebKit run in CI).
+    vi.useFakeTimers();
     const container = render(<Rotate delay={60} />);
     const trigger = container.querySelector("button") as HTMLElement;
     const tooltip = tooltipOf(container);
+    const tick = (ms: number) => act(() => vi.advanceTimersByTime(ms));
     act(() => {
       trigger.dispatchEvent(
         new PointerEvent("pointerover", { bubbles: true, pointerType: "mouse" }),
       );
       trigger.dispatchEvent(new PointerEvent("pointerenter", { pointerType: "mouse" }));
     });
-    await settle(10);
+    tick(59);
     expect(isOpen(tooltip)).toBe(false);
-    await expect.poll(() => isOpen(tooltip)).toBe(true);
+    tick(1);
+    expect(isOpen(tooltip)).toBe(true);
     // Hoverable (WCAG 1.4.13): leaving the trigger for the tooltip keeps it.
     act(() => {
       trigger.dispatchEvent(
@@ -150,7 +157,7 @@ describe("Tooltip", () => {
       );
       tooltip.dispatchEvent(new PointerEvent("pointerenter", { pointerType: "mouse" }));
     });
-    await settle(200);
+    tick(1000);
     expect(isOpen(tooltip)).toBe(true);
     act(() => {
       tooltip.dispatchEvent(
@@ -158,7 +165,7 @@ describe("Tooltip", () => {
       );
       tooltip.dispatchEvent(new PointerEvent("pointerleave", { pointerType: "mouse" }));
     });
-    await settle(200);
+    tick(200);
     expect(isOpen(tooltip)).toBe(false);
   });
 
