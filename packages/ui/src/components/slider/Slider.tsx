@@ -1,8 +1,12 @@
 import {
   type ChangeEvent,
+  type FocusEvent,
   forwardRef,
   type InputHTMLAttributes,
   type KeyboardEvent,
+  type PointerEvent,
+  useEffect,
+  useRef,
   useState,
 } from "react";
 import { warnInDevelopment } from "../../internal/development.js";
@@ -37,6 +41,15 @@ export interface SliderProps
   readonly defaultValue?: number | undefined;
   /** Called with the new value as it changes, by pointer or keyboard. */
   readonly onValueChange?: ((value: number) => void) | undefined;
+  /**
+   * Called once when a gesture that changed the value ends, with the value
+   * it ended on: when the pointer is let go, when the last key held is let
+   * go, or when the slider loses focus first. Use it for what should happen
+   * once per gesture, such as an undo step, and `onValueChange` for what
+   * follows the value as it moves. A gesture that leaves the value where it
+   * was calls nothing.
+   */
+  readonly onValueCommit?: ((value: number) => void) | undefined;
   /** Defaults to 0. */
   readonly min?: number | undefined;
   /** Defaults to 100. */
@@ -84,6 +97,11 @@ function snap(value: number, min: number, max: number, step: number): number {
  * left and right arrows follow it, in every browser. `formatValue` gives
  * screen readers the value as text.
  *
+ * `onValueChange` follows the value as it moves; `onValueCommit` is called
+ * once when the gesture ends, for what should happen once, such as an undo
+ * step: a drag let go, a key let go after one press or a held repeat, or
+ * focus leaving first.
+ *
  * Inside a `Toolbar`, the slider keeps the arrow keys, Home and End, so
  * they can't move focus past it: put it last in the toolbar. Tab still
  * leaves the toolbar.
@@ -110,6 +128,7 @@ export const Slider = /* @__PURE__ */ forwardRef<HTMLInputElement, SliderProps>(
     value: controlled,
     defaultValue,
     onValueChange,
+    onValueCommit,
     min = 0,
     max = 100,
     step = 1,
@@ -120,6 +139,9 @@ export const Slider = /* @__PURE__ */ forwardRef<HTMLInputElement, SliderProps>(
     classNames,
     unstyled,
     onKeyDown,
+    onKeyUp,
+    onPointerDown,
+    onBlur,
     ...props
   },
   ref,
@@ -142,6 +164,22 @@ export const Slider = /* @__PURE__ */ forwardRef<HTMLInputElement, SliderProps>(
     }
   }
 
+  // A gesture's changes, until it ends: the last value given, if any. It
+  // ends on events, never on a timer, so a slow machine commits as often as
+  // a fast one.
+  const pending = useRef<number | null>(null);
+  // Step keys held down now. A held key repeats its keydown, and lets go once.
+  const held = useRef(new Set<string>());
+  const commitRef = useRef(onValueCommit);
+  commitRef.current = onValueCommit;
+  const commit = (): void => {
+    const last = pending.current;
+    pending.current = null;
+    if (last !== null) {
+      commitRef.current?.(last);
+    }
+  };
+
   const change = (next: number): void => {
     const snapped = snap(next, min, max, step);
     if (snapped === value) {
@@ -150,7 +188,49 @@ export const Slider = /* @__PURE__ */ forwardRef<HTMLInputElement, SliderProps>(
     if (controlled === undefined) {
       setUncontrolled(snapped);
     }
+    pending.current = snapped;
     onValueChange?.(snapped);
+  };
+
+  // A pointer gesture ends when the pointer is let go, wherever it is by
+  // then: the thumb can be dragged off the slider. The input's own `change`
+  // event, which every engine fires on release and when assistive
+  // technology sets the value, ends it too.
+  const input = useRef<HTMLInputElement | null>(null);
+  const commitLater = useRef(commit);
+  commitLater.current = commit;
+  useEffect(() => {
+    const element = input.current;
+    if (!element) {
+      return;
+    }
+    const onCommit = (): void => commitLater.current();
+    element.addEventListener("change", onCommit);
+    return () => element.removeEventListener("change", onCommit);
+  }, []);
+  const handlePointerDown = (event: PointerEvent<HTMLInputElement>): void => {
+    onPointerDown?.(event);
+    const release = (): void => {
+      window.removeEventListener("pointerup", release, true);
+      window.removeEventListener("pointercancel", release, true);
+      commitLater.current();
+    };
+    window.addEventListener("pointerup", release, true);
+    window.addEventListener("pointercancel", release, true);
+  };
+
+  const handleKeyUp = (event: KeyboardEvent<HTMLInputElement>): void => {
+    onKeyUp?.(event);
+    if (held.current.delete(event.key) && held.current.size === 0) {
+      commit();
+    }
+  };
+
+  // Focus leaving mid-gesture ends it: a key let go elsewhere isn't seen.
+  const handleBlur = (event: FocusEvent<HTMLInputElement>): void => {
+    onBlur?.(event);
+    held.current.clear();
+    commit();
   };
 
   // Pointer changes come from the native input.
@@ -183,6 +263,7 @@ export const Slider = /* @__PURE__ */ forwardRef<HTMLInputElement, SliderProps>(
       return;
     }
     event.preventDefault();
+    held.current.add(event.key);
     change(next);
   };
 
@@ -190,7 +271,14 @@ export const Slider = /* @__PURE__ */ forwardRef<HTMLInputElement, SliderProps>(
     <input
       {...props}
       {...fieldProps}
-      ref={ref}
+      ref={(node) => {
+        input.current = node;
+        if (typeof ref === "function") {
+          ref(node);
+        } else if (ref) {
+          ref.current = node;
+        }
+      }}
       type="range"
       min={min}
       max={max}
@@ -202,6 +290,9 @@ export const Slider = /* @__PURE__ */ forwardRef<HTMLInputElement, SliderProps>(
       data-hm-unstyled={unstyledAttribute(unstyled)}
       onChange={handleChange}
       onKeyDown={handleKeyDown}
+      onKeyUp={handleKeyUp}
+      onPointerDown={handlePointerDown}
+      onBlur={handleBlur}
     />
   );
 });
