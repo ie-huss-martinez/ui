@@ -186,10 +186,25 @@
    * the lane back over the room kept for the headers, so the header has a
    * box to stay in.
    */
+  /*
+   * A lane takes no press itself, and nor do its layers unless they ask:
+   * a press on its empty space, or beside a clip's title, goes on to what's
+   * under the lanes, such as a layer that selects a range of time across
+   * them. Its header and its clips take theirs.
+   */
   .hm-timeline-lane {
     box-sizing: border-box;
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
+    pointer-events: none;
+  }
+
+  .hm-timeline-lane .hm-timeline-layer:not([data-hm-interactive]) {
+    pointer-events: none;
+  }
+
+  .hm-timeline-lane .hm-timeline-layer[data-hm-interactive] {
+    pointer-events: auto;
   }
 
   .hm-timeline-lane > * {
@@ -200,6 +215,7 @@
 
   .hm-timeline-lane > .hm-timeline-lane-header {
     align-items: center;
+    pointer-events: auto;
     box-sizing: border-box;
     display: flex;
     grid-column: 1;

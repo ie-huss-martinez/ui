@@ -40,11 +40,11 @@ export default [
     name: "Stylesheet (./styles.css)",
     path: "dist/styles.css",
     brotli: true,
-    // 9 kB. It measures 8.64 kB with the timeline's lanes; the clip edges
-    // before them took it from 8 kB to 8.5 kB. Raised as the React entry's
-    // is: to the measurement, rounded up to the next 0.5 kB. Every
+    // 9.5 kB. It measures 9.05 kB with lanes that let presses through;
+    // the lanes before them took it from 8.5 kB to 9 kB. Raised as the React
+    // entry's is: to the measurement, rounded up to the next 0.5 kB. Every
     // application loads the whole stylesheet, so this one is the cost of
     // every component.
-    limit: "9 kB",
+    limit: "9.5 kB",
   },
 ];

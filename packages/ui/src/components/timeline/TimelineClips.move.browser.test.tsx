@@ -141,7 +141,7 @@ function Fixture({
         </TimelineLane>
         {LANES.map((lane) => (
           <TimelineLane key={lane} id={lane} label={`${lane} track`}>
-            {under ? <TimelineLayer data-testid={`under-${lane}`} /> : null}
+            {under ? <TimelineLayer interactive data-testid={`under-${lane}`} /> : null}
             <TimelineClips
               label={`${lane} clips`}
               clips={clips
