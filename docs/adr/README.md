@@ -12,7 +12,7 @@ Use [`template.md`](template.md) for new records. Name files `NNNN-short-title.m
 | [0002](0002-visual-regression-in-a-pinned-container.md) | Visual regression in a pinned container | Accepted; image location superseded by [0004](0004-one-browser-test-image.md), runner replaced by [0007](0007-browser-tests-in-the-pinned-image.md) |
 | [0003](0003-component-contract.md) | The component contract | Accepted; "`ui` ships no icon set" superseded by [0005](0005-icon-set.md) |
 | [0004](0004-one-browser-test-image.md) | One browser test image, in one place | Accepted; its unit tests replaced by [0007](0007-browser-tests-in-the-pinned-image.md) |
-| [0005](0005-icon-set.md) | An icon set generated from Lucide | Accepted; amended to allow a few glyphs ui draws itself, where Lucide has none |
+| [0005](0005-icon-set.md) | An icon set generated from Lucide | Accepted; amended to allow a few glyphs ui draws itself, where Lucide has none, and to mirror icons that point along time |
 | [0006](0006-overlays-in-the-top-layer.md) | Overlays in the top layer, placed without a library | Accepted |
 | [0007](0007-browser-tests-in-the-pinned-image.md) | Every browser test runs in the pinned image, through `sdk-config` | Accepted |
 | [0008](0008-colour-input-without-the-native-picker.md) | A colour input without the browser's picker | Accepted |
