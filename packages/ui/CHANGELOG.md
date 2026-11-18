@@ -1,5 +1,11 @@
 # @hussmartinez/ui
 
+## 0.14.2
+
+### Patch Changes
+
+- [#109](https://github.com/ie-huss-martinez/ui/pull/109) [`f7fb5f7`](https://github.com/ie-huss-martinez/ui/commit/f7fb5f7f106c8d7baca9349ee7cd3e782ee6bd9a) Thanks [@hussmartinez](https://github.com/hussmartinez)! - `useAnnounce` no longer loses messages sent in the same frame. Before, when two components announced in one commit, such as a child's effect and its parent's, only the last message was said. Now messages sent in the same frame with the same politeness are said together, in order, separated by a space, and the same message twice is said once. Polite and assertive messages stay separate, and a message in a later frame is said on its own, as before. End each message with its language's punctuation, so joined messages read as sentences. If you joined messages yourself to work around this, as `useJoinedAnnounce` in audio-sdk and video-sdk does, you can call `announce` directly again.
+
 ## 0.14.1
 
 ### Patch Changes
