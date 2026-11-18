@@ -2,7 +2,7 @@
 
 - **Status:** Proposed
 - **Date:** 2026-11-17
-- **Amended:** 2026-11-17, with the reviewer's rulings on the four open decisions, and with what the key tests do and don't prove; and again with step 1, as built: see "As built"
+- **Amended:** 2026-11-17, with the reviewer's rulings on the four open decisions, and with what the key tests do and don't prove; and again with step 1, as built: see "As built". On 2026-11-18, a proposed amendment for several lanes, clips with a start, and moving a clip by dragging: see "Proposed amendment"
 
 ## Context
 
@@ -162,6 +162,146 @@ The reviewer ruled on the four questions this record first left open, on 2026-11
 2. **Range selection stays in audio-sdk,** as a layer, with `useTimelineScale` for its pointer mapping and snapping. It has one consumer today. If video-sdk builds a range tool, it moves to `ui` then, by the rule of two consumers.
 3. **Both selection modes are in the first version,** because each SDK needs one.
 4. **No windowing of clips in the first version.** Every clip is an option in the DOM. The first pull request measures a track of 2,000 clips, and the number decides whether options are then drawn only where visible, with `aria-setsize` and `aria-posinset`.
+
+## Proposed amendment: lanes, clips with a start, and moving a clip
+
+- **Status:** Proposed, 2026-11-18, with its open decisions ruled in review the same day. Nothing in this section is built. Like the rest of this record, it stays Proposed until the manual checks.
+
+### Why
+
+Both SDKs are becoming multitrack. audio-sdk's [ADR 0006](https://github.com/ie-huss-martinez/audio-sdk/pull/55) makes a recording several tracks of positioned clips, each with a name, mute, solo and gain. video-sdk's [ADR 0008](https://github.com/ie-huss-martinez/video-sdk/pull/67) keeps one video track, back to back, and adds up to eight audio tracks under it. The timeline as built can't show either:
+
+- it has one lane, in which layers and clips stack;
+- its clips lie back to back, so there's no silence between them;
+- a clip moves only by keys, one neighbour at a time, never by dragging and never to another lane.
+
+What they ask for is the same, with one difference that shapes the design: **video-sdk needs both kinds of lane in one timeline,** its video lane back to back as today, and audio lanes with positions under it.
+
+### Lanes
+
+```tsx
+<Timeline label={t("timeline.label")} length={frames} zoom={zoom}>
+  <TimelinePlayhead … />
+  {tracks.map((track) => (
+    <TimelineLane
+      key={track.key}
+      id={track.key}
+      label={t("track.label", track)}       // "Track 2, Music, muted"
+      header={<>… name, Mute, Solo, gain …</>}
+    >
+      <TimelineLayer><Waveform track={track} /></TimelineLayer>
+      <TimelineClips label={t("track.clips", track)} clips={…} … />
+    </TimelineLane>
+  ))}
+  <TimelineLayer>{rangeSelection}</TimelineLayer>   {/* over every lane */}
+</Timeline>
+```
+
+- **`TimelineLane` is a `group`,** named by `label`, with the lane's own layers and clip track stacked in it, as the whole timeline's are today. Lanes stack downward in the order written; the SDK owns that order, and moves a track by rendering it elsewhere.
+- **One playhead for all of them.** The slider stays in its row at the top, and the line runs down every lane.
+- **The header doesn't scroll with time.** It's a column at the start of the track, held in place with `position: sticky`, so it needs no script. Every lane's header is as wide as the widest, through a subgrid, up to a token's width. The timeline measures that column and fits `length` to what's left, so `zoom={1}` still fits.
+- **The header is a `ui` `Toolbar`,** rendered by the lane around the `header` content and named after the lane. So it's one Tab stop, with ← and → between its controls, and a gain `Slider` goes last, as `Slider` already asks in a toolbar.
+- **Lanes past the timeline's height scroll,** when the SDK gives the timeline a maximum height. The slider's row stays at the top, as the headers stay at the start.
+- **Below 720 pixels of the timeline's own width, each header sits above its lane,** by a container query on the timeline. That's both SDKs' breakpoint for their editors, and the timeline measures the header column either way, so the scale follows.
+- **A layer written outside the lanes covers all of them,** for audio-sdk's range selection, which stays in audio-sdk. `useTimelineLanes()` tells it which lane is under a pointer: `laneAt(clientY)`, and the lanes' ids in order.
+
+### A timeline without lanes is 0.11's
+
+Parts written straight into `Timeline`, with no `TimelineLane`, behave exactly as in 0.11: one lane, no header column, the same markup, keys and focus. **The test is that every existing timeline test passes with no edit.** A single lane with no `header` looks the same too, inside one more `group`.
+
+### Clips with a start
+
+- **`TimelineClip` gains `at`,** the unit the clip starts on. A clip track is one of two kinds, decided by its clips:
+  - **back to back,** when no clip has `at`: today's layout, where each clip starts where the one before ends. video-sdk's video lane stays this.
+  - **positioned,** when every clip has `at`: each clip is placed at its start, with silence wherever no clip is. Clips are given in time order and don't overlap; the track warns in development when they aren't or do, and doesn't correct them.
+  - Some clips with `at` and some without is a mistake, warned about in development.
+- **The two kinds can share a timeline,** one per lane.
+- **The listbox is unchanged:** one Tab stop a lane, ← and → between its clips in time order, the same selection keys.
+- **Every lane's clip edges are snap targets for the whole timeline,** as one lane's are today. So an audio clip's edge snaps to the video lane's boundaries, to other lanes' clips and to the playhead, with no work from the SDK. A clip being dragged doesn't snap to its own edges.
+- **Trimming** keeps its callback. On a positioned lane, the preview holds the clip's other edge still, since nothing after it moves; the SDK moves `at` with the start, as both SDKs' commands do.
+- **A clip can end after `length`.** video-sdk's audio can run past the video's end. `Timeline` takes `extent`, at least `length`: the track is drawn that wide, the playhead's slider still ends at `length`, and a clip that starts or ends after `length` carries `data-hm-past-end`, so the SDK can dim it.
+- **Before the timeline has measured itself,** as on a server, positioned clips share the lane equally in order, as back-to-back ones do.
+
+### One selection for the timeline
+
+`selectedKeys` is the timeline's selection, not a lane's. The SDK gives every lane the same array, and each lane reports the whole new selection:
+
+- **a plain selection replaces it,** in every lane, so selecting a clip on one lane deselects the others;
+- **adding or removing,** with Space or a Ctrl- or ⌘-click, keeps the other lanes' clips;
+- **Shift extends within the lane** the focus is in.
+
+With one lane this is what 0.11 does. It gives video-sdk one selection across its video and audio clips, and audio-sdk one selected clip at a time with `selectionMode="single"`.
+
+### Focus and the Tab order
+
+- **Two Tab stops a lane:** its header, then its clips. With the playhead written first, as both SDKs want, the order is playhead, then each lane. Sixteen tracks are thirty-two stops, so the arrows matter:
+- **↑ and ↓ on a clip go to the clip nearest in time on the lane above or below,** skipping lanes with no clips. Selection follows, and Ctrl or ⌘ moves without selecting, as along a lane. They're taken on every clip of a timeline with more than one lane, at the top and bottom too, so the page never scrolls. In a timeline without lanes they aren't taken, as in 0.11.
+- **`focusClip(key)` stays on each clip track's ref.** An SDK that adds a clip to a lane, as video-sdk does when it detaches audio, calls it on that lane's.
+- **When the focused clip is removed,** focus goes to the clip that took its place on that lane, or the one before it there, or the playhead: 0.11's rule, a lane at a time.
+
+### Moving a clip
+
+| Gesture | Keys, on a focused clip | Callback |
+|---|---|---|
+| Earlier or later | Alt+← / Alt+→, as built | `onMove(keys, direction)` |
+| To the lane above or below | **Alt+↑ / Alt+↓** | `onMoveLane(keys, direction)` |
+| Drag a clip along time and across lanes | the keys above | `onDrop(keys, { by, lane })`, once, on release |
+
+- **`onMove` keeps its meaning: a direction.** The SDK decides how far: before or after a neighbour on video-sdk's video lane, a frame on its audio lanes, 10 milliseconds in audio-sdk.
+- **Alt+↑ and Alt+↓ move the clip to the next lane,** at the same time. They pass the key table of pdf-sdk ADR 0008, which chose them for moving in a list: no browser shortcut in Chrome or Firefox; Option+↑ and Option+↓ scroll the page in Safari and Firefox on macOS, which is a page default the focused clip prevents, and the browser tests showed unprevented Alt+↓ scrolling in Chromium and WebKit. They're taken on every clip, with or without `onMoveLane`, as Alt+← and Alt+→ are.
+- **No Shift for a larger step.** video-sdk asked for Alt+Shift+← and → as a larger step. The same table rules Alt+Shift with an arrow out: Windows moves tiles with it, and Alt+Shift alone switches the keyboard layout. A larger move is the drag, the SDK's buttons, or a Start field in its inspector.
+- **Dragging:** a press on a clip that moves more than a few pixels becomes a drag, so a click still selects. The clip follows the pointer along time and over the lanes. Its start or its end snaps to the timeline's targets, whichever is nearer, unless Alt is held. Near the viewport's edges the timeline scrolls. Escape cancels. It's reported once, on release, with the units moved and the lane's `id` when it changed, so it's one undo step. A selected clip takes the rest of the selection with it.
+- **The SDK says where a clip may go.** `canDrop(keys, { by, lane })` is asked as the drag moves. Where it says no, the clip shows that it can't be dropped and release reports nothing. That's how audio-sdk refuses an overlap, and how video-sdk keeps clips from entering or leaving its video lane. Without it, every place is allowed, and the SDK may still ignore `onDrop`.
+- **With a mouse or a pen, not by touch.** A finger dragged across the clips scrolls the timeline, and a drag that took it couldn't be told from a scroll. On a touch screen a clip moves with the buttons, which are required anyway.
+- **Buttons stay required,** now for moving to another lane too, with `aria-keyshortcuts`.
+
+### Where a drag starts: for audio-sdk to decide
+
+audio-sdk's record has two drags that start in the same place: dragging across a track selects a range of time, and dragging a clip's body moves it. A track is usually covered by clips, so one press can't mean both.
+
+`TimelineClips` therefore takes **`moveHandle`**: `"clip"`, the default, where a drag anywhere on the clip moves it, which suits video-sdk; or `"title"`, where only the strip that shows the clip's `content` moves it, and a press on the rest of the clip passes through to the layer under it. That's how audio editors with range selection usually separate the two. audio-sdk chooses; this record only makes both possible.
+
+### Performance
+
+Measured before any of this is built, with a stand-in: several clip tracks, layers and three-control headers in one timeline as built, on a 1,000-pixel timeline, with React's development build, in the pinned image. The range is across Chromium, Firefox and WebKit.
+
+| Lanes × clips each | Clips | Mounting | One zoom step |
+|---|---|---|---|
+| 1 × 2,000 | 2,000 | 0.63 to 0.97 s | 0.31 to 0.35 s |
+| 16 × 125 | 2,000 | 0.28 to 0.71 s | 0.15 to 0.34 s |
+| 256 × 8 | 2,048 | 0.38 to 0.99 s | 0.16 to 0.32 s |
+| 64 × 125 | 8,000 | 1.3 to 2.3 s | 0.42 to 1.25 s |
+| 256 × 125 | 32,000 | 5.0 to 8.3 s | 1.9 to 3.6 s |
+
+- **The cost follows the number of clips, not of lanes.** Two thousand clips cost the same on one lane, on sixteen or on 256.
+- **Within both SDKs' limits, no windowing.** audio-sdk allows 16 tracks and 2,000 clips in a plan; video-sdk has nine lanes.
+- **Past a few thousand clips, zooming is the first thing to slow:** at 8,000 a zoom step can pass a second. That's where drawing only the clips in view would start to pay, and it would be by clips in view, not by lanes.
+- **The numbers are to be taken again on real lanes,** in the pull request that adds them, since a stand-in has no sticky headers or subgrid.
+
+### In order
+
+Three pull requests, each raising the size budgets from its measurement:
+
+1. **Lanes:** `TimelineLane` with its header, the layout and its scrolling, `useTimelineLanes`, ↑ and ↓ between lanes, and one selection for the timeline. The measurements again.
+2. **Clips with a start:** `at`, positioned lanes next to back-to-back ones, `extent` and `data-hm-past-end`, and the trim preview on a positioned lane.
+3. **Moving a clip:** the drag, `onDrop` and `canDrop`, `moveHandle`, Alt+↑ and Alt+↓ with `onMoveLane`, and scrolling at the edges.
+
+### Decided in review
+
+The reviewer ruled on the six questions this amendment first left open, on 2026-11-18.
+
+1. **`selectedKeys` is the timeline's selection,** given to every lane, rather than a selection per lane or a new prop on `Timeline`. It needs no new API and one lane is unchanged. An SDK that passed each lane only its own keys would lose the others on a toggle, so the README says to pass every lane the same array.
+2. **No Alt+Shift with an arrow,** which video-sdk asked for as a larger step: the family's key table rules it out.
+3. **A clip is dragged with a mouse or a pen, not by touch.** On a touch screen it moves with the required buttons, which is the single-pointer alternative WCAG 2.5.7 asks for.
+4. **`moveHandle`, with `"clip"` as the default.** The reviewer recommends `"title"` to audio-sdk, so that range selection works across clips; the choice is audio-sdk's.
+5. **Headers sit above their lanes below 720 pixels of the timeline's width,** by a container query in `ui`, with no prop.
+6. **`extent` draws clips past `length`,** and `length` keeps meaning what the playhead can reach.
+
+### What it costs
+
+- `Timeline` becomes a two-dimensional layout, with sticky rows and columns, and its largest part, the drag across lanes, is still to write.
+- **↑ and ↓ between lanes, Alt+↑ and Alt+↓, and the header as a toolbar are untried with a screen reader,** as the rest of this record is. A `group` per lane, holding a toolbar and a listbox, is a lot to hear; the manual pass that this record already waits for must cover a timeline with lanes.
+- **The manual check of Alt with an arrow in real browsers now includes ↑ and ↓,** for scrolling rather than navigating.
 
 ## Alternatives considered
 
