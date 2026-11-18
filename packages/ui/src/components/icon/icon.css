@@ -11,8 +11,24 @@
     vertical-align: middle;
   }
 
-  /* Icons that point along the reading direction, such as undo and redo. */
-  .hm-icon[data-hm-mirror]:dir(rtl) {
+  /* Mirrored in right-to-left text by [dir], not :dir(), which hosts' minifiers lower (docs/adr/0005). */
+  [dir="rtl"] .hm-icon[data-hm-mirror] {
     transform: scaleX(-1);
+  }
+
+  [dir="ltr"] [dir="rtl"] .hm-icon[data-hm-mirror] {
+    transform: scaleX(-1);
+  }
+
+  [dir="rtl"] [dir="ltr"] .hm-icon[data-hm-mirror] {
+    transform: none;
+  }
+
+  [dir="rtl"] [dir="ltr"] [dir="rtl"] .hm-icon[data-hm-mirror] {
+    transform: scaleX(-1);
+  }
+
+  [dir="ltr"] [dir="rtl"] [dir="ltr"] .hm-icon[data-hm-mirror] {
+    transform: none;
   }
 }
