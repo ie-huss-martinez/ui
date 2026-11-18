@@ -25,7 +25,10 @@ export type Politeness = "polite" | "assertive";
 
 /**
  * Announces a message to screen readers, such as "Saved 1.3 MB" (ADR 0014).
- * The message is plain text from your message catalogue.
+ * The message is plain text from your message catalogue. Messages announced
+ * in the same frame with the same politeness are said together, in order,
+ * separated by a space, and the same message twice is said once; end each
+ * with its language's punctuation so they read as sentences.
  *
  * @public
  */
@@ -62,32 +65,46 @@ export function AnnouncerProvider({ children }: AnnouncerProviderProps): ReactEl
   const [polite, setPolite] = useState<Region>({ message: "", count: 0 });
   const [assertive, setAssertive] = useState<Region>({ message: "", count: 0 });
   // One pending frame per region, so announcing in one region never cancels
-  // the other's message.
+  // the other's message, and the messages waiting for it.
   const frames = useRef<Partial<Record<Politeness, number>>>({});
+  const queues = useRef<Record<Politeness, string[]>>({ polite: [], assertive: [] });
 
   useEffect(
     () => () => {
       for (const frame of Object.values(frames.current)) {
         cancelAnimationFrame(frame);
       }
+      // Forgotten as well as cancelled: a frame left marked as pending would
+      // hold every later message back, as after Strict Mode's extra cleanup.
+      frames.current = {};
+      queues.current = { polite: [], assertive: [] };
     },
     [],
   );
 
   const announce = useCallback<Announce>((message, options) => {
     const politeness = options?.politeness ?? "polite";
+    const queue = queues.current[politeness];
+    // Messages sent in the same frame are said together, in order, as one
+    // change to the region: an editor's components announce from effects
+    // that run in one commit, and a second change in the same frame would
+    // replace the first before a screen reader read it. The same message
+    // twice in a frame is said once.
+    if (!queue.includes(message)) {
+      queue.push(message);
+    }
+    if (frames.current[politeness] !== undefined) {
+      return;
+    }
     const set = politeness === "assertive" ? setAssertive : setPolite;
     // Empty the region first, then fill it on the next frame, so a message
     // that repeats the previous one is still a change, and announced again.
     set((region) => ({ message: "", count: region.count }));
     // At most one frame is pending per region, so unmounting can cancel it.
-    const pending = frames.current[politeness];
-    if (pending !== undefined) {
-      cancelAnimationFrame(pending);
-    }
     frames.current[politeness] = requestAnimationFrame(() => {
       delete frames.current[politeness];
-      set((region) => ({ message, count: region.count + 1 }));
+      const joined = queue.splice(0).join(" ");
+      set((region) => ({ message: joined, count: region.count + 1 }));
     });
   }, []);
 
