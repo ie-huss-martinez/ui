@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { userEvent } from "vitest/browser";
 import { cleanUp, loadStyles, mount } from "../../test/dom.js";
 import { IconButton } from "../button/IconButton.js";
+import { Dialog } from "../dialog/Dialog.js";
 import { Toolbar } from "../toolbar/Toolbar.js";
 import { Slider, type SliderProps } from "./Slider.js";
 
@@ -65,6 +66,7 @@ function Gain() {
 function Committed(props: {
   readonly onChange: (value: number) => void;
   readonly onCommit: (value: number) => void;
+  readonly onCancel?: (value: number) => void;
 }) {
   const [gain, setGain] = useState(0);
   return (
@@ -79,9 +81,19 @@ function Committed(props: {
           setGain(value);
         }}
         onValueCommit={props.onCommit}
+        onValueCancel={props.onCancel}
       />
       <button type="button">After</button>
     </div>
+  );
+}
+
+/** A slider in an open dialog, as an editor's export settings have it. */
+function InDialog(props: { readonly onOpenChange: (open: boolean) => void }) {
+  return (
+    <Dialog open title="Export" onOpenChange={props.onOpenChange}>
+      <Slider label="Quality" defaultValue={50} />
+    </Dialog>
   );
 }
 
@@ -467,6 +479,134 @@ describe("Slider", () => {
       expect(onKeyUp).toHaveBeenCalled();
       expect(onPointerDown).toHaveBeenCalled();
       expect(onBlur).toHaveBeenCalled();
+    });
+  });
+
+  describe("Slider, Escape during a gesture", () => {
+    function setUp() {
+      const onChange = vi.fn();
+      const onCommit = vi.fn();
+      const onCancel = vi.fn();
+      const container = render(
+        <Committed onChange={onChange} onCommit={onCommit} onCancel={onCancel} />,
+      );
+      const input = container.querySelector("input") as HTMLInputElement;
+      input.focus();
+      return { onChange, onCommit, onCancel, input };
+    }
+    const key = (target: EventTarget, type: "keydown" | "keyup", name: string, repeat = false) => {
+      const event = new KeyboardEvent(type, { key: name, bubbles: true, cancelable: true, repeat });
+      act(() => {
+        target.dispatchEvent(event);
+      });
+      return event;
+    };
+    const setValue = (input: HTMLInputElement, value: string) =>
+      act(() => {
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(
+          input,
+          value,
+        );
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+
+    it("puts a held key's gesture back where it started, and commits nothing", () => {
+      const { onChange, onCommit, onCancel, input } = setUp();
+      for (let press = 0; press <= 4; press++) {
+        key(input, "keydown", "ArrowRight", press > 0);
+      }
+      expect(onChange).toHaveBeenLastCalledWith(5);
+      const pressed = key(input, "keydown", "Escape");
+      expect(pressed.defaultPrevented).toBe(true);
+      expect(onChange).toHaveBeenLastCalledWith(0);
+      expect(onCancel.mock.calls).toEqual([[0]]);
+      expect(input.value).toBe("0");
+      // The key still held repeats, and is ignored until it's let go.
+      key(input, "keydown", "ArrowRight", true);
+      expect(input.value).toBe("0");
+      key(input, "keyup", "ArrowRight");
+      expect(onCommit).not.toHaveBeenCalled();
+      // The next press is a gesture of its own.
+      key(input, "keydown", "ArrowRight");
+      key(input, "keyup", "ArrowRight");
+      expect(onCommit.mock.calls).toEqual([[1]]);
+    });
+
+    it("puts a pointer drag back where it started, wherever focus is, and ignores the rest of it", () => {
+      const { onChange, onCommit, onCancel, input } = setUp();
+      // Not every engine focuses a range input on press, so focus is
+      // elsewhere for the whole drag, and Escape comes from there.
+      const elsewhere = input.parentElement?.querySelector("button") as HTMLButtonElement;
+      act(() => elsewhere.focus());
+      act(() => {
+        input.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerId: 1 }));
+      });
+      setValue(input, "-24");
+      setValue(input, "-10");
+      const pressed = key(elsewhere, "keydown", "Escape");
+      expect(pressed.defaultPrevented).toBe(true);
+      expect(onChange).toHaveBeenLastCalledWith(0);
+      expect(onCancel.mock.calls).toEqual([[0]]);
+      // The pointer is still down and still moving: the thumb stays put.
+      setValue(input, "6");
+      expect(input.value).toBe("0");
+      expect(onChange).toHaveBeenCalledTimes(3);
+      act(() => {
+        document.body.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, pointerId: 1 }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      expect(onCommit).not.toHaveBeenCalled();
+      // The next drag commits as usual.
+      act(() => {
+        input.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerId: 2 }));
+      });
+      setValue(input, "4");
+      act(() => {
+        document.body.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, pointerId: 2 }));
+      });
+      expect(onCommit.mock.calls).toEqual([[4]]);
+    });
+
+    it("leaves Escape alone with no gesture in progress", () => {
+      const { onCancel, onChange, input } = setUp();
+      key(input, "keydown", "ArrowRight");
+      key(input, "keyup", "ArrowRight");
+      const pressed = key(input, "keydown", "Escape");
+      expect(pressed.defaultPrevented).toBe(false);
+      expect(onCancel).not.toHaveBeenCalled();
+      expect(onChange).toHaveBeenCalledTimes(1);
+    });
+
+    it("puts an uncontrolled slider back too", () => {
+      const onValueCancel = vi.fn();
+      const input = renderSlider({ defaultValue: 50, onValueCancel });
+      input.focus();
+      key(input, "keydown", "PageUp");
+      expect(input.value).toBe("60");
+      key(input, "keydown", "Escape");
+      expect(input.value).toBe("50");
+      expect(onValueCancel.mock.calls).toEqual([[50]]);
+    });
+
+    it("keeps a containing dialog open when Escape cancels a drag, and lets it close otherwise", async () => {
+      const onOpenChange = vi.fn();
+      const container = render(<InDialog onOpenChange={onOpenChange} />);
+      const input = document.querySelector("dialog input") as HTMLInputElement;
+      expect(container).toBeTruthy();
+      input.focus();
+      act(() => {
+        input.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerId: 1 }));
+      });
+      setValue(input, "80");
+      // A real key press, so the browser's own close request would follow.
+      await userEvent.keyboard("{Escape}");
+      expect(input.value).toBe("50");
+      expect(onOpenChange).not.toHaveBeenCalled();
+      act(() => {
+        document.body.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, pointerId: 1 }));
+      });
+      await userEvent.keyboard("{Escape}");
+      expect(onOpenChange).toHaveBeenCalledWith(false);
     });
   });
 });
