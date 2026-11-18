@@ -1,4 +1,4 @@
-import { Button, DeleteIcon, Dialog } from "@hussmartinez/ui/react";
+import { Button, DeleteIcon, Dialog, Field, TextField } from "@hussmartinez/ui/react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { type ReactNode, useState } from "react";
 
@@ -106,4 +106,35 @@ export const LongContent: Story = {
       </ul>
     </Example>
   ),
+};
+
+/**
+ * A field as wide as the body, and its last part: its focus ring shows on
+ * every side. The body scrolls, and a scrolling box clips what's drawn outside
+ * it, so it keeps room at its edges for a ring.
+ */
+export const WithAField: Story = {
+  name: "With a field",
+  render: () => (
+    <Example
+      title="Rename the track"
+      size="small"
+      footer={(close) => (
+        <>
+          <Button onClick={close}>Cancel</Button>
+          <Button variant="primary" onClick={close}>
+            Rename
+          </Button>
+        </>
+      )}
+    >
+      <Field label="Name" description="Leave it empty for no name.">
+        <TextField autoComplete="off" />
+      </Field>
+    </Example>
+  ),
+  // Focused as a keyboard user would find it, so the ring is in the screenshot.
+  play: () => {
+    document.querySelector<HTMLInputElement>("dialog[open] input")?.focus();
+  },
 };

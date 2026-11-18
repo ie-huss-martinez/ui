@@ -45,9 +45,12 @@
   /* The body scrolls when the content is long; the header and footer stay. */
   .hm-dialog-body {
     flex: 1 1 auto;
+    /* Room for a focus ring at each edge, which scrolling would clip; the margin keeps content in place. */
+    margin: calc((var(--hm-focus-ring-width) + var(--hm-focus-ring-offset)) * -1);
     min-block-size: 0;
     overflow: auto;
     overscroll-behavior: contain;
+    padding: calc(var(--hm-focus-ring-width) + var(--hm-focus-ring-offset));
   }
 
   .hm-dialog-body:focus-visible {
