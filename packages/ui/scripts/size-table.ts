@@ -10,6 +10,11 @@
  * measures it there, and removes the worktree, whatever happens. Each side is
  * measured with its own `.size-limit.js`, so a check one side lacks shows as
  * new or removed. Progress goes to stderr, and the table to stdout.
+ *
+ * **`--base` must name a ref you trust.** Building and measuring it runs that
+ * ref's own code: its Vite config, its `.size-limit.js` and its build. That's
+ * fine for `origin/main` and your own branches. Don't point it at a branch
+ * from someone you wouldn't let run code on this machine.
  */
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, rmSync } from "node:fs";
