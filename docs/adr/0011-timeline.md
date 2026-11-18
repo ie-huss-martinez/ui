@@ -355,5 +355,5 @@ The reviewer ruled on the six questions this amendment first left open, on 2026-
 - audio-sdk and video-sdk get one clip track, with the same keys, names and focus rule, and each keeps its media's drawing and its session.
 - **video-sdk's timeline changes when it adopts this:** its sizes move from `style` to the CSSOM, and its snap button and zoom become props it passes. Its keys and behaviour shouldn't change; its end-to-end tests are the check.
 - **`ui` takes on its largest component,** in three pull requests, each raising the React entry's size budget from its measurement. It's 15.94 kB of 16 kB today.
-- **Two manual checks stand between this record and Accepted:** the Alt and arrow keys in real Chrome and Firefox, above, and a pass with NVDA and VoiceOver, because nothing here has been tried with a screen reader, like `ReorderableList`.
+- **Two manual checks stand between this record and Accepted:** the Alt and arrow keys in real Chrome and Firefox, above, and a pass with NVDA and VoiceOver, because nothing here has been tried with a screen reader, like `ReorderableList`. Both are scripted in [the manual pass](../testing/manual-pass.md).
 - Only the parts an application imports are shipped, so an editor without a timeline pays nothing.

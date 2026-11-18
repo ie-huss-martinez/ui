@@ -141,6 +141,6 @@ As pdf-sdk ADR 0008 requires of its listbox, on Chromium, Firefox and WebKit:
 
 - image-sdk's layers panel goes from two Tab stops a layer to one for the list, and the track lists get the same keys and focus rules as pdf-sdk's pages.
 - **A grid is announced as a table by some screen readers,** with "row 2 of 5" rather than "2 of 5". That's the accepted cost of rows that hold controls.
-- **This design hasn't been tried with a real screen reader.** The claim that a grid receives these keys comes from the Authoring Practices and from pdf-sdk's record for a listbox. The browser tests can't check it. NVDA with Firefox and Chrome, and VoiceOver with Safari, need a manual pass before the status changes to Accepted, and the record is amended with what they find.
+- **This design hasn't been tried with a real screen reader.** The claim that a grid receives these keys comes from the Authoring Practices and from pdf-sdk's record for a listbox. The browser tests can't check it. NVDA with Firefox and Chrome, and VoiceOver with Safari, need a manual pass before the status changes to Accepted, and the record is amended with what they find. The steps are in [the manual pass](../testing/manual-pass.md).
 - The React entry was at 14.43 kB of 15 kB. With the list it measures 15.9 kB, so its budget is 16 kB.
 - A row's controls are limited to one control per cell. A text field in a row, for renaming in place, needs an editing mode (Enter or F2 to edit, Escape to leave) and its own record.
