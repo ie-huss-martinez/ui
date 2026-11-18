@@ -32,8 +32,25 @@ const EXPORTS = (() => {
   );
 })();
 
-/** Every icon component: each one ships only to the applications that import it. */
-const ICONS = EXPORTS.filter((name) => /^[A-Z]\w*Icon$/.test(name));
+/**
+ * Every icon component, from the generated list of icon names: `zoom-in` is
+ * `ZoomInIcon`. Each one ships only to the applications that import it.
+ */
+const ICONS = [
+  ...readFileSync(new URL("src/icons/icon-name.generated.ts", import.meta.url), "utf8").matchAll(
+    /^\s*\| "([a-z0-9-]+)";?$/gm,
+  ),
+].map(
+  ([, name]) => `${name.replace(/(?:^|-)([a-z0-9])/g, (_, letter) => letter.toUpperCase())}Icon`,
+);
+// Both ways: every listed icon is checked against the build in scenario(),
+// and every icon the build exports must be listed.
+const UNLISTED = EXPORTS.filter((name) => /^[A-Z]\w*Icon$/.test(name) && !ICONS.includes(name));
+if (ICONS.length === 0 || UNLISTED.length > 0) {
+  throw new Error(
+    `The icon scenario doesn't match the build: src/icons/icon-name.generated.ts lists ${ICONS.length} icons, and dist/react.js also exports ${UNLISTED.join(", ") || "nothing else"}.`,
+  );
+}
 
 /**
  * An editor: the components and icons that at least three of the five SDKs
@@ -78,6 +95,12 @@ const IGNORE = ["react", "react-dom", "@hussmartinez/sdk-core"];
  * checks drop out as they do for hosts.
  */
 function scenario(name, names, limit) {
+  // A name the parse missed would shrink the scenario and still pass, so fail
+  // instead: the export list's format changed, or a component was renamed.
+  const missing = names.filter((exported) => !EXPORTS.includes(exported));
+  if (missing.length > 0) {
+    throw new Error(`Size scenario "${name}": dist/react.js doesn't export ${missing.join(", ")}.`);
+  }
   return {
     name: `Import: ${name}`,
     path: "dist/react.js",
