@@ -1,14 +1,105 @@
 /**
- * Size budgets per entry point (ADR 0015): the brotli size of each built
- * entry, with the shared chunks it loads. They measure the unminified files in
- * dist, an upper bound: applications ship less, because their bundler
- * minifies and drops what they don't import.
+ * Size budgets (docs/adr/0012). Two kinds:
+ *
+ * - **Per entry point** (sdk-core ADR 0015): the brotli size of each built
+ *   entry, with the shared chunks it loads, unminified. An upper bound:
+ *   applications ship less, because their bundler minifies and drops what
+ *   they don't import.
+ * - **Per import scenario**, for the React entry: what an application ships
+ *   for one import, bundled and minified with esbuild, with React and
+ *   sdk-core left out. These are the budgets review judges a change by. A
+ *   scenario's budget is never raised for code the scenario doesn't import:
+ *   if a component's change moves the floor, that's the regression to fix.
+ *
+ * Every budget is raised by the pull request that needs it, to its
+ * measurement rounded up to the next 0.5 kB, with a table of what moved.
  */
+
+import { readFileSync } from "node:fs";
+
+/** The React entry's exports, read from the build so no list goes stale. */
+const EXPORTS = (() => {
+  const code = readFileSync(new URL("dist/react.js", import.meta.url), "utf8");
+  const list = code.match(/export \{([^}]*)\};\s*(?:\/\/#.*)?$/);
+  if (!list) {
+    throw new Error("dist/react.js has no export list: run the build first.");
+  }
+  return list[1].split(",").map((name) =>
+    name
+      .trim()
+      .split(/\s+as\s+/)
+      .pop(),
+  );
+})();
+
+/** Every icon component: each one ships only to the applications that import it. */
+const ICONS = EXPORTS.filter((name) => /^[A-Z]\w*Icon$/.test(name));
+
+/**
+ * An editor: the components and icons that at least three of the five SDKs
+ * import (docs/adr/0012). Fixed, not any one SDK's list; review changes it
+ * when the family's editors change shape.
+ */
+const EDITOR = [
+  "AnnouncerProvider",
+  "UiMessagesProvider",
+  "Button",
+  "IconButton",
+  "Toolbar",
+  "ToolbarGroup",
+  "Dialog",
+  "Field",
+  "NumberField",
+  "TextField",
+  "Slider",
+  "SegmentedControl",
+  "FileDropZone",
+  "ProgressBar",
+  "UndoIcon",
+  "RedoIcon",
+  "ZoomInIcon",
+  "ZoomOutIcon",
+  "FitIcon",
+  "CloseIcon",
+  "OpenIcon",
+  "DownloadIcon",
+  "DeleteIcon",
+  "RotateLeftIcon",
+  "RotateRightIcon",
+  "ChevronLeftIcon",
+];
+
+/** What a host's bundler leaves out: React and sdk-core are the host's own. */
+const IGNORE = ["react", "react-dom", "@hussmartinez/sdk-core"];
+
+/**
+ * One import from the React entry, as an application's production build
+ * bundles it: an ES module, with `process.env.NODE_ENV` set, so development
+ * checks drop out as they do for hosts.
+ */
+function scenario(name, names, limit) {
+  return {
+    name: `Import: ${name}`,
+    path: "dist/react.js",
+    import: `{ ${names.join(", ")} }`,
+    ignore: IGNORE,
+    brotli: true,
+    modifyEsbuildConfig: (config) => ({
+      ...config,
+      format: "esm",
+      define: { "process.env.NODE_ENV": '"production"' },
+    }),
+    limit,
+  };
+}
+
 export default [
   {
     name: "Server-safe entry (.), with the shared code it loads",
     path: ["dist/index.js", "dist/shared/*.js"],
     brotli: true,
+    // The files as built, not bundled again.
+    disablePlugins: ["@size-limit/esbuild"],
     // 12 kB. It measures 11.6 kB with the button's component tokens. Each
     // module compressed on its own, in kB:
     //   theme/css-value.ts      2.6  the injection allowlist and type grammars
@@ -29,17 +120,19 @@ export default [
     name: "React entry (./react), with the shared code it loads",
     path: ["dist/react.js", "dist/shared/*.js"],
     brotli: true,
-    // 24 kB. It measures 23.71 kB with the Slider's onValueCommit, about
-    // 0.2 kB; moving a clip before it took it from 22.5 kB to 23.5 kB. A
-    // budget is raised by the pull request whose component needs it, to its
-    // measurement rounded up to the next 0.5 kB. Applications ship only the
-    // components they import: see build.test.ts.
+    // The files as built, not bundled again.
+    disablePlugins: ["@size-limit/esbuild"],
+    // 24 kB; 23.99 kB. Every component counts here, though no application
+    // ships them all, so a component's pull request raises it as expected
+    // growth; review reads the import scenarios below to judge it.
     limit: "24 kB",
   },
   {
     name: "Stylesheet (./styles.css)",
     path: "dist/styles.css",
     brotli: true,
+    // The files as built, not bundled again.
+    disablePlugins: ["@size-limit/esbuild"],
     // 9.5 kB. It measures 9.05 kB with lanes that let presses through;
     // the lanes before them took it from 8.5 kB to 9 kB. Raised as the React
     // entry's is: to the measurement, rounded up to the next 0.5 kB. Every
@@ -47,4 +140,22 @@ export default [
     // every component.
     limit: "9.5 kB",
   },
+  // 1 kB; 0.73 kB. The floor: a leak into every component shows here first.
+  scenario("Button", ["Button"], "1 kB"),
+  // 1.5 kB; 1.05 kB. The floor for a toolbar's buttons.
+  scenario("IconButton with one icon", ["IconButton", "UndoIcon"], "1.5 kB"),
+  // 2 kB; 1.86 kB.
+  scenario("Dialog", ["Dialog"], "2 kB"),
+  // 3 kB; 2.51 kB.
+  scenario("ReorderableList", ["ReorderableList", "ReorderableListItem"], "3 kB"),
+  // 9 kB; 8.52 kB. The largest component, which only audio-sdk uses so far.
+  scenario(
+    "the Timeline with lanes",
+    ["Timeline", "TimelineClips", "TimelinePlayhead", "TimelineLane"],
+    "9 kB",
+  ),
+  // 3.5 kB; 3.00 kB for 62 icons, about 0.05 kB each.
+  scenario("every icon", ICONS, "3.5 kB"),
+  // 7.5 kB; 7.17 kB.
+  scenario("an editor", EDITOR, "7.5 kB"),
 ];
