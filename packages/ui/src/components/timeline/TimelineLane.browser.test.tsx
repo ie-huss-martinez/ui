@@ -338,7 +338,10 @@ describe("TimelineLane", () => {
     expect(focused()).toBe("voice4");
     expect(await press("{ArrowUp}")).toEqual(TAKEN);
     expect(focused()).toBe("voice4");
+    // Focusing voice4 at the start selected it: in single selection, the
+    // selection follows focus however it arrives.
     expect(onChange.mock.calls.map(([keys]) => keys)).toEqual([
+      ["voice4"],
       ["music2"],
       ["effects3"],
       ["music2"],

@@ -250,7 +250,10 @@ const Clip = /* @__PURE__ */ memo(function Clip({
  * (docs/adr/0011).
  *
  * - **← and →** move between clips, and Home and End go to the first and
- *   last. They follow the reading direction. The selection follows focus.
+ *   last. They follow the reading direction. With `selectionMode="single"`,
+ *   the selection follows focus however it arrives: arrows, Tab, a click, or
+ *   your own `focus()` or `focusClip`. Ctrl or ⌘ with an arrow moves focus
+ *   without selecting.
  * - **With `selectionMode="multiple"`,** Shift extends the selection from
  *   the last clip chosen; Ctrl or ⌘ moves focus without changing it; Space
  *   adds or removes the focused clip, and Shift+Space selects up to it;
@@ -408,6 +411,20 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
     };
     useImperativeHandle(ref, () => ({ focusClip }));
 
+    // In single selection, the selection follows focus however it arrives:
+    // Tab, a click, a host's `focus()` or `focusClip`. The track's own moves
+    // that mustn't select, such as Ctrl or ⌘ with an arrow, focus quietly.
+    // Focusing is synchronous, so the flag only covers that one call.
+    const quiet = useRef(false);
+    const focusQuietly = (key: string): boolean => {
+      quiet.current = true;
+      try {
+        return focusClip(key);
+      } finally {
+        quiet.current = false;
+      }
+    };
+
     // What the other lanes need of this one, for ↑ and ↓ between them.
     const laneId = useContext(TimelineLaneContext);
     const forLanes = useRef<LaneClips>({
@@ -417,7 +434,8 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
     });
     forLanes.current = {
       any: () => clips.length > 0,
-      focus: (key) => clips.some((clip) => clip.key === key) && focusClip(key),
+      // A clip that moved here from another lane keeps its selection as it was.
+      focus: (key) => clips.some((clip) => clip.key === key) && focusQuietly(key),
       focusNearest: (unit, andSelect) => {
         let nearest: TimelineClip | undefined;
         let distance = Number.POSITIVE_INFINITY;
@@ -430,7 +448,7 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
             distance = away;
           }
         });
-        if (nearest && focusClip(nearest.key) && andSelect) {
+        if (nearest && focusQuietly(nearest.key) && andSelect) {
           anchor.current = nearest.key;
           select([nearest.key]);
         }
@@ -539,7 +557,7 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
         // React put it in its new place: it goes back, if nothing else has it.
         const active = document.activeElement;
         if (moved.current && (!active || active === document.body)) {
-          focusClip(was.key);
+          focusQuietly(was.key);
         }
         moved.current = false;
         return;
@@ -967,7 +985,7 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
           return;
         }
         event.preventDefault();
-        focusClip(target.key);
+        focusQuietly(target.key);
         if (event.shiftKey) {
           select(range(to), true);
         } else if (!mod) {
@@ -1028,6 +1046,16 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
         held.current = { key, index };
         setFocusKey(key);
         anchor.current ??= key;
+        // Only on a real focus, and only when the selection would change, so
+        // a controlled host can't loop.
+        if (
+          !multiple &&
+          !quiet.current &&
+          !(selectedKeys.length === 1 && selectedKeys[0] === key)
+        ) {
+          anchor.current = key;
+          select([key]);
+        }
       }
     };
 
