@@ -531,6 +531,12 @@ export interface TimelineClip {
 }
 
 // @public
+export interface TimelineClipDrop {
+    readonly by: number;
+    readonly lane?: string | undefined;
+}
+
+// @public
 export type TimelineClipEdge = "start" | "end";
 
 // @public
@@ -546,9 +552,13 @@ export type TimelineClipsPart = "root" | "clip" | "content";
 
 // @public
 export interface TimelineClipsProps extends StyleProps<TimelineClipsPart> {
+    readonly canDrop?: ((keys: readonly string[], drop: TimelineClipDrop) => boolean) | undefined;
     readonly clips: readonly TimelineClip[];
     readonly label: string;
+    readonly moveHandle?: "clip" | "title" | undefined;
+    readonly onDrop?: ((keys: readonly string[], drop: TimelineClipDrop) => void) | undefined;
     readonly onMove?: ((keys: readonly string[], direction: -1 | 1) => void) | undefined;
+    readonly onMoveLane?: ((keys: readonly string[], direction: -1 | 1) => void) | undefined;
     readonly onSelectedKeysChange: (keys: readonly string[]) => void;
     readonly onTrim?: ((key: string, edge: TimelineClipEdge, delta: number) => void) | undefined;
     readonly onTrimToPlayhead?: ((key: string, edge: TimelineClipEdge) => void) | undefined;

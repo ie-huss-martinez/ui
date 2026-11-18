@@ -336,4 +336,7 @@ export const tokenDescriptions: Readonly<Record<TokenName, string>> = {
   "timeline-header-max-width": "Widest a lane's header grows before its controls are cut off.",
   "timeline-header-bg": "Background of the lanes' headers, and of the slider's row above lanes.",
   "timeline-lane-border-color": "Line between a timeline's lanes.",
+  "timeline-clip-moving-shadow": "Shadow under a clip being dragged.",
+  "timeline-clip-refused-border-color":
+    "Border of a dragged clip where it can't be dropped. It needs 3:1 contrast with the track.",
 };

@@ -289,6 +289,22 @@ for (const app of apps) {
       expect(second?.x ?? 0).toBeGreaterThan((first?.x ?? 0) + (first?.width ?? 0) + 5);
       expect(voiceSecond?.x ?? 0).toBeCloseTo((voiceFirst?.x ?? 0) + (voiceFirst?.width ?? 0), 0);
 
+      // Alt+↓ on a clip in a lane is taken, even though this example moves
+      // no clips between lanes: unprevented, it would scroll the page.
+      await page.evaluate(() => {
+        // The arrow's own keydown: Alt's comes first, and isn't the track's.
+        window.addEventListener("keydown", (event) => {
+          if (event.key === "ArrowDown") {
+            (window as unknown as { hmLaneKey?: boolean }).hmLaneKey = event.defaultPrevented;
+          }
+        });
+      });
+      await page.keyboard.press("Alt+ArrowDown");
+      expect(
+        await page.evaluate(() => (window as unknown as { hmLaneKey?: boolean }).hmLaneKey),
+      ).toBe(true);
+      await expect(music.getByRole("option", { name: "Music 3, clip 3 of 3" })).toBeFocused();
+
       // The header stays beside its lane, before the lane's first clip.
       const head = await mix.getByRole("toolbar", { name: "Music track" }).boundingBox();
       const firstClip = await music.getByRole("option").first().boundingBox();

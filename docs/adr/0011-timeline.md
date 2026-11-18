@@ -307,6 +307,16 @@ Three pull requests, each raising the size budgets from its measurement:
 - **A clip past `length` is marked, not styled.** `data-hm-past-end` is on a clip that ends after `length`; how it looks is the SDK's.
 - **Mistakes in the clips warn in development and aren't corrected:** clips that overlap or aren't in time order, an `at` that isn't a whole number, and a track where only some clips have one.
 
+**Moving a clip,** the last step:
+
+- **A dragged clip is drawn by a `translate`,** set through the CSSOM like its size, so it follows the pointer, across lanes too, without leaving its place in its track until the SDK renders the drop. Its neighbours don't move while it's dragged.
+- **It snaps its start or its end, whichever has less far to go,** to every lane's clip edges and the playhead, leaving out its own edges, which would otherwise hold it where it was.
+- **Four pixels of movement start a drag,** so a click with an unsteady hand still selects. The click that ends a drag doesn't change the selection.
+- **`moveHandle="title"` needed more than the clip:** the clip track itself takes no pointer, only its clips do, so that a press between clips, or beside a title, reaches the layer under the track. Before this, a press between clips went to the listbox and nowhere else.
+- **Alt+↑ and Alt+↓ are taken on every clip in a lane,** with or without `onMoveLane`, as Alt+← and Alt+→ are: unprevented, Alt+↓ scrolls the page in Chromium and WebKit.
+- **Focus follows a clip to another lane.** When the focused clip leaves a track and nothing else has focus, the track asks the timeline's other lanes for it before falling back.
+- **The timeline scrolls while a clip is held within 32 pixels of either end of the view,** on each animation frame, and the clip moves with the track.
+
 ### Decided in review
 
 The reviewer ruled on the six questions this amendment first left open, on 2026-11-18.

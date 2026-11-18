@@ -276,6 +276,8 @@ Fine-grained overrides for one component. `ui` never declares them: each compone
 | `--hm-timeline-header-max-width` | `--hm-surface-width-small` | Widest a lane's header grows before its controls are cut off. |
 | `--hm-timeline-header-bg` | `--hm-color-surface` | Background of the lanes' headers, and of the slider's row above lanes. |
 | `--hm-timeline-lane-border-color` | `--hm-color-border` | Line between a timeline's lanes. |
+| `--hm-timeline-clip-moving-shadow` | `--hm-shadow-raised` | Shadow under a clip being dragged. |
+| `--hm-timeline-clip-refused-border-color` | `--hm-color-danger-text` | Border of a dragged clip where it can't be dropped. It needs 3:1 contrast with the track. |
 | `--hm-color-field-gap` | `--hm-gap-tight` | Space between a colour field's preview, input and swatches. |
 | `--hm-color-field-swatch-size` | `--hm-control-height-small` | Width and height of a colour field's swatch. |
 | `--hm-color-field-swatch-radius` | `--hm-radius-control` | Corner radius of a colour field's preview and swatches. |
