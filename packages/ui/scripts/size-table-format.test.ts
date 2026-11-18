@@ -30,6 +30,21 @@ describe("sizeTable", () => {
 | Import: Button | 0.73 kB | – | removed | 1 kB → – |`);
   });
 
+  it("gives a change under 5 bytes in bytes, and a larger one in kilobytes", () => {
+    expect(
+      sizeTable(
+        [button, react],
+        [
+          { ...button, size: 730 },
+          { ...react, size: 23_993 },
+        ],
+      ),
+    ).toBe(`| Check | Before | After | Change | Budget |
+|---|---|---|---|---|
+| Import: Button | 0.73 kB | 0.73 kB | −1 B | 1 kB |
+| React entry | 23.99 kB | 23.99 kB | +0.01 kB | 24 kB |`);
+  });
+
   it("says so in one line when nothing changed", () => {
     expect(sizeTable([button, react], [button, react])).toBe("No size or budget changed.");
   });

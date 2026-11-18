@@ -31,7 +31,14 @@ function change(before: number | undefined, after: number | undefined): string {
     return "removed";
   }
   const delta = after - before;
-  return delta === 0 ? "0" : `${delta > 0 ? "+" : "−"}${(Math.abs(delta) / 1000).toFixed(2)} kB`;
+  if (delta === 0) {
+    return "0";
+  }
+  const sign = delta > 0 ? "+" : "−";
+  const size = Math.abs(delta);
+  // Under 5 bytes, kilobytes to two places would say "0.00 kB": bytes say
+  // how small the change is.
+  return size < 5 ? `${sign}${size} B` : `${sign}${(size / 1000).toFixed(2)} kB`;
 }
 
 /**
