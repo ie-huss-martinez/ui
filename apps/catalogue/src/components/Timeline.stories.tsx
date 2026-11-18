@@ -68,27 +68,39 @@ function Seconds() {
   );
 }
 
-const CLIPS: TimelineClip[] = [
-  { key: "intro", length: 60, label: "Clip 1 of 4, Intro, 0.00 to 2.00 seconds", content: "Intro" },
-  {
-    key: "talk",
-    length: 120,
-    label: "Clip 2 of 4, Interview, 2.00 to 6.00 seconds",
-    content: "Interview",
-  },
-  {
-    key: "cut",
-    length: 30,
-    label: "Clip 3 of 4, Cutaway, 6.00 to 7.00 seconds",
-    content: "Cutaway",
-  },
-  {
-    key: "outro",
-    length: 90,
-    label: "Clip 4 of 4, Outro, 7.00 to 10.00 seconds",
-    content: "Outro",
-  },
+/** A clip as the stories' editor keeps it: what it shows, and its length. */
+interface Shot {
+  readonly key: string;
+  readonly name: string;
+  readonly length: number;
+}
+
+const SHOTS: readonly Shot[] = [
+  { key: "intro", name: "Intro", length: 60 },
+  { key: "talk", name: "Interview", length: 120 },
+  { key: "cut", name: "Cutaway", length: 30 },
+  { key: "outro", name: "Outro", length: 90 },
 ];
+
+/**
+ * The clips as the track shows them, each named from where it is now: what
+ * it shows, its place and its range. The names are worked out at every
+ * render, as an SDK's must be. A fixed name goes stale as soon as a clip
+ * moves or is trimmed, and a screen reader then reads the old place.
+ */
+function clipsOf(shots: readonly Shot[]): TimelineClip[] {
+  let end = 0;
+  return shots.map((shot, index) => {
+    const start = end;
+    end += shot.length;
+    return {
+      key: shot.key,
+      length: shot.length,
+      label: `${shot.name}, clip ${index + 1} of ${shots.length}, ${(start / RATE).toFixed(2)} to ${time(end)}`,
+      content: shot.name,
+    };
+  });
+}
 
 function Editor({
   label = "Timeline",
@@ -118,7 +130,7 @@ function Editor({
       {clips ? (
         <TimelineClips
           label={`${label} clips`}
-          clips={CLIPS}
+          clips={clipsOf(SHOTS)}
           selectionMode={clips}
           selectedKeys={selected}
           onSelectedKeysChange={setSelected}
@@ -179,7 +191,7 @@ export const SeveralSelected: Story = {
 
 /** An editor that applies what the track reports: its clips are its own state. */
 function Editable() {
-  const [clips, setClips] = useState(CLIPS);
+  const [clips, setClips] = useState(SHOTS);
   const [selected, setSelected] = useState<readonly string[]>(["talk"]);
   const [frame, setFrame] = useState(90);
   const length = clips.reduce((sum, item) => sum + item.length, 0);
@@ -204,7 +216,7 @@ function Editable() {
       <Timeline label="Timeline" length={length}>
         <TimelineClips
           label="Clips"
-          clips={clips}
+          clips={clipsOf(clips)}
           selectionMode="multiple"
           selectedKeys={selected}
           onSelectedKeysChange={setSelected}

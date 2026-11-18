@@ -86,7 +86,7 @@ Start NVDA, then the browser. Don't switch modes yourself unless a step says to:
 | Press → twice. | The playhead's time, larger each time. | |
 | Tab. | The group "Track 1, Voice", the toolbar "Track 1, Voice", then "Mute", toggle button, not pressed. | |
 | Press →. | "Voice gain", slider, 0 decibels. | Focus moves along the toolbar. **If NVDA stays in browse mode here, → reads the page instead.** Note it: it's the risk image-sdk#67 describes. |
-| Tab. | The list "Voice clips", then "Voice 1, clip 1 of 3", not selected. | NVDA is in focus mode in the clips. |
+| Tab. | The list "Voice clips", then "Voice 1, clip 1 of 3", not selected. | NVDA is in focus mode in the clips. **Note whether the place is read twice,** as "clip 1 of 3" and then "1 of 3": screen readers count a listbox's options themselves, so the stories' clip names may not need their place. |
 | Press →. | "Voice 2, clip 2 of 3". | |
 | Press ↓. | The group "Track 2, Music", then the Music clip nearest in time. | Focus moves to the lane below, and the new lane is named. |
 | Press ↓ again. | "Track 3, Effects, muted", then an Effects clip. | The lane's state is heard. |
