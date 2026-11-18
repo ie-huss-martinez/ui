@@ -59,21 +59,21 @@ export function ChevronDownIcon(props: IconProps): ReactElement {
 }
 
 /**
- * The `chevron-left` icon: Lucide's `chevron-left`.
+ * The `chevron-left` icon: Lucide's `chevron-left`, mirrored in right-to-left text.
  *
  * @public
  */
 export function ChevronLeftIcon(props: IconProps): ReactElement {
-  return renderIcon("chevron-left", [["path", { d: "m15 18-6-6 6-6" }]], false, props);
+  return renderIcon("chevron-left", [["path", { d: "m15 18-6-6 6-6" }]], true, props);
 }
 
 /**
- * The `chevron-right` icon: Lucide's `chevron-right`.
+ * The `chevron-right` icon: Lucide's `chevron-right`, mirrored in right-to-left text.
  *
  * @public
  */
 export function ChevronRightIcon(props: IconProps): ReactElement {
-  return renderIcon("chevron-right", [["path", { d: "m9 18 6-6-6-6" }]], false, props);
+  return renderIcon("chevron-right", [["path", { d: "m9 18 6-6-6-6" }]], true, props);
 }
 
 /**
@@ -180,7 +180,7 @@ export function EllipseIcon(props: IconProps): ReactElement {
 }
 
 /**
- * The `fade-in` icon: Lucide's `chart-no-axes-column-increasing`.
+ * The `fade-in` icon: Lucide's `chart-no-axes-column-increasing`, mirrored in right-to-left text.
  *
  * @public
  */
@@ -192,13 +192,13 @@ export function FadeInIcon(props: IconProps): ReactElement {
       ["path", { d: "M12 21V9" }],
       ["path", { d: "M19 21V3" }],
     ],
-    false,
+    true,
     props,
   );
 }
 
 /**
- * The `fade-out` icon: Lucide's `chart-no-axes-column-decreasing`.
+ * The `fade-out` icon: Lucide's `chart-no-axes-column-decreasing`, mirrored in right-to-left text.
  *
  * @public
  */
@@ -210,7 +210,7 @@ export function FadeOutIcon(props: IconProps): ReactElement {
       ["path", { d: "M12 21V9" }],
       ["path", { d: "M19 21v-6" }],
     ],
-    false,
+    true,
     props,
   );
 }
@@ -866,7 +866,7 @@ export function SelectIcon(props: IconProps): ReactElement {
 }
 
 /**
- * The `skip-back` icon: Lucide's `skip-back`.
+ * The `skip-back` icon: Lucide's `skip-back`, mirrored in right-to-left text.
  *
  * @public
  */
@@ -882,13 +882,13 @@ export function SkipBackIcon(props: IconProps): ReactElement {
       ],
       ["path", { d: "M3 20V4" }],
     ],
-    false,
+    true,
     props,
   );
 }
 
 /**
- * The `skip-forward` icon: Lucide's `skip-forward`.
+ * The `skip-forward` icon: Lucide's `skip-forward`, mirrored in right-to-left text.
  *
  * @public
  */
@@ -904,7 +904,7 @@ export function SkipForwardIcon(props: IconProps): ReactElement {
         },
       ],
     ],
-    false,
+    true,
     props,
   );
 }
@@ -985,7 +985,7 @@ export function TextIcon(props: IconProps): ReactElement {
 }
 
 /**
- * The `trim-end` icon: Lucide's `arrow-left-from-line`.
+ * The `trim-end` icon: Lucide's `arrow-left-from-line`, mirrored in right-to-left text.
  *
  * @public
  */
@@ -997,13 +997,13 @@ export function TrimEndIcon(props: IconProps): ReactElement {
       ["path", { d: "M3 12h14" }],
       ["path", { d: "M21 19V5" }],
     ],
-    false,
+    true,
     props,
   );
 }
 
 /**
- * The `trim-start` icon: Lucide's `arrow-right-from-line`.
+ * The `trim-start` icon: Lucide's `arrow-right-from-line`, mirrored in right-to-left text.
  *
  * @public
  */
@@ -1015,7 +1015,7 @@ export function TrimStartIcon(props: IconProps): ReactElement {
       ["path", { d: "M21 12H7" }],
       ["path", { d: "m15 18 6-6-6-6" }],
     ],
-    false,
+    true,
     props,
   );
 }

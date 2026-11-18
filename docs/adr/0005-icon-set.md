@@ -1,8 +1,20 @@
 # 0005. An icon set generated from Lucide
 
-- **Status:** Accepted; amended 2026-11-18 to allow a few glyphs ui draws itself, for icons Lucide has none for
+- **Status:** Accepted; amended 2026-11-18 to allow a few glyphs ui draws itself, for icons Lucide has none for; amended 2026-11-19 to mirror icons that point along time
 - **Date:** 2026-11-12
 - **Amended:** 2026-11-12, after the set was built. Each icon is a plain module-level function, such as `function UndoIcon(props)`, calling a shared `renderIcon`, rather than a `createIcon()` factory with a pure annotation. Biome rejects component factories, and function declarations tree-shake without any annotation. `IconName` is generated into its own module with no imports, `icon-name.generated.ts`, so the server-safe entry exports it without reaching React, even as types, as sdk-core's `entry-no-react` rule requires
+
+## Amendment: icons that point along time
+
+*2026-11-19.* The record said media icons, such as play and skip, don't mirror, as platform guidelines advise. Those guidelines assume a media timeline that runs left to right in every language. `ui`'s doesn't: `Timeline` ([ADR 0011](0011-timeline.md)) runs from right to left in right-to-left text, with its start on the right. So an icon that points at a place on the track, unmirrored, pointed the wrong way there. audio-sdk's right-to-left screenshots showed trimming, fading and skipping to the start all pointing against time.
+
+**The rule:** an icon mirrors in right-to-left text when it points along the reading order or along time. Icons that point along time are those that point at a place on the track or a direction in it:
+
+- **Now mirrored:** `chevron-left` and `chevron-right` (earlier and later, previous and next), `trim-start` and `trim-end`, `fade-in` and `fade-out`, and `skip-back` and `skip-forward` (to the start and to the end).
+- **Already mirrored:** `undo`, `redo`, `range-start` and `range-end`.
+- **Not mirrored:** `play`, physical directions (`move-up`, `move-down`), and icons with no direction (`split`, `ripple`, `delete`, `close`, `open`, `upload`, `download`, `add`, `remove`, `muted`, the zooms and `fit`).
+
+**Play doesn't mirror.** Platform guidance keeps it pointing right in every language, and a triangle pointing left reads as rewind, which is a worse error than a mismatch with the track. Play starts something; it doesn't point at a place. In a transport the result reads as it does in left-to-right text. The row reverses and the skip icons mirror, so right to left it draws the same `|◁ ▷ ▷|`, with each skip icon pointing at the end of the track it goes to: "to the start" points right, where the track starts. The catalogue's *Transport* story shows both directions over a timeline.
 
 ## Amendment: glyphs ui draws itself
 
@@ -57,7 +69,7 @@ The set has to fit the family's rules:
   - Icons take `className`. They have no `unstyled`, because they have no visual styles beyond size and colour.
 - **Size and direction come from CSS:**
   - `.hm-icon` sizes to `--hm-icon-size` in `hm.components`, and inside a button's icon slot it follows the slot;
-  - directional icons, such as undo, redo and arrows that point along the reading order, carry `data-hm-mirror` and flip under `:dir(rtl)`. Media icons, such as play and skip, don't mirror, as platform guidelines advise.
+  - directional icons, such as undo, redo and arrows that point along the reading order, carry `data-hm-mirror` and flip under `:dir(rtl)`. Media icons, such as play and skip, don't mirror, as platform guidelines advise. *(Amended 2026-11-19: skip and the other icons that point along time do mirror; play still doesn't. See "Amendment: icons that point along time".)*
 - **Non-React rendering** isn't needed yet. If the custom elements of [sdk-core's element ADR, 0040](https://github.com/ie-huss-martinez/sdk-core/blob/main/docs/adr/0040-editor-element-base.md), need icons without React, the generator can also emit the node data, and a later record adds it.
 
 ### The first set

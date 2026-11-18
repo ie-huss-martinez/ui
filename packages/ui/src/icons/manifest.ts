@@ -3,9 +3,12 @@
  * describe what an icon is for in the SDK family, not what it draws, so a
  * glyph can change, or Lucide can rename it, without breaking anyone.
  *
- * `mirror` marks icons that point along the reading direction, which flip in
- * right-to-left text. Media controls, rotations and physical directions, such
- * as the chevrons, don't.
+ * `mirror` marks icons that point along the reading direction or along time,
+ * which flip in right-to-left text, where the timeline runs right to left too:
+ * undo and redo, the chevrons for earlier and later, trimming, fading, skipping
+ * to the start or end, and a range's start and end (docs/adr/0005, amended).
+ * Play doesn't mirror, nor do rotations or physical directions, such as up and
+ * down.
  *
  * `own` names a glyph ui draws itself, in `own-glyphs.ts`, for an icon
  * Lucide has no glyph for (docs/adr/0005, as amended).
@@ -23,16 +26,16 @@ export const iconManifest = {
   arrow: { lucide: "move-up-right" },
   check: { lucide: "check" },
   "chevron-down": { lucide: "chevron-down" },
-  "chevron-left": { lucide: "chevron-left" },
-  "chevron-right": { lucide: "chevron-right" },
+  "chevron-left": { lucide: "chevron-left", mirror: true },
+  "chevron-right": { lucide: "chevron-right", mirror: true },
   close: { lucide: "x" },
   crop: { lucide: "crop" },
   delete: { lucide: "trash" },
   download: { lucide: "download" },
   duplicate: { lucide: "copy" },
   ellipse: { lucide: "ellipse" },
-  "fade-in": { lucide: "chart-no-axes-column-increasing" },
-  "fade-out": { lucide: "chart-no-axes-column-decreasing" },
+  "fade-in": { lucide: "chart-no-axes-column-increasing", mirror: true },
+  "fade-out": { lucide: "chart-no-axes-column-decreasing", mirror: true },
   fit: { lucide: "scan" },
   "flip-horizontal": { lucide: "triangles-centerline-dashed-vertical" },
   "flip-vertical": { lucide: "triangles-centerline-dashed-horizontal" },
@@ -66,14 +69,14 @@ export const iconManifest = {
   "rotate-right": { lucide: "rotate-cw" },
   search: { lucide: "search" },
   select: { lucide: "mouse-pointer-2" },
-  "skip-back": { lucide: "skip-back" },
-  "skip-forward": { lucide: "skip-forward" },
+  "skip-back": { lucide: "skip-back", mirror: true },
+  "skip-forward": { lucide: "skip-forward", mirror: true },
   snap: { lucide: "magnet" },
   split: { lucide: "scissors" },
   stop: { lucide: "square" },
   text: { lucide: "type" },
-  "trim-end": { lucide: "arrow-left-from-line" },
-  "trim-start": { lucide: "arrow-right-from-line" },
+  "trim-end": { lucide: "arrow-left-from-line", mirror: true },
+  "trim-start": { lucide: "arrow-right-from-line", mirror: true },
   undo: { lucide: "undo-2", mirror: true },
   upload: { lucide: "upload" },
   visible: { lucide: "eye" },
