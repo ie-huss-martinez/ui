@@ -12,21 +12,32 @@
   }
 
   /*
-   * Half a thumb of room at each end, so the slider's thumb can sit on the
-   * first and last units without being clipped.
+   * Half a thumb and a focus ring of room at each end, so the slider's thumb
+   * and its ring can sit on the first and last units without being clipped.
    */
   .hm-timeline-viewport {
     box-sizing: border-box;
     overflow: auto hidden;
-    padding-inline: calc(var(--hm-slider-thumb-size, var(--hm-icon-size)) / 2);
+    padding-inline: calc(
+      var(--hm-slider-thumb-size, var(--hm-icon-size)) /
+      2 +
+      var(--hm-focus-ring-width) +
+      var(--hm-focus-ring-offset)
+    );
   }
 
   .hm-timeline-track {
     box-sizing: border-box;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
+    /* The slider's row holds its thumb and the thumb's focus ring, or a target, if larger. */
     grid-template-rows:
-      max(var(--hm-slider-thumb-size, var(--hm-icon-size)), var(--hm-target-size))
+      max(
+        var(--hm-slider-thumb-size, var(--hm-icon-size)) +
+        2 *
+        (var(--hm-focus-ring-width) + var(--hm-focus-ring-offset)),
+        var(--hm-target-size)
+      )
       minmax(var(--hm-timeline-lane-height, var(--hm-control-height)), auto);
     isolation: isolate;
     min-inline-size: 100%;
@@ -175,7 +186,9 @@
   .hm-timeline[data-hm-lanes] .hm-timeline-track {
     grid-auto-rows: minmax(var(--hm-timeline-lane-height, var(--hm-control-height)), auto);
     grid-template-rows: max(
-        var(--hm-slider-thumb-size, var(--hm-icon-size)),
+        var(--hm-slider-thumb-size, var(--hm-icon-size)) +
+        2 *
+        (var(--hm-focus-ring-width) + var(--hm-focus-ring-offset)),
         var(--hm-target-size)
       );
   }

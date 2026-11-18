@@ -136,10 +136,16 @@ describe("TimelineClips", () => {
     // No waiting: the sizes are there as soon as render returns.
     const container = render(<Fixture />);
     expect(scale.pixelsPerUnit).toBeGreaterThan(0);
-    const widths = five().map((_, index) => clip(container, `c${index + 1}`).offsetWidth);
-    const unit = (widths[1] as number) / 30;
-    expect(unit).toBeCloseTo(scale.pixelsPerUnit, 1);
-    expect(widths.map((width) => Math.round(width / unit))).toEqual([60, 30, 90, 60, 60]);
+    // Fractional widths, against the scale's own unit: offsetWidth rounds to
+    // whole pixels, and a unit derived from one rounded width is off by
+    // enough to miscount a long clip.
+    const widths = five().map(
+      (_, index) => clip(container, `c${index + 1}`).getBoundingClientRect().width,
+    );
+    expect((widths[1] as number) / 30).toBeCloseTo(scale.pixelsPerUnit, 1);
+    expect(widths.map((width) => Math.round(width / scale.pixelsPerUnit))).toEqual([
+      60, 30, 90, 60, 60,
+    ]);
     // Together they fill the track exactly, and the track is sized too.
     const trackElement = container.querySelector(".hm-timeline-track") as HTMLElement;
     expect(trackElement.style.inlineSize).not.toBe("");
