@@ -248,6 +248,9 @@ export const Slider = /* @__PURE__ */ forwardRef<HTMLInputElement, SliderProps>(
   const input = useRef<HTMLInputElement | null>(null);
   const commitLater = useRef(commit);
   commitLater.current = commit;
+  // The listeners of a pointer gesture in progress, removed when it ends,
+  // or when the slider unmounts first, so none outlive it.
+  const stopListening = useRef<(() => void) | null>(null);
   useEffect(() => {
     const element = input.current;
     if (!element) {
@@ -255,7 +258,10 @@ export const Slider = /* @__PURE__ */ forwardRef<HTMLInputElement, SliderProps>(
     }
     const onCommit = (): void => commitLater.current();
     element.addEventListener("change", onCommit);
-    return () => element.removeEventListener("change", onCommit);
+    return () => {
+      element.removeEventListener("change", onCommit);
+      stopListening.current?.();
+    };
   }, []);
   const handlePointerDown = (event: PointerEvent<HTMLInputElement>): void => {
     onPointerDown?.(event);
@@ -268,14 +274,23 @@ export const Slider = /* @__PURE__ */ forwardRef<HTMLInputElement, SliderProps>(
         keyEvent.preventDefault();
       }
     };
-    const release = (): void => {
+    const stop = (): void => {
       window.removeEventListener("pointerup", release, true);
       window.removeEventListener("pointercancel", release, true);
       window.removeEventListener("keydown", onEscape, true);
+      if (stopListening.current === stop) {
+        stopListening.current = null;
+      }
+    };
+    const release = (): void => {
+      stop();
       pressed.current = false;
       settle();
       commitLater.current();
     };
+    // A press before the last was let go, as with a second pointer, replaces it.
+    stopListening.current?.();
+    stopListening.current = stop;
     window.addEventListener("pointerup", release, true);
     window.addEventListener("pointercancel", release, true);
     window.addEventListener("keydown", onEscape, true);

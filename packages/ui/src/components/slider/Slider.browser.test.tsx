@@ -567,6 +567,27 @@ describe("Slider", () => {
       expect(onCommit.mock.calls).toEqual([[4]]);
     });
 
+    it("stops listening on the window when a drag ends, and when the slider unmounts mid-drag", () => {
+      const { onCancel, input } = setUp();
+      act(() => {
+        input.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerId: 1 }));
+      });
+      act(() => {
+        document.body.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, pointerId: 1 }));
+      });
+      // The drag is over: an Escape elsewhere isn't the slider's.
+      expect(key(document.body, "keydown", "Escape").defaultPrevented).toBe(false);
+      act(() => {
+        input.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerId: 2 }));
+      });
+      setValue(input, "-20");
+      act(() => root?.unmount());
+      root = undefined;
+      // Gone mid-drag: nothing of it is left to answer an Escape.
+      expect(key(document.body, "keydown", "Escape").defaultPrevented).toBe(false);
+      expect(onCancel).not.toHaveBeenCalled();
+    });
+
     it("leaves Escape alone with no gesture in progress", () => {
       const { onCancel, onChange, input } = setUp();
       key(input, "keydown", "ArrowRight");
