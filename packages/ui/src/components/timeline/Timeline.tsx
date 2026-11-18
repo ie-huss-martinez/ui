@@ -78,6 +78,8 @@ export interface TimelineScale {
 export interface LaneClips {
   /** Whether the track has clips. */
   readonly any: () => boolean;
+  /** Focuses a clip of this track, if it has it. */
+  readonly focus: (key: string) => boolean;
   /** Focuses the clip nearest a unit, selecting it unless told not to. */
   readonly focusNearest: (unit: number, select: boolean) => void;
 }
@@ -106,6 +108,10 @@ export interface TimelineContextValue {
   readonly setLaneClips: (id: string, clips: LaneClips | null) => void;
   /** The clip track of the next lane with clips, above (-1) or below (1) a lane. */
   readonly nextLaneClips: (id: string, direction: -1 | 1) => LaneClips | undefined;
+  /** Focuses a clip on whichever other lane has it now: where a moved clip went. */
+  readonly focusOnAnotherLane: (from: string, key: string) => boolean;
+  /** A unit snapped to the timeline's targets, leaving some out: a moving clip's own edges. */
+  readonly snapExcept: (unit: number, except: readonly number[]) => number;
 }
 
 /** The lane a part is in, or `undefined` in a timeline without lanes. */
@@ -389,9 +395,10 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
 
   const settings = useRef({ snapping, snapTargets });
   settings.current = { snapping, snapTargets };
+  const snapExceptRef = useRef<(unit: number, except: readonly number[]) => number>((unit) => unit);
 
   const scale = useMemo<TimelineScale>(() => {
-    const snap = (unit: number): number => {
+    const snap = (unit: number, except: readonly number[] = []): number => {
       if (!settings.current.snapping || pixelsPerUnit <= 0) {
         return unit;
       }
@@ -399,9 +406,12 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
       for (const read of targets.current) {
         all.push(...read());
       }
-      const valid = all.filter((target) => Number.isSafeInteger(target) && target >= 0);
+      const valid = all.filter(
+        (target) => Number.isSafeInteger(target) && target >= 0 && !except.includes(target),
+      );
       return snapTo(unit, valid, Math.round(SNAP_PIXELS / pixelsPerUnit));
     };
+    snapExceptRef.current = snap;
     return {
       length,
       extent,
@@ -417,7 +427,7 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
         const unit = Math.min(Math.max(Math.round(offset / pixelsPerUnit), 0), extent);
         return options?.snap ? Math.min(snap(unit), extent) : unit;
       },
-      snap,
+      snap: (unit) => snap(unit),
       visibleRange: () => {
         const element = viewport.current;
         if (!element || pixelsPerUnit <= 0) {
@@ -502,6 +512,22 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
     return undefined;
   }, []);
 
+  const focusOnAnotherLane = useCallback<TimelineContextValue["focusOnAnotherLane"]>(
+    (from, key) => {
+      for (const [id, clips] of laneClips.current) {
+        if (id !== from && clips.focus(key)) {
+          return true;
+        }
+      }
+      return false;
+    },
+    [],
+  );
+  const snapExcept = useCallback<TimelineContextValue["snapExcept"]>(
+    (unit, except) => snapExceptRef.current(unit, except),
+    [],
+  );
+
   const context = useMemo<TimelineContextValue>(
     () => ({
       scale,
@@ -514,8 +540,21 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
       setLane,
       setLaneClips,
       nextLaneClips,
+      focusOnAnotherLane,
+      snapExcept,
     }),
-    [scale, addTargets, lanes, headerWidth, trail, setLane, setLaneClips, nextLaneClips],
+    [
+      scale,
+      addTargets,
+      lanes,
+      headerWidth,
+      trail,
+      setLane,
+      setLaneClips,
+      nextLaneClips,
+      focusOnAnotherLane,
+      snapExcept,
+    ],
   );
 
   const laned = lanes.length > 0;

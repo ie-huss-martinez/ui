@@ -92,6 +92,7 @@ export {
 } from "./components/timeline/Timeline.js";
 export type {
   TimelineClip,
+  TimelineClipDrop,
   TimelineClipEdge,
   TimelineClipsHandle,
   TimelineClipsPart,

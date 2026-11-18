@@ -118,6 +118,57 @@ export interface TimelineClipsProps extends StyleProps<TimelineClipsPart> {
   readonly trimLimits?:
     | ((key: string, edge: TimelineClipEdge) => { readonly min?: number; readonly max?: number })
     | undefined;
+  /**
+   * Called when the user moves clips to the lane above (`-1`) or below
+   * (`1`) with Alt+↑ or Alt+↓ (Option on macOS), with the same keys as
+   * `onMove`. Render them on that lane, at the same time, or leave them when
+   * they can't go there. In a lane, the keys are taken with or without it,
+   * so the page never scrolls instead.
+   */
+  readonly onMoveLane?: ((keys: readonly string[], direction: -1 | 1) => void) | undefined;
+  /**
+   * Called once, when the user lets go of a clip dragged along time or to
+   * another lane, with the keys that moved and where: `by` units, and the
+   * `lane` it's over when that's another one. Render the clips there. With
+   * it, a clip can be dragged, with a mouse or a pen; on a touch screen a
+   * drag scrolls, and clips move with your buttons.
+   */
+  readonly onDrop?: ((keys: readonly string[], drop: TimelineClipDrop) => void) | undefined;
+  /**
+   * Asked as a clip is dragged: whether it may be dropped there. Where it
+   * may not, the clip shows it and letting go reports nothing: a place where
+   * it would overlap another clip, or a lane that doesn't take it.
+   */
+  readonly canDrop?: ((keys: readonly string[], drop: TimelineClipDrop) => boolean) | undefined;
+  /**
+   * What a drag takes hold of: the whole `clip`, the default, or only its
+   * `title`, the strip that shows its `content`. With `title`, a press on
+   * the rest of the clip passes to the layer under it, for an editor where
+   * dragging across a track selects a range of time.
+   */
+  readonly moveHandle?: "clip" | "title" | undefined;
+}
+
+/**
+ * Where a dragged clip was dropped.
+ *
+ * @public
+ */
+export interface TimelineClipDrop {
+  /** How far along time, in units: negative for earlier. */
+  readonly by: number;
+  /** The `id` of the lane it's over, when that isn't the lane it came from. */
+  readonly lane?: string | undefined;
+}
+
+/** A clip being dragged by its body, and where it is now. */
+interface Move {
+  readonly key: string;
+  readonly by: number;
+  readonly lane: string | undefined;
+  /** How far down the page its lane is from the clip's own, in CSS pixels. */
+  readonly down: number;
+  readonly refused: boolean;
 }
 
 /**
@@ -126,6 +177,12 @@ export interface TimelineClipsProps extends StyleProps<TimelineClipsPart> {
  * @public
  */
 export type TimelineClipEdge = "start" | "end";
+
+/** How far a pointer moves, in CSS pixels, before a press on a clip is a drag. */
+const DRAG_AFTER = 4;
+/** How close to an end of the view a dragged clip scrolls the timeline, and how fast, in CSS pixels. */
+const EDGE = 32;
+const SCROLL = 12;
 
 /** An edge being dragged, and how far it has gone, as `onTrim`'s `delta`. */
 interface Drag {
@@ -146,6 +203,8 @@ interface ClipProps {
   readonly dragging: TimelineClipEdge | undefined;
   /** Whether the clip runs past the timeline's length. */
   readonly pastEnd: boolean;
+  /** Whether the clip is being dragged, and whether it may be dropped where it is. */
+  readonly moving: "allowed" | "refused" | undefined;
 }
 
 /** One option. Memoised, so a change of selection renders only the clips it changes. */
@@ -158,6 +217,7 @@ const Clip = /* @__PURE__ */ memo(function Clip({
   edges,
   dragging,
   pastEnd,
+  moving,
 }: ClipProps) {
   return (
     <div
@@ -169,6 +229,7 @@ const Clip = /* @__PURE__ */ memo(function Clip({
       data-hm-key={clip.key}
       data-hm-dragging={dragging}
       data-hm-past-end={pastEnd ? "" : undefined}
+      data-hm-moving={moving}
       className={clipClass}
     >
       {clip.content == null ? null : <span className={contentClass}>{clip.content}</span>}
@@ -233,6 +294,10 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
       onTrimToPlayhead,
       trimStep = 1,
       trimLimits,
+      onMoveLane,
+      onDrop,
+      canDrop,
+      moveHandle = "clip",
       className,
       classNames,
       unstyled,
@@ -345,9 +410,14 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
 
     // What the other lanes need of this one, for ↑ and ↓ between them.
     const laneId = useContext(TimelineLaneContext);
-    const forLanes = useRef<LaneClips>({ any: () => false, focusNearest: () => undefined });
+    const forLanes = useRef<LaneClips>({
+      any: () => false,
+      focus: () => false,
+      focusNearest: () => undefined,
+    });
     forLanes.current = {
       any: () => clips.length > 0,
+      focus: (key) => clips.some((clip) => clip.key === key) && focusClip(key),
       focusNearest: (unit, andSelect) => {
         let nearest: TimelineClip | undefined;
         let distance = Number.POSITIVE_INFINITY;
@@ -373,6 +443,7 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
       }
       setLaneClips(laneId, {
         any: () => forLanes.current.any(),
+        focus: (key) => forLanes.current.focus(key),
         focusNearest: (unit, andSelect) => forLanes.current.focusNearest(unit, andSelect),
       });
       return () => setLaneClips(laneId, null);
@@ -397,20 +468,24 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
     // so they're there in the frame React commits. Only when the clips or the
     // scale changed: a change of selection sizes nothing.
     const [drag, setDrag] = useState<Drag | null>(null);
+    const [move, setMove] = useState<Move | null>(null);
     const sized = useRef<{
       clips: readonly TimelineClip[];
       scale: number;
       drag: Drag | null;
+      move: Move | null;
     } | null>(null);
     const sizeClips = (element: HTMLDivElement): void => {
       if (
         sized.current?.clips === clips &&
         sized.current.scale === pixelsPerUnit &&
-        sized.current.drag === drag
+        sized.current.drag === drag &&
+        sized.current.move === move
       ) {
         return;
       }
-      sized.current = { clips, scale: pixelsPerUnit, drag };
+      sized.current = { clips, scale: pixelsPerUnit, drag, move };
+      const rtl = move ? getComputedStyle(element).direction === "rtl" : false;
       const elements = element.children;
       // Where the clip before ended, as drawn: a clip's margin is the room
       // between that and its own start, which is nothing back to back.
@@ -437,6 +512,15 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
           node,
           "margin-inline-start",
           measured && start !== end ? `${(start - end) * pixelsPerUnit}px` : "",
+        );
+        // A clip dragged by its body follows the pointer, along time and down
+        // or up to the lane it's over, without leaving its place in the track.
+        setStyle(
+          node,
+          "translate",
+          clip && move?.key === clip.key
+            ? `${move.by * pixelsPerUnit * (rtl ? -1 : 1)}px ${move.down}px`
+            : "",
         );
         end = start + length;
       }
@@ -466,6 +550,10 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
       if (active && active !== document.body) {
         return;
       }
+      // Moved to another lane rather than removed: focus goes with it.
+      if (laneId !== undefined && context?.focusOnAnotherLane(laneId, was.key)) {
+        return;
+      }
       const next = clips[Math.min(was.index, clips.length - 1)];
       if (next) {
         focusClip(next.key);
@@ -487,7 +575,175 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
       delta: number;
     } | null>(null);
 
+    /** What moves with a clip: the timeline's whole selection when the clip is in it. */
+    const movingWith = (key: string): string[] => {
+      if (!selected.has(key)) {
+        return [key];
+      }
+      const own = new Set(clips.map((clip) => clip.key));
+      return [
+        ...clips.filter((clip) => selected.has(clip.key)).map((clip) => clip.key),
+        // The selection is the timeline's: other lanes' clips move with it.
+        ...selectedKeys.filter((other) => !own.has(other)),
+      ];
+    };
+
+    // A clip pressed, and then dragged by its body: where it started, and
+    // where the pointer has taken it.
+    const moving = useRef<{
+      readonly pointerId: number;
+      readonly element: HTMLElement;
+      readonly key: string;
+      readonly keys: readonly string[];
+      readonly x: number;
+      readonly y: number;
+      /** The unit under the pointer when it went down. */
+      readonly unit: number;
+      readonly start: number;
+      readonly length: number;
+      /** Whether the pointer has gone far enough to be a drag, not a click. */
+      started: boolean;
+      lastX: number;
+      lastY: number;
+      alt: boolean;
+      by: number;
+      lane: string | undefined;
+      refused: boolean;
+      frame: number;
+    } | null>(null);
+    // A drag ends with a click on the clip, which mustn't change the selection.
+    const dragged = useRef(false);
+
+    /** Where a dragged clip is now, from where the pointer is. */
+    const follow = (): void => {
+      const at = moving.current;
+      const scale = context?.scale;
+      if (!at || !scale || !list.current) {
+        return;
+      }
+      let start = Math.max(0, at.start + scale.unitAt(at.lastX) - at.unit);
+      if (!at.alt) {
+        // Its start or its end snaps, whichever has less far to go, and not
+        // to where the clip itself was.
+        const own = [at.start, at.start + at.length];
+        const byStart = (context?.snapExcept(start, own) ?? start) - start;
+        const end = start + at.length;
+        const byEnd = (context?.snapExcept(end, own) ?? end) - end;
+        const nudge =
+          byStart !== 0 && (byEnd === 0 || Math.abs(byStart) <= Math.abs(byEnd)) ? byStart : byEnd;
+        start = Math.max(0, start + nudge);
+      }
+      const by = start - at.start;
+      // The lane under the pointer, when the track is in one.
+      let lane: string | undefined;
+      let down = 0;
+      const ownLane = list.current.closest<HTMLElement>("[data-hm-lane]");
+      if (ownLane) {
+        for (const other of context?.track.current?.querySelectorAll<HTMLElement>(
+          ":scope > [data-hm-lane]",
+        ) ?? []) {
+          const box = other.getBoundingClientRect();
+          if (at.lastY >= box.top && at.lastY < box.bottom && other !== ownLane) {
+            lane = other.dataset["hmLane"];
+            down = box.top - ownLane.getBoundingClientRect().top;
+          }
+        }
+      }
+      const refused = canDrop ? !canDrop(at.keys, { by, lane }) : false;
+      at.by = by;
+      at.lane = lane;
+      at.refused = refused;
+      setMove((current) =>
+        current &&
+        current.by === by &&
+        current.lane === lane &&
+        current.down === down &&
+        current.refused === refused
+          ? current
+          : { key: at.key, by, lane, down, refused },
+      );
+    };
+
+    /** Scrolls the timeline while a dragged clip is held near either end of the view. */
+    const scrollAtEdges = (): void => {
+      const at = moving.current;
+      const viewport = context?.viewport.current;
+      if (!at?.started || !viewport) {
+        return;
+      }
+      const box = viewport.getBoundingClientRect();
+      const header = context?.headerWidth ?? 0;
+      const rtl = getComputedStyle(viewport).direction === "rtl";
+      const left = box.left + (rtl ? 0 : header);
+      const right = box.right - (rtl ? header : 0);
+      const step = at.lastX < left + EDGE ? -SCROLL : at.lastX > right - EDGE ? SCROLL : 0;
+      if (step !== 0) {
+        const before = viewport.scrollLeft;
+        viewport.scrollLeft += step;
+        if (viewport.scrollLeft !== before) {
+          follow();
+        }
+      }
+      at.frame = requestAnimationFrame(scrollAtEdges);
+    };
+
+    const endMove = (commit: boolean): void => {
+      const at = moving.current;
+      moving.current = null;
+      if (!at) {
+        return;
+      }
+      cancelAnimationFrame(at.frame);
+      if (!at.started) {
+        return;
+      }
+      dragged.current = true;
+      setMove(null);
+      if (commit && !at.refused && (at.by !== 0 || at.lane !== undefined)) {
+        // Focus goes with the clip, to another lane too.
+        held.current ??= { key: at.key, index: clips.findIndex((clip) => clip.key === at.key) };
+        moved.current = true;
+        onDrop?.(at.keys, { by: at.by, lane: at.lane });
+      }
+    };
+
     const handlePointerDown = (event: PointerEvent<HTMLDivElement>): void => {
+      const pressed = (event.target as HTMLElement).closest<HTMLElement>("[data-hm-key]");
+      const pressedClip = clips.find((clip) => clip.key === pressed?.dataset["hmKey"]);
+      if (
+        onDrop &&
+        pressed &&
+        pressedClip &&
+        event.button === 0 &&
+        // A finger dragged across the clips scrolls the timeline.
+        event.pointerType !== "touch" &&
+        pixelsPerUnit > 0 &&
+        !(event.target as HTMLElement).closest("[data-hm-edge]") &&
+        (moveHandle === "clip" ||
+          (event.target as HTMLElement).closest(".hm-timeline-clip-content") !== null)
+      ) {
+        const index = clips.indexOf(pressedClip);
+        moving.current = {
+          pointerId: event.pointerId,
+          element: pressed,
+          key: pressedClip.key,
+          keys: movingWith(pressedClip.key),
+          x: event.clientX,
+          y: event.clientY,
+          unit: context?.scale.unitAt(event.clientX) ?? 0,
+          start: starts[index] ?? 0,
+          length: pressedClip.length,
+          started: false,
+          lastX: event.clientX,
+          lastY: event.clientY,
+          alt: event.altKey,
+          by: 0,
+          lane: undefined,
+          refused: false,
+          frame: 0,
+        };
+        return;
+      }
       const handle = (event.target as HTMLElement).closest<HTMLElement>("[data-hm-edge]");
       const key = handle?.closest<HTMLElement>("[data-hm-key]")?.dataset["hmKey"];
       const index = clips.findIndex((clip) => clip.key === key);
@@ -517,6 +773,27 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
     };
 
     const handlePointerMove = (event: PointerEvent<HTMLDivElement>): void => {
+      const at = moving.current;
+      if (at && event.pointerId === at.pointerId) {
+        at.lastX = event.clientX;
+        at.lastY = event.clientY;
+        at.alt = event.altKey;
+        if (!at.started) {
+          // A few pixels of movement, so a click with a shaky hand still selects.
+          if (Math.hypot(event.clientX - at.x, event.clientY - at.y) < DRAG_AFTER) {
+            return;
+          }
+          at.started = true;
+          try {
+            at.element.setPointerCapture(event.pointerId);
+          } catch {
+            // The pointer is up already; its events still arrive here.
+          }
+          at.frame = requestAnimationFrame(scrollAtEdges);
+        }
+        follow();
+        return;
+      }
       const start = dragging.current;
       if (!start || event.pointerId !== start.pointerId || pixelsPerUnit <= 0) {
         return;
@@ -543,7 +820,7 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
     };
 
     // Escape cancels a drag, wherever focus is.
-    const isDragging = drag !== null;
+    const isDragging = drag !== null || move !== null;
     useEffect(() => {
       if (!isDragging) {
         return;
@@ -553,6 +830,14 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
           event.preventDefault();
           dragging.current = null;
           setDrag(null);
+          if (moving.current) {
+            cancelAnimationFrame(moving.current.frame);
+            // The pointer is still down: what it does until it's let go is
+            // nothing, and the click that follows isn't a choice of clip.
+            moving.current = null;
+            dragged.current = true;
+            setMove(null);
+          }
         }
       };
       document.addEventListener("keydown", onKeyDown, true);
@@ -621,17 +906,19 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
           event.preventDefault();
           if (onMove) {
             moved.current = true;
-            const own = new Set(clips.map((clip) => clip.key));
-            onMove(
-              selected.has(current.key)
-                ? [
-                    ...clips.filter((clip) => selected.has(clip.key)).map((clip) => clip.key),
-                    // The selection is the timeline's: other lanes' clips move with it.
-                    ...selectedKeys.filter((key) => !own.has(key)),
-                  ]
-                : [current.key],
-              event.key === forward ? 1 : -1,
-            );
+            onMove(movingWith(current.key), event.key === forward ? 1 : -1);
+          }
+        } else if (
+          (event.key === "ArrowUp" || event.key === "ArrowDown") &&
+          !event.shiftKey &&
+          laneId !== undefined
+        ) {
+          // To the lane above or below. Taken on every clip in a lane, with
+          // or without onMoveLane: unprevented, it scrolls the page.
+          event.preventDefault();
+          if (onMoveLane) {
+            moved.current = true;
+            onMoveLane(movingWith(current.key), event.key === "ArrowDown" ? 1 : -1);
           }
         } else if (edge && onTrim) {
           // Inward, which shortens the clip; with Shift, outward.
@@ -718,6 +1005,11 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
       if (key === undefined || index === -1 || event.defaultPrevented) {
         return;
       }
+      // The click that ends a drag isn't a choice of clip.
+      if (dragged.current) {
+        dragged.current = false;
+        return;
+      }
       setFocusKey(key);
       if (multiple && event.shiftKey) {
         select(range(index), true);
@@ -776,12 +1068,20 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
         data-hm-unstyled={unstyledAttribute(unstyled)}
         // Until the timeline has measured itself, the clips share the track equally.
         data-hm-measured={pixelsPerUnit > 0 ? "" : undefined}
+        // What a drag takes hold of, when clips can be dragged.
+        data-hm-move-handle={onDrop ? moveHandle : undefined}
         onKeyDown={handleKeyDown}
         onClick={handleClick}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
-        onPointerUp={() => endDrag(true)}
-        onPointerCancel={() => endDrag(false)}
+        onPointerUp={() => {
+          endDrag(true);
+          endMove(true);
+        }}
+        onPointerCancel={() => {
+          endDrag(false);
+          endMove(false);
+        }}
         onFocus={handleFocus}
         onBlur={handleBlur}
       >
@@ -796,6 +1096,7 @@ export const TimelineClips = /* @__PURE__ */ forwardRef<TimelineClipsHandle, Tim
             edges={onTrim !== undefined}
             dragging={drag?.key === clip.key ? drag.edge : undefined}
             pastEnd={(starts[index] ?? 0) + clip.length > timelineLength}
+            moving={move?.key === clip.key ? (move.refused ? "refused" : "allowed") : undefined}
           />
         ))}
       </div>

@@ -48,9 +48,15 @@
    * a server, they share the track equally; then TimelineClips.tsx sets each
    * one's inline size.
    */
+  /*
+   * Only the clips take the pointer: between them, and beside a clip's
+   * title when that's its handle, a press reaches what's under the track,
+   * such as a layer that selects a range of time.
+   */
   .hm-timeline-clips {
     box-sizing: border-box;
     display: flex;
+    pointer-events: none;
   }
 
   .hm-timeline-clip {
@@ -61,6 +67,7 @@
     flex: 1 1 0;
     min-inline-size: 0;
     overflow: hidden;
+    pointer-events: auto;
     position: relative;
     user-select: none;
   }
@@ -101,6 +108,37 @@
     padding-inline: var(--hm-timeline-clip-padding-x, var(--hm-gap-tight));
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  /*
+   * Clips that can be dragged. A dragged clip is above the lanes and the
+   * playhead as it follows the pointer; TimelineClips.tsx moves it.
+   */
+  .hm-timeline-clips[data-hm-move-handle="clip"] > .hm-timeline-clip,
+  .hm-timeline-clips[data-hm-move-handle="title"] .hm-timeline-clip-content {
+    cursor: grab;
+  }
+
+  /*
+   * With the title as the handle, the rest of a clip lets a press through
+   * to the layer under it, such as one that selects a range of time.
+   */
+  .hm-timeline-clips[data-hm-move-handle="title"] > .hm-timeline-clip {
+    pointer-events: none;
+  }
+
+  .hm-timeline-clips[data-hm-move-handle="title"] .hm-timeline-clip-content,
+  .hm-timeline-clips[data-hm-move-handle="title"] .hm-timeline-clip-edge {
+    pointer-events: auto;
+  }
+
+  .hm-timeline-clips > .hm-timeline-clip[data-hm-moving] {
+    cursor: grabbing;
+    z-index: var(--hm-z-sticky);
+  }
+
+  .hm-timeline-clips > .hm-timeline-clip[data-hm-moving="refused"] {
+    cursor: not-allowed;
   }
 
   /* Over both rows, and above the layers; only its slider takes the pointer. */
@@ -281,5 +319,16 @@
   .hm-timeline:not([data-hm-unstyled]) .hm-timeline-lane {
     border-block-start: var(--hm-border-width) solid
       var(--hm-timeline-lane-border-color, var(--hm-color-border));
+  }
+
+  /* A clip being dragged, and one that can't be dropped where it is. */
+  .hm-timeline-clips:not([data-hm-unstyled]) > .hm-timeline-clip[data-hm-moving] {
+    border-color: var(--hm-timeline-clip-selected-border-color, var(--hm-color-accent));
+    box-shadow: var(--hm-timeline-clip-moving-shadow, var(--hm-shadow-raised));
+  }
+
+  .hm-timeline-clips:not([data-hm-unstyled]) > .hm-timeline-clip[data-hm-moving="refused"] {
+    border-color: var(--hm-timeline-clip-refused-border-color, var(--hm-color-danger-text));
+    border-style: dashed;
   }
 }

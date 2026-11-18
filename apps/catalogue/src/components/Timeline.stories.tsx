@@ -435,6 +435,122 @@ export const ClipsWithAStart: Story = {
   render: () => <Placed />,
 };
 
+interface Sound {
+  readonly key: string;
+  readonly lane: "voice" | "music";
+  readonly at: number;
+  readonly length: number;
+}
+
+/** An editor that moves clips between two sound lanes, and refuses an overlap. */
+function Movable() {
+  const [sounds, setSounds] = useState<Sound[]>([
+    { key: "voice-1", lane: "voice", at: 20, length: 60 },
+    { key: "voice-2", lane: "voice", at: 120, length: 50 },
+    { key: "music-1", lane: "music", at: 200, length: 80 },
+  ]);
+  const [selected, setSelected] = useState<readonly string[]>(["voice-2"]);
+  const [frame, setFrame] = useState(0);
+  const lanes = ["voice", "music"] as const;
+  const place = (keys: readonly string[], by: number, lane?: string): Sound[] =>
+    sounds.map((sound) =>
+      keys.includes(sound.key)
+        ? { ...sound, at: sound.at + by, lane: (lane as Sound["lane"]) ?? sound.lane }
+        : sound,
+    );
+  const fits = (next: Sound[]): boolean =>
+    next.every(
+      (sound) =>
+        sound.at >= 0 &&
+        lanes.includes(sound.lane) &&
+        next.every(
+          (other) =>
+            other === sound ||
+            other.lane !== sound.lane ||
+            other.at >= sound.at + sound.length ||
+            sound.at >= other.at + other.length,
+        ),
+    );
+  const tryPlace = (next: Sound[]) => fits(next) && setSounds(next);
+  const toLane = (keys: readonly string[], direction: -1 | 1) => {
+    const from = sounds.find((sound) => sound.key === keys[0])?.lane ?? "voice";
+    const to = lanes[lanes.indexOf(from) + direction];
+    if (to) {
+      tryPlace(place(keys, 0, to));
+    }
+  };
+  return (
+    <div style={{ display: "grid", gap: "var(--hm-gap-normal)" }}>
+      <Timeline label="Timeline" length={FRAMES}>
+        <TimelinePlayhead
+          label="Playhead"
+          position={frame}
+          onPositionChange={setFrame}
+          largeStep={RATE}
+          formatValue={time}
+        />
+        {lanes.map((lane) => (
+          <TimelineLane key={lane} id={lane} label={`${lane} track`} header={<span>{lane}</span>}>
+            <TimelineClips
+              label={`${lane} clips`}
+              clips={sounds
+                .filter((sound) => sound.lane === lane)
+                .sort((a, b) => a.at - b.at)
+                .map((sound) => ({
+                  key: sound.key,
+                  at: sound.at,
+                  length: sound.length,
+                  label: `${sound.key}, from ${time(sound.at)}`,
+                  content: sound.key,
+                }))}
+              selectionMode="multiple"
+              selectedKeys={selected}
+              onSelectedKeysChange={setSelected}
+              onMove={(keys, direction) => tryPlace(place(keys, direction * 5))}
+              onMoveLane={toLane}
+              onDrop={(keys, drop) => tryPlace(place(keys, drop.by, drop.lane))}
+              canDrop={(keys, drop) => fits(place(keys, drop.by, drop.lane))}
+            />
+          </TimelineLane>
+        ))}
+      </Timeline>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--hm-gap-tight)" }}>
+        <Button
+          size="small"
+          aria-keyshortcuts="Alt+ArrowLeft"
+          onClick={() => tryPlace(place(selected, -5))}
+        >
+          Move earlier
+        </Button>
+        <Button
+          size="small"
+          aria-keyshortcuts="Alt+ArrowRight"
+          onClick={() => tryPlace(place(selected, 5))}
+        >
+          Move later
+        </Button>
+        <Button size="small" aria-keyshortcuts="Alt+ArrowUp" onClick={() => toLane(selected, -1)}>
+          Move to the lane above
+        </Button>
+        <Button size="small" aria-keyshortcuts="Alt+ArrowDown" onClick={() => toLane(selected, 1)}>
+          Move to the lane below
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Moving clips. Drag a clip along time or to the other lane; it snaps to
+ * the other clips, and shows where it can't go. Alt+↑ and Alt+↓ move it
+ * between lanes. **The buttons are required:** on a touch screen they're
+ * the way to move a clip.
+ */
+export const MovingClips: Story = {
+  name: "Moving clips",
+  render: () => <Movable />,
+};
+
 /** Visual styles dropped: the native slider, with no line, and clips with no colours. */
 export const Unstyled: Story = {
   render: () => <Editor unstyled clips="single" />,
