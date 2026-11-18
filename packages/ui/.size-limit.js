@@ -145,10 +145,11 @@ export default [
     brotli: true,
     // The files as built, not bundled again.
     disablePlugins: ["@size-limit/esbuild"],
-    // 24 kB; 23.99 kB. Every component counts here, though no application
-    // ships them all, so a component's pull request raises it as expected
-    // growth; review reads the import scenarios below to judge it.
-    limit: "24 kB",
+    // 24.5 kB; 24.04 kB with the announcer's same-frame queue, which only
+    // the editor scenario imports. Every component counts here, though no
+    // application ships them all, so a component's pull request raises it as
+    // expected growth; review reads the import scenarios below to judge it.
+    limit: "24.5 kB",
   },
   {
     name: "Stylesheet (./styles.css)",
