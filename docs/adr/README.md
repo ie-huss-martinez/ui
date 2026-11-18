@@ -19,3 +19,4 @@ Use [`template.md`](template.md) for new records. Name files `NNNN-short-title.m
 | [0009](0009-reorderable-list.md) | A reorderable list: a grid of rows with one Tab stop | Proposed |
 | [0010](0010-opt-in-text-root.md) | An opt-in class for text outside components | Accepted |
 | [0011](0011-timeline.md) | A shared timeline: clips, a playhead and layers over whole units | Proposed; an amendment for lanes, clips with a start and dragging a clip is proposed in it |
+| [0012](0012-size-budgets-per-import.md) | Size budgets for what applications import, beside each entry's | Proposed |
