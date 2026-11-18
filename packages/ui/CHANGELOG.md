@@ -1,5 +1,13 @@
 # @hussmartinez/ui
 
+## 0.14.1
+
+### Patch Changes
+
+- [#105](https://github.com/ie-huss-martinez/ui/pull/105) [`eb7f663`](https://github.com/ie-huss-martinez/ui/commit/eb7f6634d9782c4539933a2d07ceaabf03b4bdb4) Thanks [@hussmartinez](https://github.com/hussmartinez)! - A focused control inside a `Dialog`'s body now shows its whole focus ring. The body scrolls, and a scrolling box clips what's drawn outside it, so a field as wide as the body, or at its end, showed its ring along one edge only. The body now keeps room for a ring at every edge, and its content stays where it was. Nothing changes in the API.
+
+- [#107](https://github.com/ie-huss-martinez/ui/pull/107) [`4334fd7`](https://github.com/ie-huss-martinez/ui/commit/4334fd765d950a96f15640dacc785bf7a9bfe9de) Thanks [@hussmartinez](https://github.com/hussmartinez)! - The `Timeline`'s playhead now shows its whole focus ring. The timeline scrolls, and a scrolling box clips what's drawn outside it, so the thumb's ring lost its top edge, and at the first or last unit its outer side too. The slider's row is now tall enough for the thumb and its ring, and the timeline keeps room for the ring past each end. A timeline is a few pixels taller where the thumb and ring are larger than the target size, and its track is a few pixels narrower. Nothing changes in the API.
+
 ## 0.14.0
 
 ### Minor Changes
