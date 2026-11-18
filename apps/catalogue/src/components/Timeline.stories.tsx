@@ -371,6 +371,70 @@ export const LanesNarrow: Story = {
   ),
 };
 
+/** A picture lane, back to back, over a sound lane whose clips have a start each. */
+function Placed() {
+  const [selected, setSelected] = useState<readonly string[]>(["sound-2"]);
+  const [frame, setFrame] = useState(150);
+  const picture: TimelineClip[] = [
+    { key: "shot-1", length: 100, label: "Shot 1, clip 1 of 3", content: "Shot 1" },
+    { key: "shot-2", length: 140, label: "Shot 2, clip 2 of 3", content: "Shot 2" },
+    { key: "shot-3", length: 60, label: "Shot 3, clip 3 of 3", content: "Shot 3" },
+  ];
+  const sound: TimelineClip[] = [
+    { key: "sound-1", at: 20, length: 60, label: "Voice, clip 1 of 3", content: "Voice" },
+    { key: "sound-2", at: 120, length: 50, label: "Door, clip 2 of 3", content: "Door" },
+    {
+      key: "sound-3",
+      at: 260,
+      length: 80,
+      label: "Music, clip 3 of 3, past the end of the picture",
+      content: "Music",
+    },
+  ];
+  return (
+    // The sound runs 40 frames past the picture: the track is drawn that far.
+    <Timeline label="Timeline" length={FRAMES} extent={FRAMES + 40}>
+      <TimelinePlayhead
+        label="Playhead"
+        position={frame}
+        onPositionChange={setFrame}
+        largeStep={RATE}
+        formatValue={time}
+      />
+      <TimelineLane id="picture" label="Picture track" header={<span>Picture</span>}>
+        <TimelineClips
+          label="Picture clips"
+          clips={picture}
+          selectionMode="multiple"
+          selectedKeys={selected}
+          onSelectedKeysChange={setSelected}
+        />
+      </TimelineLane>
+      <TimelineLane id="sound" label="Sound track" header={<span>Sound</span>}>
+        <TimelineClips
+          label="Sound clips"
+          clips={sound}
+          selectionMode="multiple"
+          selectedKeys={selected}
+          onSelectedKeysChange={setSelected}
+        />
+      </TimelineLane>
+    </Timeline>
+  );
+}
+
+/**
+ * Clips with a start. The sound lane's clips each have `at`, so there's
+ * room between them; the picture lane's lie back to back. Both share the
+ * scale, and each lane's clip edges are snap targets for the other. The
+ * last sound runs past the timeline's length: `extent` draws the track
+ * that far, and the playhead still ends at the length.
+ */
+export const ClipsWithAStart: Story = {
+  name: "Clips with a start",
+  render: () => <Placed />,
+};
+
 /** Visual styles dropped: the native slider, with no line, and clips with no colours. */
 export const Unstyled: Story = {
   render: () => <Editor unstyled clips="single" />,

@@ -29,13 +29,13 @@ export default [
     name: "React entry (./react), with the shared code it loads",
     path: ["dist/react.js", "dist/shared/*.js"],
     brotli: true,
-    // 22 kB. It measures 21.81 kB with the timeline's lanes, about 1.9 kB:
-    // their registry, the headers' column and its measuring, and the arrows
-    // between lanes. Moving and trimming before them took it from 19.5 kB to
-    // 20 kB. A budget is raised by the pull request whose component needs
-    // it, to its measurement rounded up to the next 0.5 kB. Applications
-    // ship only the components they import: see build.test.ts.
-    limit: "22 kB",
+    // 22.5 kB. It measures 22.27 kB with clips that have a start, about
+    // 0.5 kB: placing them, checking them, and `extent`. The timeline's lanes
+    // before them took it from 20 kB to 22 kB. A budget is raised by the pull
+    // request whose component needs it, to its measurement rounded up to the
+    // next 0.5 kB. Applications ship only the components they import: see
+    // build.test.ts.
+    limit: "22.5 kB",
   },
   {
     name: "Stylesheet (./styles.css)",

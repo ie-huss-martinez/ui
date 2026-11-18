@@ -84,6 +84,7 @@ export const TimelinePlayhead = /* @__PURE__ */ forwardRef<HTMLInputElement, Tim
     const scale = context?.scale;
     const length = scale?.length ?? 0;
     const pixelsPerUnit = scale?.pixelsPerUnit ?? 0;
+    const extent = scale?.extent ?? 0;
     const position = Math.min(Math.max(Math.round(rawPosition) || 0, 0), length);
 
     const latest = useRef({ position, onPositionChange });
@@ -155,6 +156,11 @@ export const TimelinePlayhead = /* @__PURE__ */ forwardRef<HTMLInputElement, Tim
         ref={(node) => {
           if (node) {
             setStyle(node, "grid-row", lanes > 0 ? `1 / span ${lanes + 1}` : "");
+            // Where the track is drawn past the timeline's length, the slider
+            // still ends at the length: the playhead goes no further.
+            const shorter = extent > length && pixelsPerUnit > 0;
+            setStyle(node, "justify-self", shorter ? "start" : "");
+            setStyle(node, "inline-size", shorter ? `${length * pixelsPerUnit}px` : "");
           }
         }}
         className={cx("hm-timeline-playhead", classNames?.root, className)}
