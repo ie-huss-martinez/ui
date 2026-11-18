@@ -1,5 +1,50 @@
 # @hussmartinez/ui
 
+## 0.12.0
+
+### Minor Changes
+
+- [#88](https://github.com/ie-huss-martinez/ui/pull/88) [`a97298d`](https://github.com/ie-huss-martinez/ui/commit/a97298df700a77915cf694f2c4e5800eb96e503b) Thanks [@hussmartinez](https://github.com/hussmartinez)! - Clips on a `Timeline` can now have a start, so a track can have room between its clips.
+  
+  - `TimelineClip` gains `at`, the unit the clip starts on. Give it to every clip of a `TimelineClips`, in time order and without overlap, and each is placed at its start; give it to none, and they lie back to back, as before. A track warns in development when clips overlap, are out of order, or only some have `at`.
+  - The two kinds of track share a timeline, one per lane: a video lane back to back over audio lanes with positions, for instance.
+  - Every lane's clip edges are snap targets for the whole timeline, so a clip's edge snaps to another lane's clips.
+  - While an edge is dragged on a track with positions, the clip's other edge and its neighbours stay where they are.
+  - `Timeline` gains `extent`, for clips that run past `length`: the track is drawn that far, the playhead still ends at `length`, and a clip that passes it carries `data-hm-past-end`. `useTimelineScale()` gains `extent`, and `unitAt` and `visibleRange` now reach as far as it.
+
+- [#85](https://github.com/ie-huss-martinez/ui/pull/85) [`e04eeb9`](https://github.com/ie-huss-martinez/ui/commit/e04eeb995f0fe36b36d608475f8f4d481079867f) Thanks [@hussmartinez](https://github.com/hussmartinez)! - `Timeline` can now hold several lanes, for an editor with several tracks. A timeline without lanes works as before.
+  
+  - `TimelineLane` is a track: a named group with its own layers and its own `TimelineClips`, under one playhead. Lanes stack in the order you render them.
+  - `header` is the lane's controls, such as its name, Mute and Solo and a gain slider. The lane renders them as a toolbar, one Tab stop, in a column that stays in view while the timeline scrolls. Below 720 px of the timeline's width, each header sits above its lane.
+  - ↑ and ↓ on a clip go to the clip nearest in time on the next lane with clips; with Ctrl or ⌘, without selecting.
+  - **`selectedKeys` is the timeline's selection.** Give every lane's `TimelineClips` the same array: a plain selection replaces it on every lane, and adding, removing or extending keeps the other lanes' clips. `onMove` now reports every selected clip, on any lane, when the focused one is selected. With one clip track, nothing changes.
+  - A `TimelineLayer` written outside the lanes covers all of them, and `useTimelineLanes()` gives it the lanes' ids and the lane under a pointer.
+  - Give the timeline a maximum height and the lanes scroll under the playhead's slider.
+  
+  ```tsx
+  <Timeline label={t("timeline.label")} length={frames}>
+    <TimelinePlayhead … />
+    {tracks.map((track) => (
+      <TimelineLane key={track.key} id={track.key} label={t("track.label", track)} header={<TrackControls track={track} />}>
+        <TimelineLayer><Waveform track={track} /></TimelineLayer>
+        <TimelineClips label={t("track.clips", track)} clips={…} selectedKeys={selected} onSelectedKeysChange={setSelected} />
+      </TimelineLane>
+    ))}
+  </Timeline>
+  ```
+  
+  It adds three component tokens: `--hm-timeline-header-max-width`, `--hm-timeline-header-bg` and `--hm-timeline-lane-border-color`.
+
+- [#89](https://github.com/ie-huss-martinez/ui/pull/89) [`1b8343f`](https://github.com/ie-huss-martinez/ui/commit/1b8343faf4e996db0bc45cc0bb5b4bc2afbadad9) Thanks [@hussmartinez](https://github.com/hussmartinez)! - Clips on a `Timeline` can now be moved by dragging, and between lanes with the keyboard.
+  
+  - `onDrop(keys, { by, lane })`: with it, a clip is dragged with a mouse or a pen, along time and to the lane under the pointer. Its start or end snaps to the other clips, on any lane, and the playhead, unless Alt is held. It's reported once, on release; Escape cancels. A selected clip takes the rest of the timeline's selection with it. The timeline scrolls while a clip is held near either end of the view. On a touch screen a drag scrolls, and clips move with your buttons.
+  - `canDrop(keys, { by, lane })` is asked as a clip is dragged. Where it says no, the clip shows it, and letting go reports nothing.
+  - `onMoveLane(keys, direction)`: Alt+↑ and Alt+↓ (Option on macOS) move clips to the lane above or below. In a lane they're always taken, with or without `onMoveLane`, so the page doesn't scroll. Focus follows a clip to its new lane.
+  - `moveHandle`: `"clip"`, the default, or `"title"`, where only a clip's title is the handle and a press on the rest reaches the layer under it.
+  - Between clips, a press now reaches what's under the track, such as a layer, rather than the clip track.
+  
+  `TimelineClipDrop` is exported. It adds two component tokens: `--hm-timeline-clip-moving-shadow` and `--hm-timeline-clip-refused-border-color`.
+
 ## 0.11.0
 
 ### Minor Changes
