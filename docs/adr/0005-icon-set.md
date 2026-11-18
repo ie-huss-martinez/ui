@@ -69,7 +69,7 @@ The set has to fit the family's rules:
   - Icons take `className`. They have no `unstyled`, because they have no visual styles beyond size and colour.
 - **Size and direction come from CSS:**
   - `.hm-icon` sizes to `--hm-icon-size` in `hm.components`, and inside a button's icon slot it follows the slot;
-  - directional icons, such as undo, redo and arrows that point along the reading order, carry `data-hm-mirror` and flip under `:dir(rtl)`. Media icons, such as play and skip, don't mirror, as platform guidelines advise. *(Amended 2026-11-19: skip and the other icons that point along time do mirror; play still doesn't. See "Amendment: icons that point along time".)*
+  - directional icons, such as undo, redo and arrows that point along the reading order, carry `data-hm-mirror` and flip in right-to-left text. *(Amended 2026-11-19: the selector is `[dir="rtl"]` on an ancestor, not `:dir(rtl)`, which hosts' CSS minifiers lower for older browsers to `:lang()` values that never match a `dir="rtl"` page in another language. Rules for nested directions resolve up to three levels; `dir="auto"` isn't followed.)* Media icons, such as play and skip, don't mirror, as platform guidelines advise. *(Amended 2026-11-19: skip and the other icons that point along time do mirror; play still doesn't. See "Amendment: icons that point along time".)*
 - **Non-React rendering** isn't needed yet. If the custom elements of [sdk-core's element ADR, 0040](https://github.com/ie-huss-martinez/sdk-core/blob/main/docs/adr/0040-editor-element-base.md), need icons without React, the generator can also emit the node data, and a later record adds it.
 
 ### The first set

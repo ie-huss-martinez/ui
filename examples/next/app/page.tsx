@@ -78,6 +78,21 @@ export default function Page() {
           <NumberField min={1} max={99} defaultValue={1} />
         </Field>
         <VisuallyHidden>Only for screen readers</VisuallyHidden>
+        {/* A mirrored icon in nested directions, on a page whose lang isn't right to left. */}
+        <div dir="rtl" data-case="rtl">
+          <UndoIcon />
+          <div dir="ltr" data-case="rtl-ltr">
+            <UndoIcon />
+            <div dir="rtl" data-case="rtl-ltr-rtl">
+              <UndoIcon />
+            </div>
+          </div>
+        </div>
+        <div dir="ltr">
+          <div dir="rtl" data-case="ltr-rtl">
+            <UndoIcon />
+          </div>
+        </div>
         <Interactive />
       </main>
     </ThemeProvider>

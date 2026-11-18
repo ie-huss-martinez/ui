@@ -72,6 +72,22 @@ for (const app of apps) {
       }
     });
 
+    // Through the host's own CSS build: a minifier that lowers :dir(rtl) for
+    // older browsers turns it into :lang() values that never match a
+    // dir="rtl" page in English, and nothing mirrored (audio-sdk, 0.14.3).
+    test("mirrors icons in right-to-left text, at every level of nesting", async ({ page }) => {
+      await page.goto(app.url);
+      const transform = (name: string) =>
+        page
+          .locator(`[data-case="${name}"] > .hm-icon`)
+          .evaluate((icon) => getComputedStyle(icon).transform);
+      const mirrored = "matrix(-1, 0, 0, 1, 0, 0)";
+      expect(await transform("rtl")).toBe(mirrored);
+      expect(await transform("rtl-ltr")).toBe("none");
+      expect(await transform("rtl-ltr-rtl")).toBe(mirrored);
+      expect(await transform("ltr-rtl")).toBe(mirrored);
+    });
+
     test("hydrates without errors or warnings, and works afterwards", async ({ page }) => {
       const problems = watch(page, new URL(app.url).origin);
       await page.goto(app.url);
