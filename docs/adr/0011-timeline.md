@@ -165,7 +165,7 @@ The reviewer ruled on the four questions this record first left open, on 2026-11
 
 ## Proposed amendment: lanes, clips with a start, and moving a clip
 
-- **Status:** Proposed, 2026-11-18. Nothing in this section is built.
+- **Status:** Proposed, 2026-11-18, with its open decisions ruled in review the same day. Nothing in this section is built. Like the rest of this record, it stays Proposed until the manual checks.
 
 ### Why
 
@@ -286,14 +286,16 @@ Three pull requests, each raising the size budgets from its measurement:
 2. **Clips with a start:** `at`, positioned lanes next to back-to-back ones, `extent` and `data-hm-past-end`, and the trim preview on a positioned lane.
 3. **Moving a clip:** the drag, `onDrop` and `canDrop`, `moveHandle`, Alt+↑ and Alt+↓ with `onMoveLane`, and scrolling at the edges.
 
-### Open decisions
+### Decided in review
 
-1. **`selectedKeys` as the timeline's selection,** given to every lane, rather than a selection per lane or a new prop on `Timeline`. It needs no new API and one lane is unchanged, but an SDK that passed each lane only its own keys would lose the others on a toggle. **Recommended,** with that said in the README.
-2. **No Alt+Shift with an arrow,** against video-sdk's request. **Recommended:** the family's key table already rules it out.
-3. **Dragging a clip with a mouse or pen only.** The alternative is a long press on touch, which is slower to find and needs a hint. **Recommended** for now.
-4. **`moveHandle`,** with `"clip"` as the default. The alternative is a tool mode in audio-sdk, select or move, which `ui` needn't know about. **Recommended:** offer the handle, since a mode is one more thing to be in.
-5. **Headers above their lanes below 720 pixels, decided by `ui`.** The alternative is a prop the SDK sets. **Recommended:** it's the timeline's own width that matters, and both SDKs use that breakpoint.
-6. **`extent` for clips past `length`,** rather than letting `length` be the longest lane and adding a separate end for the playhead. **Recommended:** `length` keeps meaning what the playhead can reach.
+The reviewer ruled on the six questions this amendment first left open, on 2026-11-18.
+
+1. **`selectedKeys` is the timeline's selection,** given to every lane, rather than a selection per lane or a new prop on `Timeline`. It needs no new API and one lane is unchanged. An SDK that passed each lane only its own keys would lose the others on a toggle, so the README says to pass every lane the same array.
+2. **No Alt+Shift with an arrow,** which video-sdk asked for as a larger step: the family's key table rules it out.
+3. **A clip is dragged with a mouse or a pen, not by touch.** On a touch screen it moves with the required buttons, which is the single-pointer alternative WCAG 2.5.7 asks for.
+4. **`moveHandle`, with `"clip"` as the default.** The reviewer recommends `"title"` to audio-sdk, so that range selection works across clips; the choice is audio-sdk's.
+5. **Headers sit above their lanes below 720 pixels of the timeline's width,** by a container query in `ui`, with no prop.
+6. **`extent` draws clips past `length`,** and `length` keeps meaning what the playhead can reach.
 
 ### What it costs
 
