@@ -427,6 +427,7 @@ export interface SliderProps extends Omit<InputHTMLAttributes<HTMLInputElement>,
     readonly largeStep?: number | undefined;
     readonly max?: number | undefined;
     readonly min?: number | undefined;
+    readonly onValueCancel?: ((value: number) => void) | undefined;
     readonly onValueChange?: ((value: number) => void) | undefined;
     readonly onValueCommit?: ((value: number) => void) | undefined;
     readonly step?: number | undefined;

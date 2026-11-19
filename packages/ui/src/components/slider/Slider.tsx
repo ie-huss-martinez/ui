@@ -50,6 +50,13 @@ export interface SliderProps
    * was calls nothing.
    */
   readonly onValueCommit?: ((value: number) => void) | undefined;
+  /**
+   * Called when Escape cancels a gesture in progress, with the value it
+   * started from, which the slider goes back to through `onValueChange`.
+   * Nothing is committed for a cancelled gesture. Escape with no gesture in
+   * progress is left alone, so it still closes a containing dialog.
+   */
+  readonly onValueCancel?: ((value: number) => void) | undefined;
   /** Defaults to 0. */
   readonly min?: number | undefined;
   /** Defaults to 100. */
@@ -100,7 +107,9 @@ function snap(value: number, min: number, max: number, step: number): number {
  * `onValueChange` follows the value as it moves; `onValueCommit` is called
  * once when the gesture ends, for what should happen once, such as an undo
  * step: a drag let go, a key let go after one press or a held repeat, or
- * focus leaving first.
+ * focus leaving first. Escape during a gesture puts the value back where the
+ * gesture started and calls `onValueCancel` instead, with nothing committed;
+ * Escape with no gesture in progress is left to the page.
  *
  * Inside a `Toolbar`, the slider keeps the arrow keys, Home and End, so
  * they can't move focus past it: put it last in the toolbar. Tab still
@@ -129,6 +138,7 @@ export const Slider = /* @__PURE__ */ forwardRef<HTMLInputElement, SliderProps>(
     defaultValue,
     onValueChange,
     onValueCommit,
+    onValueCancel,
     min = 0,
     max = 100,
     step = 1,
@@ -168,15 +178,32 @@ export const Slider = /* @__PURE__ */ forwardRef<HTMLInputElement, SliderProps>(
   // ends on events, never on a timer, so a slow machine commits as often as
   // a fast one.
   const pending = useRef<number | null>(null);
+  // The value a gesture in progress started from, which Escape goes back to.
+  const origin = useRef<number | null>(null);
   // Step keys held down now. A held key repeats its keydown, and lets go once.
   const held = useRef(new Set<string>());
+  // Whether a pointer is down on the slider.
+  const pressed = useRef(false);
+  // After Escape, until the pointer and every key are let go: the rest of
+  // the gesture is ignored, so the thumb doesn't follow the pointer back,
+  // nor a held key start a new gesture as it repeats.
+  const cancelled = useRef(false);
   const commitRef = useRef(onValueCommit);
   commitRef.current = onValueCommit;
+  const cancelRef = useRef(onValueCancel);
+  cancelRef.current = onValueCancel;
   const commit = (): void => {
     const last = pending.current;
     pending.current = null;
+    origin.current = null;
     if (last !== null) {
       commitRef.current?.(last);
+    }
+  };
+  // Ends what's left of a cancelled gesture once nothing is held.
+  const settle = (): void => {
+    if (!pressed.current && held.current.size === 0) {
+      cancelled.current = false;
     }
   };
 
@@ -192,6 +219,28 @@ export const Slider = /* @__PURE__ */ forwardRef<HTMLInputElement, SliderProps>(
     onValueChange?.(snapped);
   };
 
+  // Escape during a gesture: back to where it started, with nothing
+  // committed. Returns whether there was a gesture to cancel.
+  const cancel = (): boolean => {
+    const start = origin.current;
+    if (start === null) {
+      return false;
+    }
+    origin.current = null;
+    pending.current = null;
+    cancelled.current = true;
+    if (start !== value) {
+      if (controlled === undefined) {
+        setUncontrolled(start);
+      }
+      onValueChange?.(start);
+    }
+    cancelRef.current?.(start);
+    return true;
+  };
+  const cancelLater = useRef(cancel);
+  cancelLater.current = cancel;
+
   // A pointer gesture ends when the pointer is let go, wherever it is by
   // then: the thumb can be dragged off the slider. The input's own `change`
   // event, which every engine fires on release and when assistive
@@ -199,6 +248,9 @@ export const Slider = /* @__PURE__ */ forwardRef<HTMLInputElement, SliderProps>(
   const input = useRef<HTMLInputElement | null>(null);
   const commitLater = useRef(commit);
   commitLater.current = commit;
+  // The listeners of a pointer gesture in progress, removed when it ends,
+  // or when the slider unmounts first, so none outlive it.
+  const stopListening = useRef<(() => void) | null>(null);
   useEffect(() => {
     const element = input.current;
     if (!element) {
@@ -206,22 +258,48 @@ export const Slider = /* @__PURE__ */ forwardRef<HTMLInputElement, SliderProps>(
     }
     const onCommit = (): void => commitLater.current();
     element.addEventListener("change", onCommit);
-    return () => element.removeEventListener("change", onCommit);
+    return () => {
+      element.removeEventListener("change", onCommit);
+      stopListening.current?.();
+    };
   }, []);
   const handlePointerDown = (event: PointerEvent<HTMLInputElement>): void => {
     onPointerDown?.(event);
-    const release = (): void => {
+    pressed.current = true;
+    origin.current ??= value;
+    // Escape is caught on the window while the pointer is down: not every
+    // engine focuses a range input when it's pressed.
+    const onEscape = (keyEvent: globalThis.KeyboardEvent): void => {
+      if (keyEvent.key === "Escape" && !keyEvent.defaultPrevented && cancelLater.current()) {
+        keyEvent.preventDefault();
+      }
+    };
+    const stop = (): void => {
       window.removeEventListener("pointerup", release, true);
       window.removeEventListener("pointercancel", release, true);
+      window.removeEventListener("keydown", onEscape, true);
+      if (stopListening.current === stop) {
+        stopListening.current = null;
+      }
+    };
+    const release = (): void => {
+      stop();
+      pressed.current = false;
+      settle();
       commitLater.current();
     };
+    // A press before the last was let go, as with a second pointer, replaces it.
+    stopListening.current?.();
+    stopListening.current = stop;
     window.addEventListener("pointerup", release, true);
     window.addEventListener("pointercancel", release, true);
+    window.addEventListener("keydown", onEscape, true);
   };
 
   const handleKeyUp = (event: KeyboardEvent<HTMLInputElement>): void => {
     onKeyUp?.(event);
     if (held.current.delete(event.key) && held.current.size === 0) {
+      settle();
       commit();
     }
   };
@@ -230,11 +308,15 @@ export const Slider = /* @__PURE__ */ forwardRef<HTMLInputElement, SliderProps>(
   const handleBlur = (event: FocusEvent<HTMLInputElement>): void => {
     onBlur?.(event);
     held.current.clear();
+    settle();
     commit();
   };
 
   // Pointer changes come from the native input.
   const handleChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    if (cancelled.current) {
+      return;
+    }
     change(event.currentTarget.valueAsNumber);
   };
 
@@ -244,6 +326,14 @@ export const Slider = /* @__PURE__ */ forwardRef<HTMLInputElement, SliderProps>(
     onKeyDown?.(event);
     // Alt and Meta combinations stay with the browser and the system.
     if (event.defaultPrevented || event.altKey || event.metaKey) {
+      return;
+    }
+    // Only a gesture in progress takes Escape; otherwise it goes on, to a
+    // containing dialog, say.
+    if (event.key === "Escape") {
+      if (cancel()) {
+        event.preventDefault();
+      }
       return;
     }
     const large = largeStep ?? Math.max(step, Math.round((max - min) / 10 / step) * step);
@@ -264,6 +354,10 @@ export const Slider = /* @__PURE__ */ forwardRef<HTMLInputElement, SliderProps>(
     }
     event.preventDefault();
     held.current.add(event.key);
+    if (cancelled.current) {
+      return;
+    }
+    origin.current ??= value;
     change(next);
   };
 
