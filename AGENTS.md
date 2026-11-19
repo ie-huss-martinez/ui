@@ -13,8 +13,8 @@ It publishes `@hussmartinez/ui`, the family's design system: design tokens, them
 ## Making changes
 
 - **Pull requests:** work on a branch and open one focused pull request per change. Never push to `main`; it is protected.
-- **One pull request at a time:** after opening a pull request, stop and report its link, a short summary and your `pnpm verify` result. Start the next change only once it's merged, from an up-to-date `main`.
-- **Never merge your own pull request:** a separate reviewer reads the full diff, runs `pnpm verify` independently for code changes, and squash-merges it. An agent that wrote a pull request never reviews or merges it. See [How pull requests are reviewed](CONTRIBUTING.md#how-pull-requests-are-reviewed).
+- **One pull request at a time:** after opening a pull request, stop and report its link, a short summary and its CI run. Start the next change only once it's merged, from an up-to-date `main`.
+- **Never merge your own pull request:** a separate reviewer reads the full diff and squash-merges it once CI is green. An agent that wrote a pull request never reviews or merges it. See [How pull requests are reviewed](CONTRIBUTING.md#how-pull-requests-are-reviewed).
 - **Pull request descriptions:** cover what changed, why, and how it was tested. They can be as detailed as useful, because they don't go into git history.
 - **Squash commits:** the merger writes the commit message on `main`. Its title is the pull request title plus `(#N)`, and its body is 2–6 lines of plain prose. See [How pull requests are merged](CONTRIBUTING.md#how-pull-requests-are-merged).
 - **Commits:** follow Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `build:`, `ci:`, `chore:`). The pull request title becomes the squash commit, so write it as a Conventional Commit too.
@@ -37,6 +37,7 @@ These follow from the standards; they're repeated here because they apply to alm
 ## Verifying changes
 
 - **Hooks:** they run automatically: linting and a secret scan on commit, commit message checks, and `pnpm verify:fast` on push. Never use `--no-verify`. If a hook is wrong or too slow, fix it in its own pull request.
-- **Before marking a pull request ready,** run the full `pnpm verify` locally and report its results in the description.
-- **CI:** it runs `pnpm verify` on Chromium, Firefox and WebKit, checks the pull request title, and checks for a changeset when the published package changes. All three must pass before merging. CI is the final gate, not a substitute for local verification.
+- **CI is the gate** (Huss's decision of 2026-11-19: the repository is public, so GitHub Actions costs nothing). It runs `pnpm verify` on Chromium, Firefox and WebKit, checks the pull request title, and checks for a changeset when the published package changes. All three must pass before merging, and the reviewer merges on green CI without running `pnpm verify` again.
+- **Before pushing,** the pre-push hook's checks are enough: don't run the full `pnpm verify` before opening a pull request. Report the CI run in the description.
+- **Local runs are for diagnosis and baselines:** reproducing a failure, `pnpm test:visual:update` for screenshots, and a focused run such as `pnpm test:browser:all <file>` while working.
 - **Never weaken a check to make it pass.** That includes lint rules, size budgets, the API report, accessibility and contrast checks, and visual baselines. Fix the cause, or propose the change in its own pull request with an ADR if the rule itself is wrong.
