@@ -1,5 +1,11 @@
 # @hussmartinez/ui
 
+## 0.15.0
+
+### Minor Changes
+
+- [#117](https://github.com/ie-huss-martinez/ui/pull/117) [`5d7986f`](https://github.com/ie-huss-martinez/ui/commit/5d7986fe6095c1bc3c0f987cadd927faa568c97f) Thanks [@hussmartinez](https://github.com/hussmartinez)! - `Slider` cancels a gesture with Escape. During a drag, or while a key is held, Escape puts the value back where the gesture started, through `onValueChange`, commits nothing, and calls the new `onValueCancel(value)` with that value. The rest of the gesture is ignored: the thumb doesn't follow the pointer back, and a held key doesn't start again until it's let go. Escape with no gesture in progress is left alone, so it still closes a containing `Dialog`; Escape that cancels a gesture doesn't. If you tracked cancellation yourself to keep one undo step per gesture, you can use `onValueCancel` instead.
+
 ## 0.14.4
 
 ### Patch Changes
