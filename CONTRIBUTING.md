@@ -67,7 +67,7 @@ The git hooks run on their own: a secret scan and lint of staged files on commit
 - **Changeset:** add one if the pull request changes what the package publishes. See [Changesets](#changesets).
 - **Checks:** `verify`, `changeset` and `pr-title` must pass, and the branch must be up to date with `main`.
 
-CI is the gate (Huss's decision of 2026-11-19: the repository is public, so GitHub Actions costs nothing). Before pushing, the pre-push hook's checks are enough; you don't need the full `pnpm verify` locally. Mark the pull request ready once CI is green. Run tests locally to diagnose a failure, to update visual baselines with `pnpm test:visual:update`, or for a focused check while you work.
+CI is the gate (Huss's decision of 2026-11-19: the repository is public, so GitHub Actions costs nothing). Before pushing, the pre-push hook's checks are enough; you don't need the full `pnpm verify` locally. Mark the pull request ready once CI is green and every CodeRabbit review thread on it is fixed or answered, then resolved; CodeRabbit reviews pull requests in this public repository, and its walkthrough comment needs nothing. Run tests locally to diagnose a failure, to update visual baselines with `pnpm test:visual:update`, or for a focused check while you work.
 
 ## How pull requests are reviewed
 
@@ -75,6 +75,7 @@ CI is the gate (Huss's decision of 2026-11-19: the repository is public, so GitH
 
 - **The diff:** the reviewer reads the full diff and checks it against `STANDARDS.md` and the ADRs.
 - **The checks:** CI must be green. The reviewer merges on green CI and doesn't run `pnpm verify` again locally; a local run is for diagnosing a failure.
+- **CodeRabbit:** every CodeRabbit review thread is fixed or answered, and resolved, before the merge.
 - **Not "almost right":** if the scope, title or quality isn't right, the pull request is fixed before it's merged.
 
 **Coding agents** open one pull request at a time. After opening it, they stop and report the link, a short summary and its CI run. They start the next change only after the pull request is merged, from an up-to-date `main`. An agent never reviews or merges a pull request it wrote; author and reviewer are always different sessions.
