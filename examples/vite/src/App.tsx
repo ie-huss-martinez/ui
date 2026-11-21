@@ -5,6 +5,7 @@ import {
   Dialog,
   Field,
   FileDropZone,
+  Heading,
   HiddenIcon,
   IconButton,
   MoveDownIcon,
@@ -284,8 +285,11 @@ export function App() {
           <ToolbarSeparator />
           <Button variant="primary">Export</Button>
         </Toolbar>
-        <Spinner label="Loading pages" />
-        <ProgressBar value={40} label="Exporting" />
+        <section aria-labelledby="status-title">
+          <Heading id="status-title">Status</Heading>
+          <Spinner label="Loading pages" />
+          <ProgressBar value={40} label="Exporting" />
+        </section>
         <Field label="Volume" description="For playback only">
           <Slider defaultValue={40} />
         </Field>

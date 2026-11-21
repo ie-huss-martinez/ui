@@ -44,6 +44,16 @@ export type {
 } from "./components/file-drop-zone/FileDropZone.js";
 export { FileDropZone } from "./components/file-drop-zone/FileDropZone.js";
 export type {
+  HeadingLevelProviderProps,
+  HeadingPart,
+  HeadingProps,
+} from "./components/heading/Heading.js";
+export {
+  Heading,
+  HeadingLevelProvider,
+  useHeadingLevel,
+} from "./components/heading/Heading.js";
+export type {
   UiMessages,
   UiMessagesProviderProps,
 } from "./components/messages/UiMessagesProvider.js";
@@ -127,6 +137,8 @@ export type { TooltipPart, TooltipProps } from "./components/tooltip/Tooltip.js"
 export { Tooltip } from "./components/tooltip/Tooltip.js";
 export type { VisuallyHiddenProps } from "./components/visually-hidden/VisuallyHidden.js";
 export { VisuallyHidden } from "./components/visually-hidden/VisuallyHidden.js";
+// The type an SDK's `headingLevel` prop takes, beside the component that uses it.
+export type { HeadingLevel } from "./heading/heading-level.js";
 export type { IconComponent, IconProps } from "./icons/create-icon.js";
 export type { IconName } from "./icons/icon-name.generated.js";
 // One module-level function per icon, so bundlers keep only those imported

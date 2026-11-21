@@ -619,6 +619,7 @@ export type ComponentTokenName =
   | "dialog-small-width"
   | "dialog-width"
   | "dialog-large-width"
+  | "heading-font-size"
   | "spinner-size"
   | "spinner-thickness"
   | "spinner-color"
@@ -789,6 +790,7 @@ const component = {
   "dialog-small-width": { fallback: "surface-width-small" },
   "dialog-width": { fallback: "surface-width-medium" },
   "dialog-large-width": { fallback: "surface-width-large" },
+  "heading-font-size": { fallback: "font-size-title" },
   "spinner-size": { fallback: "icon-size" },
   "spinner-thickness": { fallback: "focus-ring-width" },
   "spinner-color": { fallback: "color-accent" },

@@ -244,6 +244,10 @@ describe("what applications ship", () => {
       'import { SegmentedControl } from "./react.js"; export const app = SegmentedControl;',
       { includes: ["hm-segmented-control"], excludes: ["hm-button", ROVING_FOCUS] },
     );
+    await expectShipped('import { Heading } from "./react.js"; export const app = Heading;', {
+      includes: ["hm-heading"],
+      excludes: ["hm-dialog", "hm-button", "hm-icon", ROVING_FOCUS],
+    });
   });
 
   it("drops everything from the root entry that isn't imported", async () => {
@@ -259,12 +263,13 @@ const WARNINGS = [
   "IconButton needs a label",
   "below WCAG 2.2 AA contrast",
   "copies of @hussmartinez/ui",
+  "isn't a heading level",
   "[@hussmartinez/ui]",
 ];
 
 describe("development warnings", () => {
   const app =
-    'import { IconButton, ThemeProvider } from "./react.js"; import { createTheme } from "./index.js"; export const app = [IconButton, ThemeProvider, createTheme];';
+    'import { Heading, IconButton, ThemeProvider } from "./react.js"; import { createTheme, toHeadingLevel } from "./index.js"; export const app = [Heading, IconButton, ThemeProvider, createTheme, toHeadingLevel];';
 
   it("stay in development bundles", async () => {
     await expectShipped(app, { includes: WARNINGS, excludes: [] }, "development");

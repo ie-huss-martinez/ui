@@ -166,7 +166,8 @@ Every component follows one contract ([ADR 0003](https://github.com/ie-huss-mart
 | `Toolbar`, `ToolbarGroup`, `ToolbarSeparator` | A row or column of controls with one Tab stop: arrow keys move between items, Home and End jump to the ends. `label` is required on the toolbar and its groups |
 | `SegmentedControl` | A few mutually exclusive choices side by side. A radio group: arrow keys move and select. Inside a `Toolbar`, it joins the toolbar's arrow keys, and Space or Enter selects |
 | `FileDropZone` | Choosing or dropping files, such as a document to open. Its button opens the system's file picker and is the keyboard and screen reader path; the zone around it takes drops from a pointer, with `data-hm-dragging` while files are over it. `accept` and `multiple` are checked by name, type and count, and folders are turned away; `onFiles` gets the rest, and `onFilesRejected` the others, with a reason. It never reads a file or shows its name, and while it's on the page, a file dropped beside it doesn't open in place of the page; `preventStrayDrops={false}` leaves that to you |
-| `Dialog` | A modal dialog on the native `<dialog>`: focus moves in and is trapped, the page behind is inert, Escape asks to close through `onOpenChange(false)`, and focus returns to the opener. Controlled by `open`; labelled by `title`. Long content scrolls in the body, which becomes keyboard-scrollable when it overflows |
+| `Dialog` | A modal dialog on the native `<dialog>`: focus moves in and is trapped, the page behind is inert, Escape asks to close through `onOpenChange(false)`, and focus returns to the opener. Controlled by `open`; labelled by `title`. Its title is always an `<h2>`, and a `Heading` in its content is an `<h3>`. Long content scrolls in the body, which becomes keyboard-scrollable when it overflows |
+| `Heading`, `HeadingLevelProvider` and `useHeadingLevel` | The visible title of a section, as a native `<h2>` to `<h6>`, styled as a title through `--hm-heading-font-size`. Its level is `level`, or the closest `HeadingLevelProvider`'s, or 2. Give it an `id` and label its section with `aria-labelledby`. See [Heading levels](#heading-levels) |
 | `Spinner` | Loading for an unknown time. An indeterminate progress bar to assistive technology, named by `label`; its size follows `--hm-spinner-size` |
 | `ProgressBar` | Progress for a known amount, on the native `<progress>`: `value`, `max`, `label`, `valueText`. Indeterminate without `value`. It needs no inline styles, so it works under a strict Content Security Policy |
 | `Field` | A visible `label`, an optional `description` and an optional `error`, wired to one control: the label names it, the description and error describe it, and an error marks it `aria-invalid`. `Slider`, `NumberField`, `TextField`, `TextArea` and `ColorField` connect themselves; for a native `<input>` or `<select>`, pass a function and spread the props it receives |
@@ -252,6 +253,29 @@ The `@hussmartinez` SDKs build their editors from ui's components, so an applica
   ```
 
 - **Key collisions:** keep a test that your own keys don't overlap `sdkCoreMessages` or `uiMessages`, so a later release can't silently replace your text. ui's keys use component names as prefixes, such as `dialog.` and `fileDropZone.`.
+- **Heading levels:** an editor that renders headings takes `headingLevel?: HeadingLevel`, as below.
+
+### Heading levels
+
+An editor sits in a page whose outline belongs to the host, so it never picks its own heading levels ([sdk-core ADR 0058](https://github.com/ie-huss-martinez/sdk-core/blob/main/docs/adr/0058-heading-levels-in-editors.md)). An editor that renders headings takes `headingLevel?: HeadingLevel`, from `2` to `6` and `2` by default, on its React component as `headingLevel` and on its element as the `heading-level` attribute. It re-exports the `HeadingLevel` type from its React entry.
+
+- **`toHeadingLevel(value)`,** from the root entry, turns a host's value into a level: a number, or an attribute's text such as `"3"`. Anything else is `2`, with a development warning.
+- **`HeadingLevelProvider`** passes the level to the editor's own parts, and each `Heading` inside renders at it. **`nestedHeadingLevel(level)`,** from the root entry, gives the level one step down for nested headings, and never passes 6.
+- **Dialogs keep their own outline:** a `Dialog`'s title is always an `<h2>`, and headings in its content start at 3, whatever the page's level.
+
+```tsx
+import { nestedHeadingLevel, toHeadingLevel } from "@hussmartinez/ui";
+import { Heading, HeadingLevelProvider } from "@hussmartinez/ui/react";
+
+<HeadingLevelProvider level={toHeadingLevel(headingLevel)}>
+  <section aria-labelledby={titleId}>
+    <Heading id={titleId}>{messages.t("inspector.title")}</Heading>
+    <HeadingLevelProvider level={nestedHeadingLevel(toHeadingLevel(headingLevel))}>
+      {details}
+    </HeadingLevelProvider>
+  </section>
+</HeadingLevelProvider>
+```
 
 ## Errors and messages
 

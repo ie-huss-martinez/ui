@@ -56,6 +56,7 @@ for (const app of apps) {
         'role="listbox"',
         'class="hm-timeline-lane"',
         'aria-pressed="false"',
+        '<h2 id="status-title" class="hm-heading">Status</h2>',
         'class="hm-spinner"',
         "<progress",
         'class="hm-slider"',

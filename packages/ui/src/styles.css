@@ -23,6 +23,7 @@
 @import "./components/tooltip/tooltip.css";
 @import "./components/segmented-control/segmented-control.css";
 @import "./components/dialog/dialog.css";
+@import "./components/heading/heading.css";
 @import "./components/field/field.css";
 @import "./components/file-drop-zone/file-drop-zone.css";
 @import "./components/number-field/number-field.css";

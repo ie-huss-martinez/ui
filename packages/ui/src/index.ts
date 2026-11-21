@@ -10,6 +10,8 @@
 
 export type { UiErrorCode } from "./errors/ui-error.js";
 export { UiError } from "./errors/ui-error.js";
+export type { HeadingLevel } from "./heading/heading-level.js";
+export { nestedHeadingLevel, toHeadingLevel } from "./heading/heading-level.js";
 // Types only: headless tool definitions name their icons (sdk-core ADR 0030).
 export type { IconName } from "./icons/icon-name.generated.js";
 export { uiMessages } from "./messages/en.js";
