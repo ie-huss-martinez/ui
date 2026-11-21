@@ -1,5 +1,11 @@
 # @hussmartinez/ui
 
+## 0.16.3
+
+### Patch Changes
+
+- [#135](https://github.com/ie-huss-martinez/ui/pull/135) [`d647327`](https://github.com/ie-huss-martinez/ui/commit/d647327bec5ab3e5bb6f6a169dd3b0d19c9bae2e) Thanks [@hussmartinez](https://github.com/hussmartinez)! - The package no longer ships `dist/ui.d.ts`, a copy of the `./react` entry's types that no entry point exported. Nothing imports it through `exports`, so nothing changes for you; a deep import of `@hussmartinez/ui/dist/ui.d.ts`, which `exports` never allowed, no longer resolves.
+
 ## 0.16.2
 
 ### Patch Changes
