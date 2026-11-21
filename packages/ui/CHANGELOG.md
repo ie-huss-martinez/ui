@@ -1,5 +1,11 @@
 # @hussmartinez/ui
 
+## 0.16.2
+
+### Patch Changes
+
+- [#132](https://github.com/ie-huss-martinez/ui/pull/132) [`2176cb4`](https://github.com/ie-huss-martinez/ui/commit/2176cb4fb412133c694ad8b64a6a37e3b17e305e) Thanks [@hussmartinez](https://github.com/hussmartinez)! - `Timeline` keeps its callbacks and settings in refs updated during the commit, with `useLatest`, instead of writing them while it renders, which React's purity rules forbid (sdk-core ADR 0063). Nothing changes in what it renders or reports: `onMaxZoomChange`, `onVisibleRangeChange`, snapping and keyboard movement between lanes behave as before. A render that React throws away, as concurrent rendering can, no longer leaves a callback or setting from that render behind.
+
 ## 0.16.1
 
 ### Patch Changes
