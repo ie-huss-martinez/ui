@@ -8,5 +8,9 @@
     "reportFolder": "<projectFolder>/api/",
     "reportTempFolder": "<projectFolder>/temp/react/"
   },
-  "dtsRollup": { "enabled": true, "publicTrimmedFilePath": "<projectFolder>/dist/react.d.ts" }
+  "dtsRollup": {
+    "enabled": true,
+    "publicTrimmedFilePath": "<projectFolder>/dist/react.d.ts",
+    "untrimmedFilePath": ""
+  }
 }
