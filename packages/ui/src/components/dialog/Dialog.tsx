@@ -6,7 +6,6 @@ import {
   type ReactNode,
   type RefObject,
   type SyntheticEvent,
-  useCallback,
   useEffect,
   useId,
   useRef,
@@ -14,6 +13,7 @@ import {
 import { IconButton } from "../button/IconButton.js";
 import { HeadingLevelContext } from "../heading/Heading.js";
 import { useUiText } from "../messages/UiMessagesProvider.js";
+import { useMergedRef } from "../shared/merged-ref.js";
 import { cx, type StyleProps, unstyledAttribute } from "../shared/style-props.js";
 import { CloseIcon } from "./CloseIcon.js";
 
@@ -53,22 +53,6 @@ export interface DialogProps
   readonly initialFocus?: RefObject<HTMLElement | null> | undefined;
   /** Defaults to `medium`. */
   readonly size?: "small" | "medium" | "large" | undefined;
-}
-
-function useMergedRef<T>(forwarded: ForwardedRef<T>) {
-  const local = useRef<T | null>(null);
-  const setRef = useCallback(
-    (node: T | null) => {
-      local.current = node;
-      if (typeof forwarded === "function") {
-        forwarded(node);
-      } else if (forwarded) {
-        forwarded.current = node;
-      }
-    },
-    [forwarded],
-  );
-  return [local, setRef] as const;
 }
 
 /**

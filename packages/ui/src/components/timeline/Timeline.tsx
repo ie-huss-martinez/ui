@@ -706,6 +706,24 @@ export interface TimelineLanes {
 }
 
 /**
+ * The id of the lane in `track` under `clientY`, if one is. It reads the
+ * track's element when it's called, from a handler, never while rendering.
+ */
+function laneUnder(
+  track: RefObject<HTMLDivElement | null> | undefined,
+  clientY: number,
+): string | undefined {
+  for (const element of track?.current?.querySelectorAll<HTMLElement>(":scope > [data-hm-lane]") ??
+    []) {
+    const box = element.getBoundingClientRect();
+    if (clientY >= box.top && clientY < box.bottom) {
+      return element.dataset["hmLane"];
+    }
+  }
+  return undefined;
+}
+
+/**
  * The lanes of the {@link Timeline} around a layer or a part.
  *
  * @public
@@ -717,17 +735,7 @@ export function useTimelineLanes(): TimelineLanes {
   return useMemo(
     () => ({
       lanes: lanes ?? [],
-      laneAt: (clientY) => {
-        for (const element of track?.current?.querySelectorAll<HTMLElement>(
-          ":scope > [data-hm-lane]",
-        ) ?? []) {
-          const box = element.getBoundingClientRect();
-          if (clientY >= box.top && clientY < box.bottom) {
-            return element.dataset["hmLane"];
-          }
-        }
-        return undefined;
-      },
+      laneAt: (clientY: number) => laneUnder(track, clientY),
     }),
     [lanes, track],
   );

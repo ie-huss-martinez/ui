@@ -1,22 +1,16 @@
-import preset from "@hussmartinez/sdk-config/lint-staged";
-import { ESLint } from "eslint";
+import preset, { isReactSource } from "@hussmartinez/sdk-config/lint-staged";
 
+/**
+ * The family's preset, with React's lint (sdk-core ADR 0063) as
+ * `withReactLint` adds it: after Biome, over the whole of the source when a
+ * staged file is React source, naming no file. `withReactLint` runs
+ * `hm-lint-react` on `src` at the repository's root, and ui's source is in
+ * `packages/ui/src`, so this runs `pnpm lint:react`, which says where.
+ */
 export default {
   ...preset,
-  // React's lint for published source (sdk-core ADR 0063). Given a file its
-  // configuration ignores, such as a test, a story or a fixture, it reports
-  // that the file is ignored and fails, so ESLint's own answer, from the same
-  // eslint.config.js, filters those out first.
-  "packages/ui/src/**/*.{ts,tsx}": async (files) => {
-    const eslint = new ESLint();
-    const linted = [];
-    for (const file of files) {
-      if (!(await eslint.isPathIgnored(file))) {
-        linted.push(file);
-      }
-    }
-    return linted.length > 0
-      ? [`hm-lint-react ${linted.map((file) => JSON.stringify(file)).join(" ")}`]
-      : [];
-  },
+  "!(*.css)": [
+    ...preset["!(*.css)"],
+    (files) => (files.some(isReactSource) ? ["pnpm lint:react"] : []),
+  ],
 };
