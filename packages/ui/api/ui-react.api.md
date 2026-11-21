@@ -819,6 +819,11 @@ export function useAnnounce(): Announce;
 export function useHeadingLevel(): HeadingLevel;
 
 // @public
+export function useLatest<T>(value: T): {
+    readonly current: T;
+};
+
+// @public
 export function usePlatform(): Platform;
 
 // @public
