@@ -55,6 +55,9 @@ export default defineConfig(({ mode }) => {
             // Refuses to start outside the browser test image and CI (sdk-core
             // ADR 0049): on a host, tests fail at random.
             globalSetup: ["@hussmartinez/sdk-config/testing/require-image"],
+            // The family's guard against a Firefox crash (ui#61), before any
+            // test runs in the page. It does nothing in other browsers.
+            setupFiles: ["@hussmartinez/sdk-config/testing/firefox-labelled-by/setup"],
             browser: {
               enabled: true,
               headless: true,
@@ -80,6 +83,9 @@ export default defineConfig(({ mode }) => {
             // is stricter: it has no CI exception, so baselines are only
             // ever written in the image.
             globalSetup: ["@hussmartinez/sdk-config/testing/require-image"],
+            // The family's guard against a Firefox crash (ui#61), before any
+            // test runs in the page. It does nothing in other browsers.
+            setupFiles: ["@hussmartinez/sdk-config/testing/firefox-labelled-by/setup"],
             browser: {
               enabled: true,
               headless: true,
