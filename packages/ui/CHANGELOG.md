@@ -1,5 +1,11 @@
 # @hussmartinez/ui
 
+## 0.16.4
+
+### Patch Changes
+
+- [#137](https://github.com/ie-huss-martinez/ui/pull/137) [`4c0a2eb`](https://github.com/ie-huss-martinez/ui/commit/4c0a2eb1f98e5c1ba8c16b2a71c0bc638c357b14) Thanks [@hussmartinez](https://github.com/hussmartinez)! - `Dialog` and `Toolbar` share one helper to merge their own ref with the one you forward, and `useTimelineLanes` reads the track only when `laneAt` is called. Nothing changes in what they render or how refs reach you: a ref you pass to `Dialog` or `Toolbar` still receives the element, whether it's an object or a callback. With these, every rule of React's lint passes on ui's source (sdk-core ADR 0063).
+
 ## 0.16.3
 
 ### Patch Changes
