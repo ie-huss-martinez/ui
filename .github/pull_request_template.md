@@ -14,11 +14,12 @@ on main. See CONTRIBUTING.md for how pull requests are merged.
 
 ## How it was tested
 
-<!-- Link the CI run, and say what you checked by hand or ran locally to diagnose. -->
+<!-- What you ran locally, what you left to CI (link the run), and anything you checked by hand. -->
 
 ## Checklist
 
-- [ ] CI is green, and its run is linked above.
+- [ ] The git hooks ran (no `--no-verify`), and CI is green on the current head.
+- [ ] Every review thread is fixed or answered, and resolved.
 - [ ] Tests cover the change, next to the code.
 - [ ] Exported APIs are typed and have TSDoc, and the API report is updated where the package has one.
 - [ ] New dependencies are justified above.
