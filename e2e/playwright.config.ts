@@ -10,6 +10,9 @@ const ci = Boolean(process.env["CI"]);
  */
 export default defineConfig({
   testDir: "tests",
+  // Refuses to start outside the browser test image and CI (sdk-core ADR
+  // 0049): on a host, tests fail at random.
+  globalSetup: "@hussmartinez/sdk-config/testing/require-image",
   forbidOnly: ci,
   retries: 0,
   reporter: ci ? "line" : "list",

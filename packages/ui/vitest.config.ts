@@ -46,6 +46,9 @@ export default defineConfig(({ mode }) => {
           test: {
             name: "browser",
             include: ["src/**/*.browser.test.{ts,tsx}"],
+            // Refuses to start outside the browser test image and CI (sdk-core
+            // ADR 0049): on a host, tests fail at random.
+            globalSetup: ["@hussmartinez/sdk-config/testing/require-image"],
             browser: {
               enabled: true,
               headless: true,
