@@ -4,10 +4,9 @@ import {
   type HTMLAttributes,
   type KeyboardEvent,
   type ReactElement,
-  useCallback,
   useEffect,
-  useRef,
 } from "react";
+import { useMergedRef } from "../shared/merged-ref.js";
 import { cx, type StyleProps, unstyledAttribute } from "../shared/style-props.js";
 import { moveFocus, syncTabStop } from "./roving-focus.js";
 import { ToolbarContext } from "./toolbar-context.js";
@@ -24,22 +23,6 @@ export interface ToolbarProps
   readonly label: string;
   /** Defaults to `horizontal`. Arrow keys follow it. */
   readonly orientation?: "horizontal" | "vertical" | undefined;
-}
-
-function useMergedRef<T>(forwarded: React.ForwardedRef<T>) {
-  const local = useRef<T | null>(null);
-  const setRef = useCallback(
-    (node: T | null) => {
-      local.current = node;
-      if (typeof forwarded === "function") {
-        forwarded(node);
-      } else if (forwarded) {
-        forwarded.current = node;
-      }
-    },
-    [forwarded],
-  );
-  return [local, setRef] as const;
 }
 
 /**
