@@ -1,6 +1,15 @@
+import { browserTestImageProblem } from "@hussmartinez/sdk-config/testing/require-image";
 import { defineConfig, devices } from "@playwright/test";
 
 const ci = Boolean(process.env["CI"]);
+
+/**
+ * Playwright starts the web servers before the global setup, so a host run
+ * would build and wait for both examples before the guard refused it. Where
+ * the guard will refuse, there are no servers to start, and it does so at
+ * once. The configuration itself never throws, so editors still load it.
+ */
+const canRunBrowsers = browserTestImageProblem() === undefined;
 
 /**
  * End-to-end server-rendering tests (ADR 0007), against production builds of
@@ -21,18 +30,20 @@ export default defineConfig({
     ? (["Desktop Chrome", "Desktop Firefox", "Desktop Safari"] as const)
     : (["Desktop Chrome"] as const)
   ).map((device) => ({ name: device, use: { ...devices[device] } })),
-  webServer: [
-    {
-      command: "pnpm --filter @hussmartinez/ui-example-next start",
-      url: "http://localhost:3100",
-      reuseExistingServer: !ci,
-      timeout: 60_000,
-    },
-    {
-      command: "pnpm --filter @hussmartinez/ui-example-vite start",
-      url: "http://localhost:3200",
-      reuseExistingServer: !ci,
-      timeout: 60_000,
-    },
-  ],
+  webServer: canRunBrowsers
+    ? [
+        {
+          command: "pnpm --filter @hussmartinez/ui-example-next start",
+          url: "http://localhost:3100",
+          reuseExistingServer: !ci,
+          timeout: 60_000,
+        },
+        {
+          command: "pnpm --filter @hussmartinez/ui-example-vite start",
+          url: "http://localhost:3200",
+          reuseExistingServer: !ci,
+          timeout: 60_000,
+        },
+      ]
+    : [],
 });
