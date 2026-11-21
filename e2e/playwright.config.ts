@@ -1,3 +1,4 @@
+import { fontLaunchEnv } from "@hussmartinez/sdk-config/testing/fonts";
 import { browserTestImageProblem } from "@hussmartinez/sdk-config/testing/require-image";
 import { defineConfig, devices } from "@playwright/test";
 
@@ -25,7 +26,13 @@ export default defineConfig({
   forbidOnly: ci,
   retries: 0,
   reporter: ci ? "line" : "list",
-  use: { trace: "retain-on-failure" },
+  use: {
+    trace: "retain-on-failure",
+    // In the image, text renders in Liberation, with a real bold face
+    // (sdk-core ADR 0062). The whole environment: Playwright replaces the
+    // browser's rather than adding to it.
+    launchOptions: { env: fontLaunchEnv() },
+  },
   projects: (ci
     ? (["Desktop Chrome", "Desktop Firefox", "Desktop Safari"] as const)
     : (["Desktop Chrome"] as const)

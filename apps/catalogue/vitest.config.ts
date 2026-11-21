@@ -1,3 +1,4 @@
+import { fontLaunchEnv } from "@hussmartinez/sdk-config/testing/fonts";
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
@@ -14,6 +15,14 @@ if (process.argv.includes("visual") && process.env["HM_VISUAL_CONTAINER"] !== "1
     "Visual tests run only in the pinned Playwright image. Use pnpm test:visual, or pnpm test:visual:update to update the baselines.",
   );
 }
+
+/**
+ * Every browser here renders text in Liberation in the image, with a real
+ * bold face (sdk-core ADR 0062), so stories' layout and the screenshots see
+ * the same text. The whole environment: Playwright replaces the browser's
+ * rather than adding to it.
+ */
+const provider = () => playwright({ launchOptions: { env: fontLaunchEnv() } });
 
 export default defineConfig(({ mode }) => {
   // Stories run on Chromium locally, and on all three engines in CI or with
@@ -49,7 +58,7 @@ export default defineConfig(({ mode }) => {
             browser: {
               enabled: true,
               headless: true,
-              provider: playwright(),
+              provider: provider(),
               instances: browsers.map((browser) => ({ browser })),
             },
           },
@@ -74,7 +83,7 @@ export default defineConfig(({ mode }) => {
             browser: {
               enabled: true,
               headless: true,
-              provider: playwright(),
+              provider: provider(),
               instances: [{ browser: "chromium" }],
               viewport: { width: 1024, height: 768 },
               expect: {
