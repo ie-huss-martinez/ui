@@ -1,3 +1,4 @@
+import { fontLaunchEnv } from "@hussmartinez/sdk-config/testing/fonts";
 import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
 import type { BrowserCommand } from "vitest/node";
@@ -52,7 +53,10 @@ export default defineConfig(({ mode }) => {
             browser: {
               enabled: true,
               headless: true,
-              provider: playwright(),
+              // In the image, text renders in Liberation, with a real bold face
+              // (sdk-core ADR 0062). The whole environment: Playwright replaces
+              // the browser's rather than adding to it.
+              provider: playwright({ launchOptions: { env: fontLaunchEnv() } }),
               instances: browsers.map((browser) => ({ browser })),
               commands: { setColorScheme, setReducedMotion },
             },
