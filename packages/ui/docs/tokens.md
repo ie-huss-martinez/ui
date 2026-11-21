@@ -199,6 +199,7 @@ Fine-grained overrides for one component. `ui` never declares them: each compone
 | `--hm-dialog-small-width` | `--hm-surface-width-small` | Width of small dialogs. |
 | `--hm-dialog-width` | `--hm-surface-width-medium` | Width of dialogs. |
 | `--hm-dialog-large-width` | `--hm-surface-width-large` | Width of large dialogs. |
+| `--hm-heading-font-size` | `--hm-font-size-title` | Size of headings from the Heading component. |
 | `--hm-spinner-size` | `--hm-icon-size` | Size of spinners. |
 | `--hm-spinner-thickness` | `--hm-focus-ring-width` | Thickness of a spinner's ring. |
 | `--hm-spinner-color` | `--hm-color-accent` | Colour of a spinner's moving arc. |

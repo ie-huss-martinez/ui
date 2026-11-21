@@ -244,6 +244,7 @@ export const tokenDescriptions: Readonly<Record<TokenName, string>> = {
   "dialog-small-width": "Width of small dialogs.",
   "dialog-width": "Width of dialogs.",
   "dialog-large-width": "Width of large dialogs.",
+  "heading-font-size": "Size of headings from the Heading component.",
   "spinner-size": "Size of spinners.",
   "spinner-thickness": "Thickness of a spinner's ring.",
   "spinner-color": "Colour of a spinner's moving arc.",

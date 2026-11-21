@@ -134,11 +134,12 @@ export default [
   entryBudget({
     name: "React entry (./react), with the shared code it loads",
     entry: "dist/react.js",
-    // 24.5 kB; 24.04 kB with the announcer's same-frame queue, which only
-    // the editor scenario imports. Every component counts here, though no
+    // 25 kB; 24.71 kB with Heading and HeadingLevelProvider (sdk-core ADR
+    // 0058), which only the Dialog and editor scenarios import, through
+    // Dialog's context for its content's headings. Every component counts here, though no
     // application ships them all, so a component's pull request raises it as
     // expected growth; review reads the import scenarios below to judge it.
-    limit: "24.5 kB",
+    limit: "25 kB",
   }),
   entryBudget({
     name: "Stylesheet (./styles.css)",

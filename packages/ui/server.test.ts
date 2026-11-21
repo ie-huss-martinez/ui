@@ -178,6 +178,8 @@ describe("the built package on a server", () => {
       },
       FileDropZone: { accept: ".pdf", onFiles: noop, children: "Open a document" },
       Dialog: { open: true, onOpenChange: noop, title: "Title", children: "Body" },
+      Heading: { children: "Selection" },
+      HeadingLevelProvider: { level: 3, children: "Selection" },
       Spinner: {},
       ProgressBar: { value: 40 },
       NumberField: { label: "Copies", locale: "de", defaultValue: 1234.5, name: "copies" },

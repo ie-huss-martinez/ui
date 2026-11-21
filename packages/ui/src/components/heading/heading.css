@@ -1,0 +1,11 @@
+@layer hm.components {
+  .hm-heading {
+    margin: 0;
+  }
+
+  .hm-heading:not([data-hm-unstyled]) {
+    font-size: var(--hm-heading-font-size, var(--hm-font-size-title));
+    font-weight: var(--hm-font-weight-strong);
+    line-height: var(--hm-line-height-tight);
+  }
+}

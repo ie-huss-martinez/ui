@@ -12,6 +12,7 @@ import {
   useRef,
 } from "react";
 import { IconButton } from "../button/IconButton.js";
+import { HeadingLevelContext } from "../heading/Heading.js";
 import { useUiText } from "../messages/UiMessagesProvider.js";
 import { cx, type StyleProps, unstyledAttribute } from "../shared/style-props.js";
 import { CloseIcon } from "./CloseIcon.js";
@@ -38,7 +39,7 @@ export interface DialogProps
    * button. Keep `open` true to refuse, for example while saving.
    */
   readonly onOpenChange: (open: boolean) => void;
-  /** The heading, and the dialog's accessible name. */
+  /** The heading, an `<h2>`, and the dialog's accessible name. */
   readonly title: ReactNode;
   /** A short description under the title, read when the dialog opens. */
   readonly description?: ReactNode;
@@ -81,6 +82,9 @@ function useMergedRef<T>(forwarded: ForwardedRef<T>) {
  *   first focusable element, and back to what was focused before when it
  *   closes.
  * - **Server rendering:** renders closed, and opens after hydration.
+ * - **Headings:** the title is always an `<h2>`, because a modal dialog is
+ *   its own outline (sdk-core ADR 0058). A {@link Heading} in the content
+ *   or footer is an `<h3>` unless it sets its own level.
  *
  * @example
  * ```tsx
@@ -229,12 +233,15 @@ export const Dialog = /* @__PURE__ */ forwardRef(function Dialog(
           {description}
         </p>
       )}
-      <div ref={body} className={cx("hm-dialog-body", classNames?.body)}>
-        {children}
-      </div>
-      {footer == null ? null : (
-        <div className={cx("hm-dialog-footer", classNames?.footer)}>{footer}</div>
-      )}
+      {/* The title is an h2, so headings in the content start at 3 (sdk-core ADR 0058). */}
+      <HeadingLevelContext.Provider value={3}>
+        <div ref={body} className={cx("hm-dialog-body", classNames?.body)}>
+          {children}
+        </div>
+        {footer == null ? null : (
+          <div className={cx("hm-dialog-footer", classNames?.footer)}>{footer}</div>
+        )}
+      </HeadingLevelContext.Provider>
     </dialog>
   );
 });

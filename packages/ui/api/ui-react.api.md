@@ -212,6 +212,30 @@ export function FlipHorizontalIcon(props: IconProps): ReactElement;
 export function FlipVerticalIcon(props: IconProps): ReactElement;
 
 // @public
+export const Heading: ForwardRefExoticComponent<HeadingProps & RefAttributes<HTMLHeadingElement>>;
+
+// @public
+export type HeadingLevel = 2 | 3 | 4 | 5 | 6;
+
+// @public
+export function HeadingLevelProvider(input: HeadingLevelProviderProps): ReactElement;
+
+// @public
+export interface HeadingLevelProviderProps {
+    // (undocumented)
+    readonly children?: ReactNode;
+    readonly level: HeadingLevel;
+}
+
+// @public
+export type HeadingPart = "root";
+
+// @public
+export interface HeadingProps extends Omit<HTMLAttributes<HTMLHeadingElement>, "className">, StyleProps<HeadingPart> {
+    readonly level?: HeadingLevel | undefined;
+}
+
+// @public
 export function HiddenIcon(props: IconProps): ReactElement;
 
 // @public
@@ -790,6 +814,9 @@ export function UploadIcon(props: IconProps): ReactElement;
 
 // @public
 export function useAnnounce(): Announce;
+
+// @public
+export function useHeadingLevel(): HeadingLevel;
 
 // @public
 export function usePlatform(): Platform;
