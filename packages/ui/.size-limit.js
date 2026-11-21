@@ -13,24 +13,16 @@
  *
  * Every budget is raised by the pull request that needs it, to its
  * measurement rounded up to the next 0.5 kB, with a table of what moved.
+ *
+ * The checks come from `@hussmartinez/sdk-config/size`, the family's
+ * helpers for these budgets (sdk-core ADRs 0055 and 0056).
  */
 
 import { readFileSync } from "node:fs";
+import { entryBudget, exportNames, importBudget } from "@hussmartinez/sdk-config/size";
 
 /** The React entry's exports, read from the build so no list goes stale. */
-const EXPORTS = (() => {
-  const code = readFileSync(new URL("dist/react.js", import.meta.url), "utf8");
-  const list = code.match(/export \{([^}]*)\};\s*(?:\/\/#.*)?$/);
-  if (!list) {
-    throw new Error("dist/react.js has no export list: run the build first.");
-  }
-  return list[1].split(",").map((name) =>
-    name
-      .trim()
-      .split(/\s+as\s+/)
-      .pop(),
-  );
-})();
+const EXPORTS = exportNames("dist/react.js");
 
 /**
  * Every icon component, from the generated list of icon names: `zoom-in` is
@@ -86,13 +78,13 @@ const EDITOR = [
   "ChevronLeftIcon",
 ];
 
-/** What a host's bundler leaves out: React and sdk-core are the host's own. */
-const IGNORE = ["react", "react-dom", "@hussmartinez/sdk-core"];
-
 /**
  * One import from the React entry, as an application's production build
- * bundles it: an ES module, with `process.env.NODE_ENV` set, so development
- * checks drop out as they do for hosts.
+ * bundles it. `importBudget` leaves out React and the family's packages,
+ * which are the host's own. It leaves esbuild's format and
+ * `process.env.NODE_ENV` at size-limit's defaults, so this sets them as
+ * sdk-core ADR 0056 describes the measure: an ES module, with development
+ * checks dropped as they are for hosts.
  */
 function scenario(name, names, limit) {
   // A name the parse missed would shrink the scenario and still pass, so fail
@@ -102,27 +94,24 @@ function scenario(name, names, limit) {
     throw new Error(`Size scenario "${name}": dist/react.js doesn't export ${missing.join(", ")}.`);
   }
   return {
-    name: `Import: ${name}`,
-    path: "dist/react.js",
-    import: `{ ${names.join(", ")} }`,
-    ignore: IGNORE,
-    brotli: true,
+    ...importBudget({
+      name: `Import: ${name}`,
+      entry: "dist/react.js",
+      imports: `{ ${names.join(", ")} }`,
+      limit,
+    }),
     modifyEsbuildConfig: (config) => ({
       ...config,
       format: "esm",
       define: { "process.env.NODE_ENV": '"production"' },
     }),
-    limit,
   };
 }
 
 export default [
-  {
+  entryBudget({
     name: "Server-safe entry (.), with the shared code it loads",
-    path: ["dist/index.js", "dist/shared/*.js"],
-    brotli: true,
-    // The files as built, not bundled again.
-    disablePlugins: ["@size-limit/esbuild"],
+    entry: "dist/index.js",
     // 12 kB. It measures 11.6 kB with the button's component tokens. Each
     // module compressed on its own, in kB:
     //   theme/css-value.ts      2.6  the injection allowlist and type grammars
@@ -138,32 +127,26 @@ export default [
     // An application using only the built-in themes ships none of this: see
     // the ThemeProvider tree-shaking test in build.test.ts.
     limit: "12 kB",
-  },
-  {
+  }),
+  entryBudget({
     name: "React entry (./react), with the shared code it loads",
-    path: ["dist/react.js", "dist/shared/*.js"],
-    brotli: true,
-    // The files as built, not bundled again.
-    disablePlugins: ["@size-limit/esbuild"],
+    entry: "dist/react.js",
     // 24.5 kB; 24.04 kB with the announcer's same-frame queue, which only
     // the editor scenario imports. Every component counts here, though no
     // application ships them all, so a component's pull request raises it as
     // expected growth; review reads the import scenarios below to judge it.
     limit: "24.5 kB",
-  },
-  {
+  }),
+  entryBudget({
     name: "Stylesheet (./styles.css)",
-    path: "dist/styles.css",
-    brotli: true,
-    // The files as built, not bundled again.
-    disablePlugins: ["@size-limit/esbuild"],
+    entry: "dist/styles.css",
     // 9.5 kB. It measures 9.05 kB with lanes that let presses through;
     // the lanes before them took it from 8.5 kB to 9 kB. Raised as the React
     // entry's is: to the measurement, rounded up to the next 0.5 kB. Every
     // application loads the whole stylesheet, so this one is the cost of
     // every component.
     limit: "9.5 kB",
-  },
+  }),
   // 1 kB; 0.73 kB. The floor: a leak into every component shows here first.
   scenario("Button", ["Button"], "1 kB"),
   // 1.5 kB; 1.05 kB. The floor for a toolbar's buttons.
