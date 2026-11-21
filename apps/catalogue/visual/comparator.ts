@@ -13,6 +13,9 @@
  *   anti-aliasing, such as the edge of a thin line that moved.
  *
  * `comparator.test.ts` fails if one of them is loosened.
+ *
+ * This is stricter than the family's `threshold: 0.0038` (sdk-core ADR
+ * 0054) on purpose: ui ADR 0002 says why, and what would change it.
  */
 export const strictComparator = {
   comparatorName: "pixelmatch",

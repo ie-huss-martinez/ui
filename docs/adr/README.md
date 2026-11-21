@@ -9,7 +9,7 @@ Use [`template.md`](template.md) for new records. Name files `NNNN-short-title.m
 | # | Decision | Status |
 |---|---|---|
 | [0001](0001-design-tokens-and-theme-scoping.md) | Design tokens, theme layers and theme scoping | Accepted |
-| [0002](0002-visual-regression-in-a-pinned-container.md) | Visual regression in a pinned container | Accepted; image location superseded by [0004](0004-one-browser-test-image.md), runner replaced by [0007](0007-browser-tests-in-the-pinned-image.md) |
+| [0002](0002-visual-regression-in-a-pinned-container.md) | Visual regression in a pinned container | Accepted; image location superseded by [0004](0004-one-browser-test-image.md), runner replaced by [0007](0007-browser-tests-in-the-pinned-image.md); amended to stay stricter than sdk-core ADR 0054 |
 | [0003](0003-component-contract.md) | The component contract | Accepted; "`ui` ships no icon set" superseded by [0005](0005-icon-set.md) |
 | [0004](0004-one-browser-test-image.md) | One browser test image, in one place | Accepted; its unit tests replaced by [0007](0007-browser-tests-in-the-pinned-image.md) |
 | [0005](0005-icon-set.md) | An icon set generated from Lucide | Accepted; amended to allow a few glyphs ui draws itself, where Lucide has none, and to mirror icons that point along time |
