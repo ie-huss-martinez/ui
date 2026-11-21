@@ -3,6 +3,7 @@
 - **Status:** Accepted; the image's location is superseded by [0004](0004-one-browser-test-image.md), and the container runner is replaced by [0007](0007-browser-tests-in-the-pinned-image.md)
 - **Date:** 2026-11-10
 - **Amended:** 2026-11-17. "Pixel for pixel" wasn't true: the comparison allowed no differing pixel, but left pixelmatch's colour threshold and its anti-aliasing detection at their defaults, so a faint change passed. The timeline's background moved by ten pixels and no test failed. Both are now off, in `apps/catalogue/visual/comparator.ts`, with a test that fails if either is loosened. No baseline changed: all 523 already matched exactly
+- **Amended:** 2026-11-21. ui stays stricter than the family's tolerance in [sdk-core ADR 0054](https://github.com/ie-huss-martinez/sdk-core/blob/main/docs/adr/0054-visual-comparison-tolerance.md). See [Stricter than the family's tolerance](#stricter-than-the-familys-tolerance)
 
 ## Context
 
@@ -16,6 +17,15 @@
 - **Every story in light, dark and Poster, in both densities,** compared pixel for pixel. Each render is also checked with axe, so contrast holds in every theme, not just the default one. A guard test fails if the a11y add-on stops failing stories with violations.
 - **The image moves with Playwright.** A unit test fails when the image's Playwright version differs from the installed package, or when the image isn't pinned by digest. Dependabot proposes image updates, with the same seven-day cooldown as everything else.
 - **Isolation.** The container gets its own `node_modules` and pnpm store volumes, so host binaries never mix with the container's, and the files it writes are handed back to the calling user.
+
+### Stricter than the family's tolerance
+
+[sdk-core ADR 0054](https://github.com/ie-huss-martinez/sdk-core/blob/main/docs/adr/0054-visual-comparison-tolerance.md) gives `sdk-config`'s Playwright preset `threshold: 0.0038`, so that a pixel one level (1/255) off on every channel in the same direction isn't counted; 24 of the 26 ways to move the channels by at most one level pass. It rejected `threshold: 0` for the family because some baselines re-captured on an unchanged page differ from themselves. ui doesn't use that preset, and keeps its own comparator: `threshold: 0`, `allowedMismatchedPixelRatio: 0` and `includeAA: true`.
+
+- **ui's comparison can be stricter, and is.** ui's visual tests use Vitest's `toMatchScreenshot`, whose pixelmatch options are all configurable. Playwright's comparison, which the preset wraps, always leaves out the pixels pixelmatch takes for anti-aliasing. ADR 0054 accepts that as a limit no threshold fixes. ui compares those pixels too, so a change confined to the edges of text or a rounded corner fails here. Taking 0.0038 would loosen the colour check and gain nothing on edges.
+- **The noise ADR 0054 measured hasn't reached ui's checks.** Its history lists four pairs of ui baselines that differ on a single pixel each. They're commits that re-captured baselines, not failed runs. Since the strict comparator landed on 2026-11-17, ui's CI has run `verify` 154 times to completion: 152 passed, one was cancelled, and the one failure was a WebKit timing test (fixed in #108), not a screenshot. No visual test has failed on an unchanged page.
+- **What would change this:** a visual test that fails on a page that didn't change, with the diff measured as rendering noise rather than a change. Then ui adopts `threshold: 0.0038`, in a new record that supersedes this section and says what was measured. It doesn't change by loosening one state, or by retrying.
+- **What stays the same:** `comparator.test.ts` still fails if any of the three options is loosened, and baselines are still written only in the pinned image.
 
 ## Alternatives considered
 
