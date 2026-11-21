@@ -43,6 +43,9 @@ export default defineConfig(({ mode }) => {
           plugins: [storybookTest({ configDir: ".storybook" })],
           test: {
             name: "storybook",
+            // Refuses to start outside the browser test image and CI (sdk-core
+            // ADR 0049): on a host, tests fail at random.
+            globalSetup: ["@hussmartinez/sdk-config/testing/require-image"],
             browser: {
               enabled: true,
               headless: true,
@@ -64,6 +67,10 @@ export default defineConfig(({ mode }) => {
           test: {
             name: "visual",
             include: ["visual/**/*.visual.test.tsx"],
+            // Like every browser project. The check at the top of this file
+            // is stricter: it has no CI exception, so baselines are only
+            // ever written in the image.
+            globalSetup: ["@hussmartinez/sdk-config/testing/require-image"],
             browser: {
               enabled: true,
               headless: true,
