@@ -45,7 +45,11 @@ catalog:
   playwright: 1.65.1
   publint: ^0.3.25
   react: ^19.3.0
+  # The oldest React ui supports (its peer range is >=18.3), exactly, under
+  # another name: tests that must hold on it run against these.
+  react-18: npm:react@18.3.1
   react-dom: ^19.3.0
+  react-dom-18: npm:react-dom@18.3.1
   secretlint: ^13.1.0
   size-limit: ^14.3.0
   storybook: ^10.6.7
