@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { unreachableDeclarations } from "./check-packed-types.ts";
+import { unreachableDeclarations } from "./check-packed-types.js";
 
 const manifest = {
   exports: {
