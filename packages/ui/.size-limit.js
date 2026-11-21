@@ -84,10 +84,9 @@ const EDITOR = [
 /**
  * One import from the React entry, as an application's production build
  * bundles it. `importBudget` leaves out React and the family's packages,
- * which are the host's own. It leaves esbuild's format and
- * `process.env.NODE_ENV` at size-limit's defaults, so this sets them as
- * sdk-core ADR 0056 describes the measure: an ES module, with development
- * checks dropped as they are for hosts.
+ * which are the host's own, bundles an ES module with development checks
+ * dropped, and counts only the imported names the bundle uses (sdk-core
+ * ADR 0056).
  */
 function scenario(name, names, limit) {
   // A name the parse missed would shrink the scenario and still pass, so fail
@@ -96,19 +95,12 @@ function scenario(name, names, limit) {
   if (missing.length > 0) {
     throw new Error(`Size scenario "${name}": dist/react.js doesn't export ${missing.join(", ")}.`);
   }
-  return {
-    ...importBudget({
-      name: `Import: ${name}`,
-      entry: "dist/react.js",
-      imports: `{ ${names.join(", ")} }`,
-      limit,
-    }),
-    modifyEsbuildConfig: (config) => ({
-      ...config,
-      format: "esm",
-      define: { "process.env.NODE_ENV": '"production"' },
-    }),
-  };
+  return importBudget({
+    name: `Import: ${name}`,
+    entry: "dist/react.js",
+    imports: `{ ${names.join(", ")} }`,
+    limit,
+  });
 }
 
 export default [
@@ -151,10 +143,11 @@ export default [
     // every component.
     limit: "9.5 kB",
   }),
-  // A floor: 0.8 kB; 0.73 kB. A leak into every component shows here first.
-  scenario("the floor, Button", ["Button"], "0.8 kB"),
-  // A floor: 1.1 kB; 1.05 kB. The floor for a toolbar's buttons.
-  scenario("the floor, IconButton with one icon", ["IconButton", "UndoIcon"], "1.1 kB"),
+  // A floor: 0.6 kB; 0.56 kB, counting only the React names it uses
+  // (sdk-config 0.12.1). A leak into every component shows here first.
+  scenario("the floor, Button", ["Button"], "0.6 kB"),
+  // A floor: 0.9 kB; 0.88 kB. The floor for a toolbar's buttons.
+  scenario("the floor, IconButton with one icon", ["IconButton", "UndoIcon"], "0.9 kB"),
   // 2 kB; 1.86 kB.
   scenario("Dialog", ["Dialog"], "2 kB"),
   // 3 kB; 2.51 kB.
