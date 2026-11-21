@@ -14,6 +14,7 @@ import {
 } from "react";
 import { warnInDevelopment } from "../../internal/development.js";
 import { checkSingleCopy } from "../../internal/single-copy.js";
+import { useLatest } from "../../react/use-latest.js";
 import { cx, type StyleProps, unstyledAttribute } from "../shared/style-props.js";
 import { setStyle } from "./set-style.js";
 
@@ -297,6 +298,8 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
   const [headerWidth, setHeaderWidth] = useState(0);
   const [trail, setTrail] = useState(0);
   const [beside, setBeside] = useState(true);
+  // The lanes in their order, for the ref callbacks and handlers below.
+  const order = useLatest(lanes);
 
   // Measured and sized when React commits, through ref callbacks, so the
   // first frame painted is already sized. A ref callback runs only in a
@@ -338,8 +341,7 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
     setTrail(after);
     setStyle(element, "padding-inline-start", column > 0 ? `${column + after}px` : "");
   };
-  const remeasure = useRef(measure);
-  remeasure.current = measure;
+  const remeasure = useLatest(measure);
   // Watches the viewport, and each lane's header, whose content sets its width.
   const resized = useRef<ResizeObserver | null>(null);
   useEffect(() => {
@@ -367,7 +369,7 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
       cancelAnimationFrame(frame);
       observer.disconnect();
     };
-  }, []);
+  }, [remeasure]);
 
   const fit = extent > 0 && room > 0 ? room / extent : 0;
   // Never closer than one unit to maxPixelsPerUnit, nor a track too wide to
@@ -376,13 +378,12 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
   const pixelsPerUnit = Math.min(Math.max(fit * zoom, fit), closest);
   const maxZoom = fit > 0 ? closest / fit : 1;
 
-  const notifyMaxZoom = useRef(onMaxZoomChange);
-  notifyMaxZoom.current = onMaxZoomChange;
+  const notifyMaxZoom = useLatest(onMaxZoomChange);
   useEffect(() => {
     if (fit > 0) {
       notifyMaxZoom.current?.(maxZoom);
     }
-  }, [fit, maxZoom]);
+  }, [fit, maxZoom, notifyMaxZoom]);
 
   // Sizes go through the CSSOM: a style attribute would be blocked by a
   // strict Content Security Policy when rendered on a server.
@@ -390,14 +391,12 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
     setStyle(element, "inline-size", pixelsPerUnit > 0 ? `${extent * pixelsPerUnit}px` : "");
   };
 
-  const headerColumn = useRef(headerWidth);
-  headerColumn.current = headerWidth;
+  const headerColumn = useLatest(headerWidth);
+  const settings = useLatest({ snapping, snapTargets });
 
-  const settings = useRef({ snapping, snapTargets });
-  settings.current = { snapping, snapTargets };
-  const snapExceptRef = useRef<(unit: number, except: readonly number[]) => number>((unit) => unit);
-
-  const scale = useMemo<TimelineScale>(() => {
+  // The scale, and its snap with exceptions, which only the timeline's own
+  // parts use, through the context.
+  const { scale, snap } = useMemo(() => {
     const snap = (unit: number, except: readonly number[] = []): number => {
       if (!settings.current.snapping || pixelsPerUnit <= 0) {
         return unit;
@@ -411,8 +410,7 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
       );
       return snapTo(unit, valid, Math.round(SNAP_PIXELS / pixelsPerUnit));
     };
-    snapExceptRef.current = snap;
-    return {
+    const scale: TimelineScale = {
       length,
       extent,
       pixelsPerUnit,
@@ -445,7 +443,9 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
         };
       },
     };
-  }, [length, extent, pixelsPerUnit]);
+    return { scale, snap };
+  }, [length, extent, pixelsPerUnit, settings, headerColumn]);
+  const latestSnap = useLatest(snap);
 
   const addTargets = useCallback((read: () => readonly number[]) => {
     targets.current.add(read);
@@ -454,8 +454,7 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
     };
   }, []);
 
-  const notifyRange = useRef(onVisibleRangeChange);
-  notifyRange.current = onVisibleRangeChange;
+  const notifyRange = useLatest(onVisibleRangeChange);
   const lastRange = useRef("");
   const reportRange = useCallback((): void => {
     const range = scale.visibleRange();
@@ -464,32 +463,36 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
       lastRange.current = key;
       notifyRange.current?.(range);
     }
-  }, [scale]);
+  }, [scale, notifyRange]);
   // After a zoom, a resize or a change of length; scrolling reports itself.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: room changes the range without changing the scale's identity when the zoom is capped.
+  // room is listed on purpose: it changes the range without changing the
+  // scale's identity when the zoom is capped.
   useEffect(reportRange, [reportRange, room]);
 
-  const setLane = useCallback<TimelineContextValue["setLane"]>((id, lane) => {
-    const before = laneParts.current.get(id);
-    if (lane) {
-      if (before?.element === lane.element && before.toolbar === lane.toolbar) {
-        return;
+  const setLane = useCallback<TimelineContextValue["setLane"]>(
+    (id, lane) => {
+      const before = laneParts.current.get(id);
+      if (lane) {
+        if (before?.element === lane.element && before.toolbar === lane.toolbar) {
+          return;
+        }
+        laneParts.current.set(id, lane);
+        if (lane.toolbar) {
+          resized.current?.observe(lane.toolbar);
+        }
+      } else if (before) {
+        laneParts.current.delete(id);
+        if (before.toolbar) {
+          resized.current?.unobserve(before.toolbar);
+        }
       }
-      laneParts.current.set(id, lane);
-      if (lane.toolbar) {
-        resized.current?.observe(lane.toolbar);
+      // The lanes changed without the timeline rendering: measure them now.
+      if (viewport.current) {
+        remeasure.current(viewport.current);
       }
-    } else if (before) {
-      laneParts.current.delete(id);
-      if (before.toolbar) {
-        resized.current?.unobserve(before.toolbar);
-      }
-    }
-    // The lanes changed without the timeline rendering: measure them now.
-    if (viewport.current) {
-      remeasure.current(viewport.current);
-    }
-  }, []);
+    },
+    [remeasure],
+  );
 
   const setLaneClips = useCallback<TimelineContextValue["setLaneClips"]>((id, clips) => {
     if (clips) {
@@ -499,18 +502,19 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
     }
   }, []);
 
-  const order = useRef(lanes);
-  order.current = lanes;
-  const nextLaneClips = useCallback<TimelineContextValue["nextLaneClips"]>((id, direction) => {
-    const ids = order.current;
-    for (let at = ids.indexOf(id) + direction; at >= 0 && at < ids.length; at += direction) {
-      const clips = laneClips.current.get(ids[at] as string);
-      if (clips?.any()) {
-        return clips;
+  const nextLaneClips = useCallback<TimelineContextValue["nextLaneClips"]>(
+    (id, direction) => {
+      const ids = order.current;
+      for (let at = ids.indexOf(id) + direction; at >= 0 && at < ids.length; at += direction) {
+        const clips = laneClips.current.get(ids[at] as string);
+        if (clips?.any()) {
+          return clips;
+        }
       }
-    }
-    return undefined;
-  }, []);
+      return undefined;
+    },
+    [order],
+  );
 
   const focusOnAnotherLane = useCallback<TimelineContextValue["focusOnAnotherLane"]>(
     (from, key) => {
@@ -524,8 +528,8 @@ export const Timeline = /* @__PURE__ */ forwardRef<HTMLElement, TimelineProps>(f
     [],
   );
   const snapExcept = useCallback<TimelineContextValue["snapExcept"]>(
-    (unit, except) => snapExceptRef.current(unit, except),
-    [],
+    (unit, except) => latestSnap.current(unit, except),
+    [latestSnap],
   );
 
   const context = useMemo<TimelineContextValue>(
