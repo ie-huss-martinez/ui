@@ -14,6 +14,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
+import ts from "typescript";
 
 /** Every string in an `exports` map, or in a top-level `types`, that names a declaration. */
 function declaredEntries(manifest: { exports?: unknown; types?: unknown }): string[] {
@@ -34,15 +35,18 @@ function declaredEntries(manifest: { exports?: unknown; types?: unknown }): stri
   return found;
 }
 
-/** The relative files a declaration refers to: imports, re-exports, `import()` types and references. */
+/**
+ * The relative files a declaration refers to, as the compiler reads them:
+ * imports, re-exports and `import()` types, and the `/// <reference path>`
+ * directives at the top of the file. A directive after the first statement
+ * is only a comment.
+ */
 function references(text: string): string[] {
-  const specifiers = [
-    ...text.matchAll(/\bfrom\s+["'](\.{1,2}\/[^"']+)["']/g),
-    ...text.matchAll(/\bimport\s*\(\s*["'](\.{1,2}\/[^"']+)["']\s*\)/g),
-    ...text.matchAll(/\bimport\s+["'](\.{1,2}\/[^"']+)["']/g),
-    ...text.matchAll(/\/\/\/\s*<reference\s+path=["']([^"']+)["']/g),
+  const { importedFiles, referencedFiles } = ts.preProcessFile(text, true, true);
+  return [
+    ...importedFiles.map((file) => file.fileName).filter((name) => /^\.{1,2}\//.test(name)),
+    ...referencedFiles.map((file) => file.fileName),
   ];
-  return specifiers.map(([, specifier]) => specifier as string);
 }
 
 /** The declaration files a relative specifier can mean, from the file that uses it. */
@@ -108,11 +112,13 @@ if (import.meta.main) {
       process.stderr.write(
         `The tarball holds type declarations that no entry in package.json's exports reaches:\n${stray.map((path) => `  ${path}`).join("\n")}\nStop the build emitting them, or leave them out of "files".\n`,
       );
-      process.exit(1);
+      // Not process.exit(): the temporary folder is removed below first.
+      process.exitCode = 1;
+    } else {
+      process.stdout.write(
+        `Every packed declaration is reached from exports (${files.filter((file) => file.path.endsWith(".d.ts")).length} files).\n`,
+      );
     }
-    process.stdout.write(
-      `Every packed declaration is reached from exports (${files.filter((file) => file.path.endsWith(".d.ts")).length} files).\n`,
-    );
   } finally {
     rmSync(destination, { recursive: true, force: true });
   }

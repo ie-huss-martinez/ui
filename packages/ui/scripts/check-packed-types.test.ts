@@ -29,7 +29,7 @@ describe("unreachableDeclarations", () => {
     expect(
       check({
         "dist/index.d.ts":
-          'export * from "./shared/a.js";\n/// <reference path="./globals.d.ts" />',
+          '/// <reference path="./globals.d.ts" />\nexport * from "./shared/a.js";',
         "dist/react.d.ts":
           'import type { B } from "./shared/b";\nexport type C = import("./shared/c.js").C;',
         "dist/shared/a.d.ts": 'export { D } from "../deep/index.js";',
@@ -40,6 +40,16 @@ describe("unreachableDeclarations", () => {
         "dist/orphan.d.ts": 'export * from "./shared/a.js";',
       }),
     ).toEqual(["dist/orphan.d.ts"]);
+  });
+
+  it("doesn't follow a reference directive after the first statement, which is only a comment", () => {
+    expect(
+      check({
+        "dist/index.d.ts": 'export declare const a: 1;\n/// <reference path="./late.d.ts" />',
+        "dist/react.d.ts": "",
+        "dist/late.d.ts": "",
+      }),
+    ).toEqual(["dist/late.d.ts"]);
   });
 
   it("starts from a top-level types field too, and ignores packages' own imports", () => {
