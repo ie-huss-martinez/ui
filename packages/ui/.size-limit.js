@@ -13,6 +13,9 @@
  *
  * Every budget is raised by the pull request that needs it, to its
  * measurement rounded up to the next 0.5 kB, with a table of what moved.
+ * The floors are tighter (sdk-core ADR 0056): their measurement rounded up
+ * to the next 0.1 kB, never raised, and the table shows them every time:
+ * their names start with "the floor", which `size:table` looks for.
  *
  * The checks come from `@hussmartinez/sdk-config/size`, the family's
  * helpers for these budgets (sdk-core ADRs 0055 and 0056).
@@ -147,10 +150,10 @@ export default [
     // every component.
     limit: "9.5 kB",
   }),
-  // 1 kB; 0.73 kB. The floor: a leak into every component shows here first.
-  scenario("Button", ["Button"], "1 kB"),
-  // 1.5 kB; 1.05 kB. The floor for a toolbar's buttons.
-  scenario("IconButton with one icon", ["IconButton", "UndoIcon"], "1.5 kB"),
+  // A floor: 0.8 kB; 0.73 kB. A leak into every component shows here first.
+  scenario("the floor, Button", ["Button"], "0.8 kB"),
+  // A floor: 1.1 kB; 1.05 kB. The floor for a toolbar's buttons.
+  scenario("the floor, IconButton with one icon", ["IconButton", "UndoIcon"], "1.1 kB"),
   // 2 kB; 1.86 kB.
   scenario("Dialog", ["Dialog"], "2 kB"),
   // 3 kB; 2.51 kB.
