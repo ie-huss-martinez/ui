@@ -38,7 +38,7 @@ Commit updated baselines with the change that caused them, and look at the image
 
 **End-to-end tests** (`pnpm test:e2e`) start production builds of the [Next.js](examples/next) and [Vite](examples/vite) examples, so they need `pnpm build` first; `pnpm verify` runs them in order. Add a component to both examples when it's added to the package.
 
-The git hooks run on their own: a secret scan and lint of staged files on commit, a Conventional Commits check of each message, and `pnpm verify:fast` on push. Don't bypass them with `--no-verify`. If a hook is wrong or too slow, fix it in its own pull request.
+The git hooks run on their own: a secret scan, a hidden-character check and lint of staged files on commit, a Conventional Commits check of each message, and `pnpm verify:fast` on push. Don't bypass them with `--no-verify`. If a hook is wrong or too slow, fix it in its own pull request.
 
 **The hooks are the local bar, and CI is the merge gate** ([sdk-core ADR 0053](https://github.com/ie-huss-martinez/sdk-core/blob/main/docs/adr/0053-ci-is-the-merge-gate.md)). You don't need to run the full `pnpm verify` before opening a pull request: CI runs it on every push, on all three browser engines. Run it, or part of it, to diagnose a failure, to reproduce one from CI, to update visual baselines, or for a focused check while you work.
 

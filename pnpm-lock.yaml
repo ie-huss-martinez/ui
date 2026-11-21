@@ -183,8 +183,8 @@ catalogs:
       specifier: ^21.2.4
       version: 21.2.4
     '@hussmartinez/sdk-config':
-      specifier: ^0.9.0
-      version: 0.9.0
+      specifier: ^0.11.2
+      version: 0.11.2
     '@hussmartinez/sdk-core':
       specifier: ^0.4.1
       version: 0.4.1
@@ -301,7 +301,7 @@ importers:
         version: 21.2.4(conventional-commits-parser@7.1.4)(typescript@6.0.3)
       '@hussmartinez/sdk-config':
         specifier: 'catalog:'
-        version: 0.9.0(@biomejs/biome@2.6.6)(@commitlint/cli@21.2.4(conventional-commits-parser@7.1.4)(typescript@6.0.3))(@microsoft/api-extractor@7.60.1(@types/node@24.19.2))(@playwright/test@1.65.1)(@vitest/browser-playwright@5.1.0)(ajv@8.20.0)(dependency-cruiser@18.7.2)(lint-staged@17.6.0)(secretlint@13.1.0(supports-color@10.2.2))(stylelint@18.0.0)(typescript@6.0.3)(vitest@5.1.0)
+        version: 0.11.2(@biomejs/biome@2.6.6)(@commitlint/cli@21.2.4(conventional-commits-parser@7.1.4)(typescript@6.0.3))(@microsoft/api-extractor@7.60.1(@types/node@24.19.2))(@playwright/test@1.65.1)(@vitest/browser-playwright@5.1.0)(ajv@8.20.0)(dependency-cruiser@18.7.2)(esbuild@0.28.2)(lint-staged@17.6.0)(secretlint@13.1.0(supports-color@10.2.2))(stylelint@18.0.0)(typescript@6.0.3)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.1.0)
       dependency-cruiser:
         specifier: 'catalog:'
         version: 18.7.2
@@ -335,7 +335,7 @@ importers:
     devDependencies:
       '@hussmartinez/sdk-config':
         specifier: 'catalog:'
-        version: 0.9.0(@biomejs/biome@2.6.6)(@commitlint/cli@21.2.4(conventional-commits-parser@7.1.4)(typescript@6.0.3))(@microsoft/api-extractor@7.60.1(@types/node@24.19.2))(@playwright/test@1.65.1)(@vitest/browser-playwright@5.1.0)(ajv@8.20.0)(dependency-cruiser@18.7.2)(lint-staged@17.6.0)(secretlint@13.1.0(supports-color@10.2.2))(stylelint@18.0.0)(typescript@6.0.3)(vitest@5.1.0)
+        version: 0.11.2(@biomejs/biome@2.6.6)(@commitlint/cli@21.2.4(conventional-commits-parser@7.1.4)(typescript@6.0.3))(@microsoft/api-extractor@7.60.1(@types/node@24.19.2))(@playwright/test@1.65.1)(@vitest/browser-playwright@5.1.0)(ajv@8.20.0)(dependency-cruiser@18.7.2)(esbuild@0.28.2)(lint-staged@17.6.0)(secretlint@13.1.0(supports-color@10.2.2))(stylelint@18.0.0)(typescript@6.0.3)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.1.0)
       '@hussmartinez/sdk-core':
         specifier: 'catalog:'
         version: 0.4.1
@@ -389,7 +389,7 @@ importers:
         version: 4.14.0(playwright-core@1.65.1)
       '@hussmartinez/sdk-config':
         specifier: 'catalog:'
-        version: 0.9.0(@biomejs/biome@2.6.6)(@commitlint/cli@21.2.4(conventional-commits-parser@7.1.4)(typescript@6.0.3))(@microsoft/api-extractor@7.60.1(@types/node@24.19.2))(@playwright/test@1.65.1)(@vitest/browser-playwright@5.1.0)(ajv@8.20.0)(dependency-cruiser@18.7.2)(lint-staged@17.6.0)(secretlint@13.1.0(supports-color@10.2.2))(stylelint@18.0.0)(typescript@6.0.3)(vitest@5.1.0)
+        version: 0.11.2(@biomejs/biome@2.6.6)(@commitlint/cli@21.2.4(conventional-commits-parser@7.1.4)(typescript@6.0.3))(@microsoft/api-extractor@7.60.1(@types/node@24.19.2))(@playwright/test@1.65.1)(@vitest/browser-playwright@5.1.0)(ajv@8.20.0)(dependency-cruiser@18.7.2)(esbuild@0.28.2)(lint-staged@17.6.0)(secretlint@13.1.0(supports-color@10.2.2))(stylelint@18.0.0)(typescript@6.0.3)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.1.0)
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.65.1
@@ -442,7 +442,7 @@ importers:
     devDependencies:
       '@hussmartinez/sdk-config':
         specifier: 'catalog:'
-        version: 0.9.0(@biomejs/biome@2.6.6)(@commitlint/cli@21.2.4(conventional-commits-parser@7.1.4)(typescript@6.0.3))(@microsoft/api-extractor@7.60.1(@types/node@24.19.2))(@playwright/test@1.65.1)(@vitest/browser-playwright@5.1.0)(ajv@8.20.0)(dependency-cruiser@18.7.2)(lint-staged@17.6.0)(secretlint@13.1.0(supports-color@10.2.2))(stylelint@18.0.0)(typescript@6.0.3)(vitest@5.1.0)
+        version: 0.11.2(@biomejs/biome@2.6.6)(@commitlint/cli@21.2.4(conventional-commits-parser@7.1.4)(typescript@6.0.3))(@microsoft/api-extractor@7.60.1(@types/node@24.19.2))(@playwright/test@1.65.1)(@vitest/browser-playwright@5.1.0)(ajv@8.20.0)(dependency-cruiser@18.7.2)(esbuild@0.28.2)(lint-staged@17.6.0)(secretlint@13.1.0(supports-color@10.2.2))(stylelint@18.0.0)(typescript@6.0.3)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.1.0)
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
@@ -470,7 +470,7 @@ importers:
         version: 0.18.5
       '@hussmartinez/sdk-config':
         specifier: 'catalog:'
-        version: 0.9.0(@biomejs/biome@2.6.6)(@commitlint/cli@21.2.4(conventional-commits-parser@7.1.4)(typescript@6.0.3))(@microsoft/api-extractor@7.60.1(@types/node@24.19.2))(@playwright/test@1.65.1)(@vitest/browser-playwright@5.1.0)(ajv@8.20.0)(dependency-cruiser@18.7.2)(lint-staged@17.6.0)(secretlint@13.1.0(supports-color@10.2.2))(stylelint@18.0.0)(typescript@6.0.3)(vitest@5.1.0)
+        version: 0.11.2(@biomejs/biome@2.6.6)(@commitlint/cli@21.2.4(conventional-commits-parser@7.1.4)(typescript@6.0.3))(@microsoft/api-extractor@7.60.1(@types/node@24.19.2))(@playwright/test@1.65.1)(@vitest/browser-playwright@5.1.0)(ajv@8.20.0)(dependency-cruiser@18.7.2)(esbuild@0.28.2)(lint-staged@17.6.0)(secretlint@13.1.0(supports-color@10.2.2))(stylelint@18.0.0)(typescript@6.0.3)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.1.0)
       '@microsoft/api-extractor':
         specifier: 'catalog:'
         version: 7.60.1(@types/node@24.19.2)
@@ -1085,8 +1085,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@hussmartinez/sdk-config@0.9.0':
-    resolution: {integrity: sha512-s26RRK2G7xIWN0uqw+hOamarjLFdE5WCby7FMpTpt0HoGJEmkqwGYqkMxTTvnMgQ1caXppI6vEiw95n5O4bx+w==}
+  '@hussmartinez/sdk-config@0.11.2':
+    resolution: {integrity: sha512-K/s3MPBXOeFD7b7yi8lSJ49teZbEkTBDDIf2SJ9qj7aJfjOTVXrvahx8Wt5jT9/TIQ5nD9OX66o48BCC3ujAtw==}
     engines: {node: '>=24'}
     hasBin: true
     peerDependencies:
@@ -1097,10 +1097,12 @@ packages:
       '@vitest/browser-playwright': 5.1.0
       ajv: ^8.20.0
       dependency-cruiser: ^18.7.2
+      esbuild: ^0.28.2
       lint-staged: ^17.6.0
       secretlint: ^13.1.0
       stylelint: ^18.0.0
       typescript: ^6.0.3
+      vite: ^8.3.6
       vitest: ^5.1.0
     peerDependenciesMeta:
       '@biomejs/biome':
@@ -1117,6 +1119,8 @@ packages:
         optional: true
       dependency-cruiser:
         optional: true
+      esbuild:
+        optional: true
       lint-staged:
         optional: true
       secretlint:
@@ -1124,6 +1128,8 @@ packages:
       stylelint:
         optional: true
       typescript:
+        optional: true
+      vite:
         optional: true
       vitest:
         optional: true
@@ -4154,7 +4160,7 @@ snapshots:
   '@esbuild/win32-x64@0.28.2':
     optional: true
 
-  '@hussmartinez/sdk-config@0.9.0(@biomejs/biome@2.6.6)(@commitlint/cli@21.2.4(conventional-commits-parser@7.1.4)(typescript@6.0.3))(@microsoft/api-extractor@7.60.1(@types/node@24.19.2))(@playwright/test@1.65.1)(@vitest/browser-playwright@5.1.0)(ajv@8.20.0)(dependency-cruiser@18.7.2)(lint-staged@17.6.0)(secretlint@13.1.0(supports-color@10.2.2))(stylelint@18.0.0)(typescript@6.0.3)(vitest@5.1.0)':
+  '@hussmartinez/sdk-config@0.11.2(@biomejs/biome@2.6.6)(@commitlint/cli@21.2.4(conventional-commits-parser@7.1.4)(typescript@6.0.3))(@microsoft/api-extractor@7.60.1(@types/node@24.19.2))(@playwright/test@1.65.1)(@vitest/browser-playwright@5.1.0)(ajv@8.20.0)(dependency-cruiser@18.7.2)(esbuild@0.28.2)(lint-staged@17.6.0)(secretlint@13.1.0(supports-color@10.2.2))(stylelint@18.0.0)(typescript@6.0.3)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.1.0)':
     dependencies:
       '@commitlint/config-conventional': 21.2.4
       '@secretlint/secretlint-rule-preset-recommend': 13.1.0
@@ -4169,10 +4175,12 @@ snapshots:
       '@vitest/browser-playwright': 5.1.0(playwright@1.65.1)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.1.0)
       ajv: 8.20.0
       dependency-cruiser: 18.7.2
+      esbuild: 0.28.2
       lint-staged: 17.6.0
       secretlint: 13.1.0(supports-color@10.2.2)
       stylelint: 18.0.0
       typescript: 6.0.3
+      vite: 8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
       vitest: 5.1.0(@types/node@24.19.2)(@vitest/browser-playwright@5.1.0)(@vitest/ui@5.1.0)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
 
   '@hussmartinez/sdk-core@0.4.1': {}

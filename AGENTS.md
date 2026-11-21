@@ -36,7 +36,7 @@ These follow from the standards; they're repeated here because they apply to alm
 
 ## Verifying changes
 
-- **Hooks are the local bar** ([sdk-core ADR 0053](https://github.com/ie-huss-martinez/sdk-core/blob/main/docs/adr/0053-ci-is-the-merge-gate.md)). They run automatically: linting and a secret scan on commit, commit message checks, and `pnpm verify:fast` on push. Never use `--no-verify`. If a hook is wrong or too slow, fix it in its own pull request.
+- **Hooks are the local bar** ([sdk-core ADR 0053](https://github.com/ie-huss-martinez/sdk-core/blob/main/docs/adr/0053-ci-is-the-merge-gate.md)). They run automatically: linting, a secret scan and a hidden-character check on commit, commit message checks, and `pnpm verify:fast` on push. Never use `--no-verify`. If a hook is wrong or too slow, fix it in its own pull request.
 - **CI is the merge gate.** It runs the full `pnpm verify` on Chromium, Firefox and WebKit, and checks the pull request title and changeset. Every check must pass on the pull request's current head before merging, and the reviewer doesn't rerun them locally as a second gate.
 - **Local runs are for a reason,** not a routine step before every pull request: to diagnose a failure, to reproduce one from CI, to update screenshots with `pnpm test:visual:update`, or a focused run while working, such as `pnpm --filter @hussmartinez/ui test:browser:all <file>` with the file relative to `packages/ui`.
 - **A failure that only shows in CI is real.** Find its cause. Never loosen an assertion, add a retry or rerun until it passes.
