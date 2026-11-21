@@ -2,6 +2,7 @@
 
 - **Status:** Accepted, 2026-11-18, with its four open decisions ruled as recommended
 - **Date:** 2026-11-18
+- **Refined by:** [sdk-core ADR 0056](https://github.com/ie-huss-martinez/sdk-core/blob/main/docs/adr/0056-size-budgets-for-what-applications-import.md), 2026-11-21, which makes import budgets a family rule. See [Refined by the family's rule](#refined-by-the-familys-rule)
 
 ## Context
 
@@ -111,3 +112,14 @@ The scenarios as `size-limit` measures them:
 | An editor (26) | 7.17 kB | 7.5 kB |
 
 They're 0.03 kB to 0.31 kB under the script's esbuild figures above. `size-limit` subtracts the cost of an empty esbuild bundle, and its entry passes the imports to `console.log` rather than exporting them, which saves their names; the more names, the larger the gap. The React entry measures 23.99 kB of its 24 kB budget after #90's dependency updates.
+
+## Refined by the family's rule
+
+[sdk-core ADR 0056](https://github.com/ie-huss-martinez/sdk-core/blob/main/docs/adr/0056-size-budgets-for-what-applications-import.md), accepted on 2026-11-21, took this record as its precedent and made import budgets a rule for every package's core and React entries. Where the two differ, the family's rule applies in `ui` from 2026-11-21:
+
+- **A floor's limit is its measurement rounded up to the next 0.1 kB, not 0.5 kB, and is never raised.** Half a kilobyte of slack would hide the small leak a floor exists to catch. `ui`'s two floors move from 1 kB to 0.8 kB (`Button`, 0.73 kB) and from 1.5 kB to 1.1 kB (`IconButton` with one icon, 1.05 kB). Every other budget keeps the 0.5 kB step.
+- **A pull request's size table shows every floor's measured size,** whether it moved or not, because a limit only bounds a change and the measurement shows it. The floors' checks are named as ADR 0056 names them, `Import: the floor, …`, and `size:table` always lists a check with that name.
+- **What a scenario leaves out is the family's list:** `react`, `react-dom` and every `@hussmartinez/*` package, with their subpaths, and an entry's own lazy chunks. For `ui` that's the same as `react`, `react-dom` and `@hussmartinez/sdk-core` here, since sdk-core is the only family package it imports, and it has no lazy chunks.
+- **The checks come from `sdk-config`'s `entryBudget`, `importBudget` and `exportNames`,** adopted in #125 with every measurement unchanged. `ui` still bundles each scenario as an ES module with `process.env.NODE_ENV` set to `"production"`, as ADR 0056 describes the measure, until `importBudget` sets both itself.
+
+What stays as decided here, because the family's rule leaves it to each package: which scenarios `ui` has, the fixed editor set, the stylesheet's two-number table, and `build.test.ts` checking which code ships.

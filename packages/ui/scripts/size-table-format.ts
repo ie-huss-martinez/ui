@@ -20,7 +20,8 @@ const kB = (bytes: number | undefined): string =>
   bytes === undefined ? "–" : `${(bytes / 1000).toFixed(2)} kB`;
 
 const budget = (bytes: number | undefined): string =>
-  // Budgets are set in steps of 0.5 kB, so they print as written.
+  // Budgets are set in steps of 0.5 kB, and floors of 0.1 kB, so they print
+  // as written.
   bytes === undefined ? "–" : `${Number((bytes / 1000).toFixed(2))} kB`;
 
 function change(before: number | undefined, after: number | undefined): string {
@@ -42,9 +43,16 @@ function change(before: number | undefined, after: number | undefined): string {
 }
 
 /**
- * The checks whose size or budget changed, in the order they're configured,
- * with checks only one side has marked "new" or "removed". With nothing
- * changed, says so in one line instead of an empty table.
+ * A floor's check, named as sdk-core ADR 0056 names them, such as
+ * "Import: the floor, Button". The table always shows a floor, because its
+ * measurement, not its limit, is what shows a small leak.
+ */
+const FLOOR = /^Import: the floor\b/;
+
+/**
+ * The floors, and the checks whose size or budget changed, in the order they're configured,
+ * with checks only one side has marked "new" or "removed". With no floor
+ * and nothing changed, says so in one line instead of an empty table.
  */
 export function sizeTable(
   before: readonly SizeResult[],
@@ -61,7 +69,7 @@ export function sizeTable(
     const old = was.get(name);
     const now = is.get(name);
     const same = old?.size === now?.size && old?.sizeLimit === now?.sizeLimit;
-    if (same && !all) {
+    if (same && !all && !FLOOR.test(name)) {
       return [];
     }
     const limits =

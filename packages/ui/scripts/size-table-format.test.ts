@@ -45,6 +45,15 @@ describe("sizeTable", () => {
 | React entry | 23.99 kB | 23.99 kB | +0.01 kB | 24 kB |`);
   });
 
+  it("always lists a floor, moved or not (sdk-core ADR 0056)", () => {
+    const floor = { name: "Import: the floor, Button", size: 729, sizeLimit: 800 };
+    expect(
+      sizeTable([floor, react], [floor, react]),
+    ).toBe(`| Check | Before | After | Change | Budget |
+|---|---|---|---|---|
+| Import: the floor, Button | 0.73 kB | 0.73 kB | 0 | 0.8 kB |`);
+  });
+
   it("says so in one line when nothing changed", () => {
     expect(sizeTable([button, react], [button, react])).toBe("No size or budget changed.");
   });
